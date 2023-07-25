@@ -6,8 +6,8 @@
 
 const HOME_URL = 'https://github.com/MichealWayne/fe-tools';
 const DEFAULT_SEARCH_LIST = ['mdn', 'github', 'npmjs', 'caniuse', 'stackoverflow', 'baidu'];
+
 let FEToolsData = null; // 请求插件数据
-//var LocalMarksData = null; // 本地收藏夹数据
 let MarkList = null;
 
 /**
@@ -54,7 +54,7 @@ function jumpAction(url) {
   });
 }
 
-var DOMS = {
+const DOMS = {
   input: document.querySelector('#search'),
   logoCtn: document.querySelector('.j-logo_ctn'),
   searchList: document.querySelector('.j-searchList'),
@@ -83,7 +83,7 @@ window.HandleSearch = {
   },
 };
 
-var FeTools = {
+const FeTools = {
   setListeners: function() {
     // Enter
     document.addEventListener(
@@ -169,10 +169,10 @@ var FeTools = {
     }
 
     let resultList = [];
-    for (var i = 0, len = FEToolsData.length; i < len; i++) {
-      var item = FEToolsData[i];
+    for (let i = 0, len = FEToolsData.length; i < len; i++) {
+      const item = FEToolsData[i];
 
-      for (let j in item.target) {
+      for (const j in item.target) {
         if (~value.indexOf(item.target[j])) {
           item.label = 'fe-tools';
           item.color = 'orange';
@@ -197,7 +197,7 @@ var FeTools = {
       }
     }
 
-    var defaultHTML = DEFAULT_SEARCH_LIST.map(function(item) {
+    const defaultHTML = DEFAULT_SEARCH_LIST.map(function(item) {
       return (
         '<li data-type="' +
         item +
@@ -242,12 +242,10 @@ var FeTools = {
       let url = tab.url,
         value = DOMS.input.value;
       if (value && ~value.indexOf('http')) url = value;
-      var qrnode = new AraleQRCode({
+      const qrnode = new AraleQRCode({
         text: url,
-        //render: 'svg'
       });
-      //console.log(qrnode)
-      // DOMS.fixCtn.appendChild(qrnode)
+
       DOMS.fixCtn.innerHTML =
         '<div>\
                     <img title="右键可保存二维码图片" class="u-icon" src="' +
@@ -261,19 +259,19 @@ var FeTools = {
     });
   },
   handleDownloadQR: function(url) {
-    var qrnode = new AraleQRCode({
+    const qrnode = new AraleQRCode({
       text: url,
       render: 'svg',
     });
 
-    var ctn = document.createElement('div');
+    const ctn = document.createElement('div');
     ctn.appendChild(qrnode);
 
-    var blobContent = new Blob([ctn.innerHTML], {
+    const blobContent = new Blob([ctn.innerHTML], {
       type: 'application/svg',
     });
-    var blobUrl = window.URL.createObjectURL(blobContent);
-    var eleLink = document.createElement('a');
+    const blobUrl = window.URL.createObjectURL(blobContent);
+    const eleLink = document.createElement('a');
     eleLink.download = 'qr-code.svg';
     eleLink.style.display = 'none';
     eleLink.href = blobUrl;
@@ -289,17 +287,17 @@ var FeTools = {
     DOMS.searchList.addEventListener(
       'click',
       function(e) {
-        var target = e.target,
-          $target = $(target).parents('li');
+        const target = e.target;
+        const $target = $(target).parents('li');
         $target = ($target.length && $target) || $(target);
 
-        var _searchType = $target.data('type');
+        const _searchType = $target.data('type');
 
         if (_searchType) {
           HandleSearch['to' + _searchType]($target.data('val') || '');
         }
         if (target.id === 'otherOpen') {
-          var ul = document.createElement('ul');
+          const ul = document.createElement('ul');
           ul.innerHTML = target.dataset.html;
           DOMS.searchList.appendChild(ul);
           target.style.display = 'none';

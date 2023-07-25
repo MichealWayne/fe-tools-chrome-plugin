@@ -15,7 +15,8 @@
  */
 export function getUrlParam(name: string, decode?: string) {
   const reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)');
-  const res = window.location.search.substring(1).match(reg); //匹配目标参数
+  //匹配目标参数
+  const res = window.location.search.substring(1).match(reg);
 
   if (res) {
     if (!decode) {
@@ -34,8 +35,7 @@ export function getUrlParam(name: string, decode?: string) {
  * @param {string} type
  */
 export function handleQRCode(url: string, type = 'canvas') {
-  console.warn('AraleQRCode', window.AraleQRCode);
-  const AraleQRCode = window.AraleQRCode;
+  const { AraleQRCode } = window;
   if (typeof AraleQRCode === 'undefined') {
     alert('工具库加载失败，请重试');
     return null;
@@ -88,7 +88,8 @@ export function getFileBase64(file: File, cb: (base64: string) => unknown) {
 
   const reader = new FileReader();
   reader.onload = function (e) {
-    const base64 = e.target!.result; // 该文件的完整Base64
+    // 该文件的完整Base64
+    const base64 = e.target!.result;
 
     if (cb) cb(base64 as string);
   };

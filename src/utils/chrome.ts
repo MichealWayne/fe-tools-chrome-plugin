@@ -1,7 +1,7 @@
 /**
  * @author Wayne
  * @Date 2019-10-02 14:48:29
- * @LastEditTime 2023-07-09 14:13:57
+ * @LastEditTime 2023-07-24 14:31:28
  */
 
 import { AnyFunc, AnyObj } from '@/types';
@@ -31,7 +31,8 @@ export function jumpAction(url: string) {
  */
 export function getLocalTabUrl(cb: (url: string, tab?: any) => any) {
   try {
-    chrome.tabs.getSelected(null, function (tab: any) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs: any[]) => {
+      const tab = tabs[0];
       if (cb) cb(tab.url, tab);
     });
   } catch (e) {

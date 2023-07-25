@@ -32,6 +32,7 @@ function handleSuccess(res: AxiosResponse<any>, url: string) {
     success: true,
     message: statusText,
     statusCode: status,
+    url,
     ...result,
   });
 }

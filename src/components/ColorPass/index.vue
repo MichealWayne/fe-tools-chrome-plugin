@@ -4,23 +4,23 @@
     <!--颜色输入-->
     <section :class="$style.content">
       <div class="m-color-input">
-        <span>RGB：</span>
-        <input
-          v-model="rgb"
-          maxlength="11"
-          data-type="rgb"
-          placeholder="RGB表示，逗号分隔"
-          @keyup="changeColor"
-        />
-      </div>
-
-      <div class="m-color-input">
         <span>HEX：</span>
         <input
           v-model="hex"
           maxlength="6"
           data-type="hex"
-          placeholder="16进制表示"
+          placeholder="16进制表示，如ff0000"
+          @keyup="changeColor"
+        />
+      </div>
+
+      <div class="m-color-input">
+        <span>RGB：</span>
+        <input
+          v-model="rgb"
+          maxlength="11"
+          data-type="rgb"
+          placeholder="RGB表示，逗号分隔，如255,0,0"
           @keyup="changeColor"
         />
       </div>
@@ -31,11 +31,12 @@
           v-model="hsb"
           maxlength="13"
           data-type="hsb"
-          placeholder="HSB表示，逗号分隔"
+          placeholder="HSB表示，逗号分隔，如0,100%,100%"
           @keyup="changeColor"
         />
       </div>
     </section>
+
     <!--颜色展示-->
     <div class="m-color-show" :style="{ backgroundColor: `#${hex || 'fff'}` }"></div>
 
@@ -80,7 +81,7 @@ export default defineComponent({
     },
     changeColor(e: Event) {
       if (!e || !(e.target instanceof HTMLElement)) return;
-      let type = e.target.dataset.type;
+      const { type } = e.target.dataset;
 
       const setEmptyOutput = () => (this.hsb = this.rgb = '');
 
@@ -90,7 +91,7 @@ export default defineComponent({
             this.hex,
             () => {
               this.rgb = hexToRgb(divisionString(this.hex, 2)).join(',');
-              let rgbArr = this.rgb.split(',');
+              const rgbArr = this.rgb.split(',');
               this.hsb = rgbToHsb(rgbArr).join(',');
             },
             setEmptyOutput
@@ -100,7 +101,7 @@ export default defineComponent({
           checkRgb(
             this.rgb,
             () => {
-              let rgbArr = this.rgb.split(',');
+              const rgbArr = this.rgb.split(',');
               this.hex = rgbToHex(rgbArr).join('');
               this.hsb = rgbToHsb(rgbArr).join(',');
             },
@@ -112,11 +113,13 @@ export default defineComponent({
             this.hsb,
             () => {
               this.rgb = hsbToRgb(this.hsb.split(',').map(val => parseInt(val))).join(',');
-              let rgbArr = this.rgb.split(',');
+              const rgbArr = this.rgb.split(',');
               this.hex = rgbToHex(rgbArr).join('');
             },
             setEmptyOutput
           );
+        default:
+          console.error(`[Warning]illegal type:${type}(ColorPass)`);
       }
     },
   },
@@ -140,6 +143,7 @@ export default defineComponent({
   margin-bottom: 10px;
 
   & > input {
+    width: 300px;
     font-size: 18px;
     border-bottom: 1px solid #888;
     &::placeholder {

@@ -111,14 +111,18 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+
+import { AnyObj } from '@/types/index';
 import JSONFormat from '@/utils/json-format';
 
 export default defineComponent({
   name: 'PostMan',
   data() {
     return {
-      showTap: false, // 显示taps
-      tapType: 'json', // tap类型
+      // 显示taps
+      showTap: false,
+      // tap类型
+      tapType: 'json',
 
       contentType: 'application/x-www-form-urlencoded',
       urlContent: '',
@@ -141,35 +145,38 @@ export default defineComponent({
       window.open('https://github.com/MichealWayne/fe-tools');
     },
 
-    postman: function () {
+    postman() {
       this.$nextTick(() => {
         this.sendRequest(this.urlContent, this.methodContent, this.paramContent);
       });
     },
 
-    sendRequest: function (url: string, method: string, body: string) {
-      let xhr = new XMLHttpRequest();
-      if (body) {
-        body = body.trim();
-        if (body[0] === '{') {
+    sendRequest(url: string, method: string, bodyStr: string) {
+      const xhr = new XMLHttpRequest();
+
+      let requestBody: AnyObj | FormData | string = '';
+      if (bodyStr) {
+        bodyStr = bodyStr.trim();
+        if (bodyStr[0] === '{') {
+          let body: AnyObj = {};
           // json格式
           try {
-            body = JSON.parse(body);
+            body = JSON.parse(bodyStr);
           } catch (e) {
             alert('参数格式有误(' + (e as Error).message + ')');
           }
           if (this.contentType === 'multipart/form-data') {
             let fd = new FormData();
             for (let i in body) {
-              fd.append(i, body[i]);
+              fd.append(i, body[i] as string);
             }
-            body = fd;
+            requestBody = fd;
           } else {
             let arr = [];
             for (let i in body) {
               arr.push(i + '=' + body[i]);
             }
-            body = arr.join('&');
+            requestBody = arr.join('&');
           }
         }
       }
@@ -187,9 +194,7 @@ export default defineComponent({
               .getAllResponseHeaders()
               .trim()
               .split('\n')
-              .map(item => {
-                return item.split(': ').map(x => x.trim());
-              });
+              .map((item: string) => item.split(': ').map(x => x.trim()));
             break;
           case resp.target.LOADING:
             result = 'Loading...';
@@ -210,13 +215,13 @@ export default defineComponent({
       xhr.open(method, url);
       if (method.toLowerCase() === 'post') {
         xhr.setRequestHeader('Content-Type', this.contentType);
-        xhr.send(body);
+        xhr.send(requestBody);
       } else {
         xhr.send();
       }
     },
 
-    jsonFormat: function (source: string) {
+    jsonFormat(source: string) {
       this.errorMsgForJson = '';
       this.jfCallbackName_start = '';
       this.jfCallbackName_end = '';
@@ -249,12 +254,12 @@ export default defineComponent({
           this.tapType = 'data';
           try {
             // 再给你一次机会，是不是下面这种情况：  "{\"ret\":\"0\", \"msg\":\"ok\"}"
-            jsonObj = new Function("return '" + source + "'")();
+            jsonObj = new Function(`return '${source}'`)();
             if (typeof jsonObj === 'string') {
               jsonObj = new Function('return ' + jsonObj)();
             }
-          } catch (exxx) {
-            this.errorMsgForJson = exxx.message;
+          } catch (err) {
+            this.errorMsgForJson = (err as Error).message;
           }
         }
       }
@@ -264,9 +269,9 @@ export default defineComponent({
         try {
           // 要尽量保证格式化的东西一定是一个json，所以需要把内容进行JSON.stringify处理
           source = JSON.stringify(jsonObj);
-        } catch (ex) {
+        } catch (err) {
           // 通过JSON反解不出来的，一定有问题
-          this.errorMsgForJson = ex.message;
+          this.errorMsgForJson = (err as any).message;
         }
 
         if (!this.errorMsgForJson.length) {
@@ -286,8 +291,8 @@ export default defineComponent({
 
       // 不是json，都格式化不了，一定会出错
       if (this.errorMsgForJson) {
-        let el = document.querySelector('#optionBar');
-        el && (el.style.display = 'none');
+        const el = document.querySelector('#optionBar');
+        if (el) (el as HTMLElement).style.display = 'none';
       }
     },
 

@@ -128,7 +128,7 @@ export default defineComponent({
 
   data(): {
     keywords: string;
-    markList: Array<{ [key: string]: unknown }>;
+    markList: Array<{ title?: string; [key: string]: unknown }>;
     logoFold: string | boolean;
 
     showCompName: string;
@@ -136,59 +136,83 @@ export default defineComponent({
     resultList: Array<{
       link: string;
       name: string;
-      label?: string;
+      label?: 'tools' | 'mark';
+      type?: string;
       color?: string;
+      children?: any;
     }>;
-    feToolsList: Array<{ name: string; link: string; desc: string; target: any }>;
+    feToolsList: Array<{ name: string; link: string; desc: string; target: any; children?: any }>;
   } {
     return {
+      // 搜索关键词
       keywords: '',
-      markList: [], // local marks list
-      logoFold: '', // logo fold
+      // 本地书签信息
+      markList: [],
+      // logo折叠
+      logoFold: '',
 
+      // 当前展示的组件
       showCompName: getUrlParam('search') ? 'QRCode' : '',
-
-      resultList: [], // search result list
-      feToolsList: [], // fe tools list
+      // 搜索结果
+      resultList: [],
+      // 远程工具信息列表
+      feToolsList: [],
     };
   },
 
   beforeMount() {
-    getMarkTree(list => (this.markList = list));
+    const _msg = getUrlParam('message');
+    if (_msg) {
+      this.keywords = _msg;
+      this.setSearchResult();
+    }
+    getMarkTree((list: any) => (this.markList = list));
     ajax
       .getFeTools()
       .then((data: any) => {
-        let list = this.handleFEToolsList(data.list);
-        this.feToolsList = Object.freeze(list);
-
-        let _msg = getUrlParam('message');
-        if (_msg) {
-          this.keywords = _msg;
-          this.setSearchResult();
-        }
+        const list = this.handleFEToolsList(data.list);
+        this.feToolsList = list;
       })
-      .catch(e => {
-        alert(e && e.message);
+      .catch((e: Error) => {
+        alert(e?.message || '链接信息获取失败');
       });
   },
 
   methods: {
+    /**
+     * 前往简易postman
+     */
     toPostMan() {
       jumpAction('index.html?type=postman');
     },
 
+    /**
+     * 去fe-tools主页
+     */
     toHome() {
       jumpAction('https://github.com/MichealWayne/fe-tools');
     },
+
+    /**
+     * 输入框聚焦时，logo隐藏
+     */
     handleInputFocus() {
       if (this.keywords) this.logoFold = true;
     },
+
+    /**
+     * 输入框失去焦点时，logo展示
+     */
     handleInputBlur() {
       if (!this.keywords) {
         this.resultList = [];
         this.logoFold = false;
       }
     },
+
+    /**
+     * 输入时
+     */
     handleInputInput() {
       if (this.keywords) {
         this.logoFold = true;
@@ -196,7 +220,10 @@ export default defineComponent({
       }
     },
 
-    handleResultClick(item) {
+    /**
+     * 检索结果的点击
+     */
+    handleResultClick(item: any) {
       if (item.type === 'qr') {
         // qr code
         this.showCompName = 'QRCode';
@@ -204,42 +231,60 @@ export default defineComponent({
         jumpAction(item.link);
       }
     },
-    getResultText(item) {
-      if (item.type === 'qr') {
-        return '生成二维码';
-      } else {
-        return item.name;
-      }
+
+    /**
+     * 结果的展示文案
+     */
+    getResultText(item: any) {
+      return item.type === 'qr' ? '生成二维码' : item.name;
     },
-    getResultLabel(type) {
+
+    /**
+     * 结果的展示标签
+     */
+    getResultLabel(type?: 'tools' | 'mark') {
+      if (!type) return '';
       return {
         tools: 's-simple',
         mark: 's-red',
       }[type];
     },
 
-    handleFEToolsList(list): Array<{
+    /**
+     * 处理结果
+     */
+    handleFEToolsList(list: any): Array<{
       name: string;
       link: string;
       desc: string;
       target: any;
+      children?: any;
     }> {
-      let handleList = data => {
-        let result = [];
+      const handleList = (
+        data: any
+      ): Array<{
+        name: string;
+        link: string;
+        desc: string;
+        target: any;
+        children?: any;
+      }> => {
+        const result = [];
         if (Array.isArray(data)) {
-          for (let i = 0, len = data.length; i < len; i++) {
-            let item = data[i];
-            if (item.link && item.name)
+          data.forEach(item => {
+            if (item.link && item.name) {
               result.push({
                 name: item.name,
                 link: item.link,
                 desc: item.desc,
                 target: item.target,
               });
-            if (item.children && item.children.length) {
+            }
+
+            if (item.children?.length) {
               result.push(...handleList(item.children));
             }
-          }
+          });
         } else if (data.link && data.name) {
           result.push({
             name: data.name,
@@ -251,39 +296,48 @@ export default defineComponent({
         return result;
       };
 
-      let resultArr = handleList(list);
-      return resultArr;
+      return handleList(list);
     },
 
+    // eslint-disable-next-line complexity
     setSearchResult() {
-      let keywords = this.keywords.toLowerCase();
+      const keywords = this.keywords.toLowerCase();
 
-      if (~keywords.indexOf('http')) {
+      if (keywords.startsWith('http')) {
         // link
         this.resultList = [
           {
             type: 'qr',
+            link: '',
+            name: 'qr',
           },
         ];
-        return false;
+        return;
       }
 
-      let resultList = [];
+      const resultList: Array<{
+        link: string;
+        name: string;
+        label?: 'tools' | 'mark';
+        type?: string;
+        color?: string;
+        children?: any;
+      }> = [];
       if (keywords && keywords.length > 2) {
-        let FEToolsData = this.feToolsList || [];
-        for (let i = 0, len = FEToolsData.length; i < len; i++) {
-          let item = FEToolsData[i];
-          //for (let j in item.target) {
-          if (
-            ~item.name.indexOf(keywords) ||
-            (item.desc && ~item.desc.indexOf(keywords)) ||
-            (item.target && ~item.target.join(' | ').indexOf(keywords))
-          ) {
+        const FEToolsData = this.feToolsList || [];
+
+        FEToolsData.forEach(item => {
+          const IS_SUPPORT_KEYWORDS =
+            item.name.includes(keywords) ||
+            (item.desc && item.desc.includes(keywords)) ||
+            (item.target && item.target.join(' | ').includes(keywords));
+
+          if (IS_SUPPORT_KEYWORDS) {
             if (!item.link) {
-              if (item.children && item.children.length) {
-                item.children.map(child => {
+              if (item.children?.length) {
+                item.children.map((child: any) => {
                   resultList.push({
-                    label: 'tool',
+                    label: 'tools',
                     color: 'orange',
                     link: child.link,
                     name:
@@ -294,7 +348,7 @@ export default defineComponent({
               }
             } else {
               resultList.push({
-                label: 'tool',
+                label: 'tools',
                 color: 'orange',
                 link: item.link,
                 name:
@@ -303,35 +357,30 @@ export default defineComponent({
               });
             }
           }
-          //}
-        }
+        });
       }
 
       // 收藏夹
-      let MarkList = this.markList || [];
+      const MarkList = this.markList || [];
       if (MarkList) {
-        for (let i = 0, len = MarkList.length; i < len; i++) {
-          let item = MarkList[i];
-
-          if (~item.title.toLowerCase().indexOf(keywords)) {
+        MarkList.forEach(item => {
+          if (item.title?.toLowerCase().includes(keywords)) {
             resultList.push({
-              link: item.url,
-              name: item.title.replace(keywords, `<strong>${keywords}</strong>`),
+              link: item.url as string,
+              name: item.title.replace(keywords, `<strong>${keywords}</strong>`) as string,
               color: 'red',
               label: 'mark',
             });
           }
-        }
+        });
       }
 
-      //if (!resultList.length || this.showMore) {
-      DEFAULT_SEARCH_LIST.map(function (item) {
+      DEFAULT_SEARCH_LIST.forEach(item => {
         resultList.push({
           link: item.link + keywords,
           name: `在${item.name}中搜索: <strong>${keywords}</strong>`,
         });
       });
-      //}
       this.resultList = resultList;
     },
 

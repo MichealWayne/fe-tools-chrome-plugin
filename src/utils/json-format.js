@@ -170,7 +170,7 @@ let JsonFormatEntrance = (function () {
 
   /**
    * 执行代码格式化
-   * @param  {[type]} jsonStr [description]
+   * @param  {string} jsonStr [description]
    * @return {[type]}
    */
   let format = function (jsonStr) {

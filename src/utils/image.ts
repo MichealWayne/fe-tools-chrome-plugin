@@ -1,7 +1,7 @@
 /**
  * @author Wayne
  * @Date 2019-10-04 17:27:22
- * @LastEditTime 2023-07-09 14:14:21
+ * @LastEditTime 2023-07-25 10:02:17
  */
 import { compressImg, getFileBase64 } from './index';
 
@@ -45,7 +45,7 @@ export function handleInputUploadImageFile(
 
     if (!fileList || !len || !/\/(?:jpeg|png|gif)/i.test(fileList[0].type)) {
       reject('文件格式错误');
-      return false;
+      return;
     }
     const _imgUrl = window.URL.createObjectURL(fileList[0]);
 

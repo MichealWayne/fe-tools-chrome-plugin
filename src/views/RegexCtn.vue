@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-parsing-error -->
 <template>
   <section class="m-regex">
     <p class="m-filter_ctn u-c-middle">
@@ -10,7 +11,7 @@
         :class="{
           'z-fold': !item.isOpened,
           'z-hide':
-            !~(item.name || '').indexOf(filterTxt) && !~(item.description || '').indexOf(filterTxt),
+            !(item.name || '').includes(filterTxt) && !(item.description || '').includes(filterTxt),
         }"
         class="m-regex_item g-center g-mb20"
       >
@@ -43,6 +44,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+
+import { AnyFunc } from '@/types';
 import ajax from '@/api/ajax';
 // test: import RegexList from '@/datas/regex';
 
@@ -50,10 +53,14 @@ export default defineComponent({
   name: 'RegexCtn',
 
   props: {
-    back: Function,
+    back: Function as AnyFunc,
+    default: () => {},
   },
 
-  data() {
+  data(): {
+    filterTxt: string;
+    regexList: any[];
+  } {
     return {
       filterTxt: '',
       regexList: [],
@@ -74,8 +81,8 @@ export default defineComponent({
     },
     handleRegTestClick(index: number) {
       try {
-        const $input = document.querySelector('.j-regInput_' + index) as HTMLInputElement;
-        let res =
+        const $input = document.querySelector(`.j-regInput_${index}`) as HTMLInputElement;
+        const res =
           this.regexList[index] && new RegExp(this.regexList[index].regexStr).test($input.value);
         document.querySelector(`.j-regOutput_${index}`)!.innerHTML = `<span s-color="${
           (res && 'blue') || 'red'

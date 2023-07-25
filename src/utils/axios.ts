@@ -1,13 +1,16 @@
+/**
+ * @author Wayne
+ * @Date 2022-11-27 17:45:33
+ * @LastEditTime 2023-07-22 10:01:25
+ */
+// eslint-disable-next-line filenames/match-exported
 import axios, { AxiosResponse, AxiosRequestConfig } from 'axios';
 
 const service = axios.create();
 
 // Request interceptors
 service.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
-    // do something
-    return config;
-  },
+  (config: AxiosRequestConfig) => config,
   (error: any) => {
     Promise.reject(error);
   }
@@ -20,10 +23,7 @@ service.interceptors.response.use(
 
     // do something
   },
-  (error: any) => {
-    // do something
-    return Promise.reject(error);
-  }
+  (error: any) => Promise.reject(error)
 );
 
 export default service;

@@ -46,8 +46,8 @@ export default defineComponent({
   },
 
   watch: {
-    keywords(newVal) {
-      if (newVal) {
+    keywords(newVal, oldVal) {
+      if (newVal !== oldVal && newVal !== this.originWords) {
         this.originWords = newVal;
       }
     },
@@ -83,6 +83,7 @@ export default defineComponent({
       const useInputUrl = keywords?.includes('http');
 
       if (useInputUrl) {
+        // 输入链接
         this.qrdownloadUrl = keywords;
         this.QRUrl = handleQRCode(keywords)!.getImgUrl();
       } else {

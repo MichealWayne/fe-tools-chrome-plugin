@@ -35,7 +35,7 @@
       >
         <icon-reset />
       </em>
-      <img class="u-w100" style="max-height: 300px" :src="imgUrl" alt="" />
+      <img class="u-w100" style="max-height: 300px" :src="imgUrl" alt="compressed image" />
     </div>
 
     <!-- 压缩比例调整 -->
@@ -82,8 +82,10 @@ export default defineComponent({
     return {
       // 图片压缩比例
       compressRate: '',
+
       // 页面展示的图片地址
       imgUrl: '',
+
       // 图片压缩后的base64字符串
       base64result: '',
     };
@@ -157,10 +159,12 @@ export default defineComponent({
     handleBoxDrag(e: Event) {
       if (!e) return;
 
-      e.preventDefault(); // 取消浏览器默认拖拽效果
+      // 取消浏览器默认拖拽效果
+      e.preventDefault();
 
-      let fileList = (e as DragEvent).dataTransfer!.files; // 获取拖拽中的文件对象
-      this.handleFileList(fileList);
+      // 获取拖拽中的文件对象
+      const { files } = (e as DragEvent).dataTransfer!;
+      this.handleFileList(files);
     },
     handleBoxClick() {
       (this.$refs.uploadPic as HTMLInputElement).click();
@@ -170,14 +174,14 @@ export default defineComponent({
      * 事件设置
      */
     setEvents() {
-      let box = document.querySelector('#dragbox');
+      const box = document.querySelector('#dragbox');
 
       // forbid default
       document.addEventListener('drop', function (e) {
         e.preventDefault();
       });
 
-      if (!box) return false;
+      if (!box) return;
 
       box.addEventListener('dragover', function (e) {
         console.log('elemenet dragover');
@@ -197,8 +201,8 @@ export default defineComponent({
      * 事件移除
      */
     removeEvents() {
-      let box = document.querySelector('#dragbox');
-      if (!box) return false;
+      const box = document.querySelector('#dragbox');
+      if (!box) return;
 
       box.removeEventListener('drop', this.handleBoxDrag);
     },

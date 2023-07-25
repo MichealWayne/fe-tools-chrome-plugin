@@ -42,6 +42,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+
+import { AnyFunc } from '@/types';
 import { jumpAction } from '@/utils/chrome';
 import ajax from '@/api/ajax';
 
@@ -49,7 +51,7 @@ export default defineComponent({
   name: 'MooCtn',
 
   props: {
-    back: Function,
+    back: Function as AnyFunc,
   },
 
   data(): {
@@ -64,17 +66,26 @@ export default defineComponent({
     return {
       keywords: '',
       logoFold: false,
+
+      // 搜索结果列表
       resultList: [],
 
-      styleList: [], // css属性列表
-      mooColorList: [], // moo-css 颜色列表
-      mooFuncList: [], // moo-css 方法列表
-      mooClassList: [], // moo-css 样式列表
+      // css属性列表
+      styleList: [],
+
+      // moo-css 颜色列表
+      mooColorList: [],
+
+      // moo-css 方法列表
+      mooFuncList: [],
+
+      // moo-css 样式列表
+      mooClassList: [],
     };
   },
 
   mounted() {
-    ajax.getMooCSS().then(data => {
+    ajax.getMooCSS().then((data: any) => {
       this.handleList(data.list);
     });
   },
@@ -113,18 +124,19 @@ export default defineComponent({
     },
 
     setSearchResult() {
-      let keywords = this.keywords.toLowerCase();
+      const keywords = this.keywords.toLowerCase();
 
-      let resultList = [];
-      if (keywords && keywords.length > 2) {
+      const resultList = [];
+      if (keywords?.length > 1) {
         // 属性
         let styleList = this.styleList || [];
+
         for (let i = 0, len = styleList.length; i < len; i++) {
-          let item = styleList[i];
+          const item = styleList[i];
           if (
-            ~item.name.indexOf(keywords) ||
-            ~item.desc.indexOf(keywords) ||
-            ~item.type.indexOf(keywords)
+            item.name.includes(keywords) ||
+            item.desc.includes(keywords) ||
+            item.type.includes(keywords)
           ) {
             resultList.push({
               label: 'CSS ' + item.ver,
@@ -275,15 +287,15 @@ export default defineComponent({
             if (name === '颜色') {
               this.mooColorList = Object.freeze(
                 this.handleMooColorList(data[i].children[j].children)
-              );
+              ) as any[];
             } else if (name === '方法') {
               this.mooFuncList = Object.freeze(
                 this.handleMooFuncList(data[i].children[j].children)
-              );
+              ) as any[];
             } else if (name === '样式') {
               this.mooClassList = Object.freeze(
                 this.handleMooClassList(data[i].children[j].children)
-              );
+              ) as any[];
             }
           }
         }

@@ -91,11 +91,11 @@ export default defineComponent({
     changeValue(e: Event) {
       if (!e || !(e.target instanceof HTMLElement)) return;
 
-      const type = e.target!.dataset.type;
+      const { type } = e.target!.dataset;
       const rate = this.defaultRate;
       const keep = this.defaultKeep;
 
-      if (!rate || Number.isNaN(rate) || Number.isNaN(keep)) return false;
+      if (!rate || Number.isNaN(rate) || Number.isNaN(keep)) return;
 
       switch (type) {
         case 'px':
@@ -110,6 +110,8 @@ export default defineComponent({
           this.px = (parseFloat(this.rem) * rate).toFixed(keep);
           this.vw = (parseFloat(this.rem) * 10).toFixed(keep);
           break;
+        default:
+          console.error(`[Warning]illegal type:${type}(UnitCalculator)`);
       }
     },
   },
