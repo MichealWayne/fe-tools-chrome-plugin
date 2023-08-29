@@ -1,3 +1,4 @@
+<!-- eslint-disable max-len -->
 <template>
   <i aria-label="icon: inbox" class="g-fs40" s-cr_blue
     ><svg

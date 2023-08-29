@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 /**
  * utils
  * @author Wayne
@@ -22,7 +23,8 @@ export function getUrlParam(name: string, decode?: string) {
     if (!decode) {
       return decodeURI(res[2]);
     } else {
-      return eval(decode + '(res[2])');
+      // eslint-disable-next-line no-eval
+      return eval(`${decode}(res[2])`);
     }
   }
   return null;
@@ -129,9 +131,10 @@ export function compressImg(img: HTMLImageElement, rate = 0.9) {
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, width, height);
   if ((count = (width * height) / 600000) > 1) {
-    count = ~~(Math.sqrt(count) + 1);
-    const nw = ~~(width / count),
-      nh = ~~(height / count);
+    count = Math.floor(Math.sqrt(count) + 1);
+
+    const nw = Math.floor(width / count);
+    const nh = Math.floor(height / count);
     tCanvas.width = nw;
     tCanvas.height = nh;
     for (let i = 0; i < count; i++) {

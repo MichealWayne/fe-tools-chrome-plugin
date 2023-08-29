@@ -125,7 +125,9 @@ export default defineComponent({
      */
     handleRateBlur() {
       getCompressedImageBase64(this.imgUrl, this.compressRate)
-        .then(base64 => (this.base64result = base64))
+        .then(base64 => {
+          this.base64result = base64;
+        })
         .catch(e => {
           console.error(e);
           alert('转换失败，请重试');
@@ -177,19 +179,17 @@ export default defineComponent({
       const box = document.querySelector('#dragbox');
 
       // forbid default
-      document.addEventListener('drop', function (e) {
+      document.addEventListener('drop', e => {
         e.preventDefault();
       });
 
       if (!box) return;
 
-      box.addEventListener('dragover', function (e) {
-        console.log('elemenet dragover');
+      box.addEventListener('dragover', e => {
         box?.classList.add('over');
         e.preventDefault();
       });
-      box.addEventListener('dragleave', function (e) {
-        console.log('elemenet dragleave');
+      box.addEventListener('dragleave', e => {
         box?.classList.remove('over');
         e.preventDefault();
       });

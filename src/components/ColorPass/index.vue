@@ -83,14 +83,17 @@ export default defineComponent({
       if (!e || !(e.target instanceof HTMLElement)) return;
       const { type } = e.target.dataset;
 
-      const setEmptyOutput = () => (this.hsb = this.rgb = '');
+      const setEmptyOutput = () => {
+        this.hsb = this.rgb = '';
+      };
 
       switch (type) {
         case 'hex':
           checkHex(
             this.hex,
             () => {
-              this.rgb = hexToRgb(divisionString(this.hex, 2)).join(',');
+              const divisionNum = 2;
+              this.rgb = hexToRgb(divisionString(this.hex, divisionNum)).join(',');
               const rgbArr = this.rgb.split(',');
               this.hsb = rgbToHsb(rgbArr).join(',');
             },
@@ -112,12 +115,13 @@ export default defineComponent({
           checkHsb(
             this.hsb,
             () => {
-              this.rgb = hsbToRgb(this.hsb.split(',').map(val => parseInt(val))).join(',');
+              this.rgb = hsbToRgb(this.hsb.split(',').map(val => parseInt(val, 10))).join(',');
               const rgbArr = this.rgb.split(',');
               this.hex = rgbToHex(rgbArr).join('');
             },
             setEmptyOutput
           );
+          break;
         default:
           console.error(`[Warning]illegal type:${type}(ColorPass)`);
       }

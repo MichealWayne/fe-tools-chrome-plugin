@@ -46,21 +46,24 @@
 import { defineComponent } from 'vue';
 
 import { AnyFunc } from '@/types';
-import ajax from '@/api/ajax';
+import ajax from '@/api';
 // test: import RegexList from '@/datas/regex';
 
+type ComponentDataTypes = {
+  filterTxt: string;
+  regexList: any[];
+};
 export default defineComponent({
   name: 'RegexCtn',
 
   props: {
-    back: Function as AnyFunc,
-    default: () => {},
+    back: {
+      type: Function as AnyFunc,
+      default: () => ({}),
+    },
   },
 
-  data(): {
-    filterTxt: string;
-    regexList: any[];
-  } {
+  data(): ComponentDataTypes {
     return {
       filterTxt: '',
       regexList: [],

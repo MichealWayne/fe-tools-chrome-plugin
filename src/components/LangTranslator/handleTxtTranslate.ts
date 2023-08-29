@@ -1,9 +1,9 @@
 /**
  * @author Wayne
  * @Date 2023-07-22 13:57:04
- * @LastEditTime 2023-07-25 09:57:07
+ * @LastEditTime 2023-07-25 19:35:55
  */
-import ajax from '@/api/ajax';
+import ajax from '@/api';
 
 export default function handleTxtTranslate(txt: string): Promise<string> {
   return new Promise(resolve => {

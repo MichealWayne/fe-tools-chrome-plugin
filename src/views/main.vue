@@ -38,7 +38,7 @@
             </li>
           </ul>
         </section>
-        <section class="g-mt50 g-center">
+        <section class="g-mt30 g-center">
           <ul class="m-others g-fs14 u-pt10 u-j-middle">
             <li
               class="f-tc"
@@ -65,7 +65,7 @@
               <span class="g-fs12">PostMan</span>
             </li>
           </ul>
-          <ul class="m-others g-fs14 u-pt30 u-j-middle">
+          <ul class="m-others g-fs14 u-pt10 u-j-middle">
             <li class="f-tc" title="计算器，px/rem/vw换算" @click="showCompName = 'UnitCalculator'">
               <em class="u-icon iconfont icon-calc g-center g-fs36"></em>
               <span class="g-fs12">单位计算器</span>
@@ -81,6 +81,12 @@
             <li class="f-tc" title="常用正则表达式查询" @click="showCompName = 'RegexCtn'">
               <em class="u-icon iconfont icon-regex g-center g-fs36"></em>
               <span class="g-fs12">正则查询</span>
+            </li>
+          </ul>
+          <ul class="m-others g-fs14 u-pt10 u-j-middle">
+            <li class="f-tc" title="常用工具方法查询" @click="showCompName = 'UtilsCtn'">
+              <em class="u-icon icon-utils g-center g-fs36"></em>
+              <span class="g-fs12">工具方法</span>
             </li>
           </ul>
         </section>
@@ -108,14 +114,33 @@ import { defineComponent } from 'vue';
 
 import { getUrlParam } from '@/utils';
 import { getMarkTree, jumpAction } from '@/utils/chrome';
-import ajax from '@/api/ajax';
+import ajax from '@/api';
 
 import MooCtn from './MooCtn.vue';
 import RegexCtn from './RegexCtn.vue';
+import UtilsCtn from './UtilsCtn.vue';
 
 import { DEFAULT_SEARCH_LIST } from '@/constant';
 
 import CompMap from '@/components/';
+
+type ComponentDataTypes = {
+  keywords: string;
+  markList: Array<{ title?: string; [key: string]: unknown }>;
+  logoFold: string | boolean;
+
+  showCompName: string;
+
+  resultList: Array<{
+    link: string;
+    name: string;
+    label?: 'tools' | 'mark';
+    type?: string;
+    color?: string;
+    children?: any;
+  }>;
+  feToolsList: Array<{ name: string; link: string; desc: string; target: any; children?: any }>;
+};
 
 export default defineComponent({
   name: 'MainContent',
@@ -124,25 +149,10 @@ export default defineComponent({
     ...CompMap,
     MooCtn,
     RegexCtn,
+    UtilsCtn,
   },
 
-  data(): {
-    keywords: string;
-    markList: Array<{ title?: string; [key: string]: unknown }>;
-    logoFold: string | boolean;
-
-    showCompName: string;
-
-    resultList: Array<{
-      link: string;
-      name: string;
-      label?: 'tools' | 'mark';
-      type?: string;
-      color?: string;
-      children?: any;
-    }>;
-    feToolsList: Array<{ name: string; link: string; desc: string; target: any; children?: any }>;
-  } {
+  data(): ComponentDataTypes {
     return {
       // 搜索关键词
       keywords: '',
@@ -166,7 +176,9 @@ export default defineComponent({
       this.keywords = _msg;
       this.setSearchResult();
     }
-    getMarkTree((list: any) => (this.markList = list));
+    getMarkTree((list: any) => {
+      this.markList = list;
+    });
     ajax
       .getFeTools()
       .then((data: any) => {
@@ -285,7 +297,8 @@ export default defineComponent({
               result.push(...handleList(item.children));
             }
           });
-        } else if (data.link && data.name) {
+        }
+        if (data.link && data.name) {
           result.push({
             name: data.name,
             link: data.link,
