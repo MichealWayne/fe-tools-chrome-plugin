@@ -40,7 +40,7 @@ export default defineComponent({
   props: {
     back: {
       type: Function as AnyFunc,
-      default: () => {},
+      default: () => ({}),
     },
   },
 

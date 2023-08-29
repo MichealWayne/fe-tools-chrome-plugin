@@ -55,6 +55,7 @@ function handleError(err: any, url: string) {
     statusCode = response.status;
     msg = data.message || statusText;
   } else {
+    // eslint-disable-next-line no-magic-numbers
     statusCode = 600;
     msg = message || `Network Error(${url})`;
   }
@@ -84,21 +85,22 @@ export function post(url: string, ...rest: any[]) {
     .catch(e => handleError(e, url));
 }
 
-const ajax_handler = {
+const AjaxMethods = {
   get,
   post,
 };
 
-const ajaxObj: any = {};
+const api: any = {};
 function handleAjax(info: string) {
   const _info = info.split(' ');
   return function (datas: AnyObj) {
-    return ajax_handler[_info[0] as keyof typeof ajax_handler](_info[1], datas);
+    return AjaxMethods[_info[0] as keyof typeof AjaxMethods](_info[1], datas);
   };
 }
 
-for (const i in AJAX_INTERFACE) {
-  ajaxObj[i] = handleAjax(AJAX_INTERFACE[i as keyof typeof AJAX_INTERFACE]);
+// eslint-disable-next-line guard-for-in
+for (const key in AJAX_INTERFACE) {
+  api[key] = handleAjax(AJAX_INTERFACE[key as keyof typeof AJAX_INTERFACE]);
 }
 
-export default ajaxObj;
+export default api;

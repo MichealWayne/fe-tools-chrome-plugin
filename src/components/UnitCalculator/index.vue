@@ -73,7 +73,7 @@ export default defineComponent({
       // 默认rem转换比例
       defaultRate: parseFloat(localStorage.getItem('feTools_rate') || '') || DEFAULT_REM_RATE,
       // 默认保留位数
-      defaultKeep: parseInt(localStorage.getItem('feTools_keep') || '') || DEFAULT_FIXED_NUMBER,
+      defaultKeep: parseInt(localStorage.getItem('feTools_keep') || '', 10) || DEFAULT_FIXED_NUMBER,
 
       px: '',
       vw: '',
@@ -97,18 +97,19 @@ export default defineComponent({
 
       if (!rate || Number.isNaN(rate) || Number.isNaN(keep)) return;
 
+      const SizeUnit = 10;
       switch (type) {
         case 'px':
           this.rem = (parseFloat(this.px) / rate).toFixed(keep);
-          this.vw = (parseFloat(this.rem) * 10).toFixed(keep);
+          this.vw = (parseFloat(this.rem) * SizeUnit).toFixed(keep);
           break;
         case 'vw':
-          this.rem = (parseFloat(this.vw) / 10).toFixed(keep);
+          this.rem = (parseFloat(this.vw) / SizeUnit).toFixed(keep);
           this.px = (parseFloat(this.rem) * rate).toFixed(keep);
           break;
         case 'rem':
           this.px = (parseFloat(this.rem) * rate).toFixed(keep);
-          this.vw = (parseFloat(this.rem) * 10).toFixed(keep);
+          this.vw = (parseFloat(this.rem) * SizeUnit).toFixed(keep);
           break;
         default:
           console.error(`[Warning]illegal type:${type}(UnitCalculator)`);

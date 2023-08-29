@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 import { AnyFunc } from '@/types';
 
 /**
@@ -162,7 +163,7 @@ export function rgbToHsb(rgb: string[]) {
   const rgbR = Number(rgb[0]);
   const rgbG = Number(rgb[1]);
   const rgbB = Number(rgb[2]);
-  const rgbNums = rgb.map(v => parseInt(v));
+  const rgbNums = rgb.map(v => parseInt(v, 10));
   const max = Math.max(...rgbNums);
   const min = Math.min(...rgbNums);
 

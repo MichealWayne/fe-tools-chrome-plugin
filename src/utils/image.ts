@@ -1,7 +1,7 @@
 /**
  * @author Wayne
  * @Date 2019-10-04 17:27:22
- * @LastEditTime 2023-07-25 10:02:17
+ * @LastEditTime 2023-08-28 21:23:31
  */
 import { compressImg, getFileBase64 } from './index';
 
@@ -53,7 +53,7 @@ export function handleInputUploadImageFile(
     _img.onload = () => {
       resolve({
         imgUrl: _imgUrl,
-        base64result: (compressRate && compressImg(_img, Number(compressRate))) || '',
+        base64result: compressRate ? compressImg(_img, Number(compressRate)) : '',
       });
     };
     _img.onerror = function (e) {

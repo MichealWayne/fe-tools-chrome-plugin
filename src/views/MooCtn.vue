@@ -45,13 +45,16 @@ import { defineComponent } from 'vue';
 
 import { AnyFunc } from '@/types';
 import { jumpAction } from '@/utils/chrome';
-import ajax from '@/api/ajax';
+import ajax from '@/api';
 
 export default defineComponent({
   name: 'MooCtn',
 
   props: {
-    back: Function as AnyFunc,
+    back: {
+      type: Function as AnyFunc,
+      default: () => ({}),
+    },
   },
 
   data(): {
@@ -123,15 +126,16 @@ export default defineComponent({
       jumpAction(item.link);
     },
 
+    // eslint-disable-next-line complexity
     setSearchResult() {
       const keywords = this.keywords.toLowerCase();
 
       const resultList = [];
       if (keywords?.length > 1) {
         // 属性
-        let styleList = this.styleList || [];
+        const styleList = this.styleList || [];
 
-        for (let i = 0, len = styleList.length; i < len; i++) {
+        for (let i = 0; i < styleList.length; i++) {
           const item = styleList[i];
           if (
             item.name.includes(keywords) ||
@@ -139,7 +143,7 @@ export default defineComponent({
             item.type.includes(keywords)
           ) {
             resultList.push({
-              label: 'CSS ' + item.ver,
+              label: `CSS ${item.ver}`,
               color: 'orange',
               name:
                 item.name.replace(keywords, `<strong>${keywords}</strong>`) +
@@ -152,10 +156,11 @@ export default defineComponent({
         }
 
         // 颜色
-        let mooColorList = this.mooColorList || [];
-        for (let i = 0, len = mooColorList.length; i < len; i++) {
-          let item = mooColorList[i];
-          if (~item.name.indexOf(keywords) || ~item.desc.indexOf(keywords)) {
+        const mooColorList = this.mooColorList || [];
+
+        for (let i = 0; i < mooColorList.length; i++) {
+          const item = mooColorList[i];
+          if (item.name.includes(keywords) || item.desc.includes(keywords)) {
             resultList.unshift({
               label: 'moo',
               color: 'red',
@@ -170,10 +175,10 @@ export default defineComponent({
         }
 
         // 方法
-        let mooFuncList = this.mooFuncList || [];
-        for (let i = 0, len = mooFuncList.length; i < len; i++) {
-          let item = mooFuncList[i];
-          if (~item.name.indexOf(keywords) || ~item.desc.indexOf(keywords)) {
+        const mooFuncList = this.mooFuncList || [];
+        for (let i = 0; i < mooFuncList.length; i++) {
+          const item = mooFuncList[i];
+          if (item.name.includes(keywords) || item.desc.includes(keywords)) {
             resultList.unshift({
               label: 'moo-f',
               color: 'blue',
@@ -187,13 +192,13 @@ export default defineComponent({
         }
 
         // 样式
-        let mooClassList = this.mooClassList || [];
-        for (let i = 0, len = mooClassList.length; i < len; i++) {
-          let item = mooClassList[i];
+        const mooClassList = this.mooClassList || [];
+        for (let i = 0; i < mooClassList.length; i++) {
+          const item = mooClassList[i];
           if (
-            ~item.name.indexOf(keywords) ||
-            ~item.desc.indexOf(keywords) ||
-            ~item.val.indexOf(keywords)
+            item.name.includes(keywords) ||
+            item.desc.includes(keywords) ||
+            item.val.includes(keywords)
           ) {
             resultList.push({
               label: 'moo',
@@ -211,95 +216,99 @@ export default defineComponent({
 
     // @todo
     handleStyleList(list: any[]) {
-      let arr = [];
-      for (let i in list) {
-        let name = list[i].name;
-        let child = list[i].children;
+      const arr: Array<{
+        type: string;
+        name: string;
+        desc: string;
+        ver: string;
+      }> = [];
 
-        for (let i = 0, len = child.length; i < len; i++) {
-          let item = child[i];
+      Object.values(list).forEach(item => {
+        const { name, children } = item;
+
+        children.forEach((subItem: any) => {
           arr.push({
             type: name,
-            name: item['属性'],
-            desc: item['说明'],
-            ver: item['CSS版本'],
+            name: subItem['属性'],
+            desc: subItem['说明'],
+            ver: subItem['CSS版本'],
           });
-        }
-      }
+        });
+      });
+
       return arr;
     },
     // @todo
     handleMooColorList(list: any[]) {
-      let arr = [];
-      for (let i = 0, len = list.length; i < len; i++) {
-        let item = list[i];
-        arr.push({
-          name: item['变量'] + ' ' + item['十六进制色值'],
-          desc: item['说明'],
-          show: item['效果'],
-        });
-      }
-      return arr;
+      return list.map(item => ({
+        name: `${item['变量']} ${item['十六进制色值']}`,
+        desc: item['说明'],
+        show: item['效果'],
+      }));
     },
     // @todo
     handleMooFuncList(list: any[]) {
-      let arr = [];
-      for (let i = 0, len = list.length; i < len; i++) {
-        let item = list[i];
-        arr.push({
-          name: item['方法名'] + '(' + item['参数'] + ')',
-          desc: item['说明'],
-          place: item['平台'],
-        });
-      }
-      return arr;
+      return list.map(item => ({
+        name: item['方法名'] + '(' + item['参数'] + ')',
+        desc: item['说明'],
+        place: item['平台'],
+      }));
     },
     // @todo
     handleMooClassList(list: any[]) {
-      let arr = [];
-      for (let i in list) {
-        let name = list[i].name;
-        let child = list[i].children;
+      const arr: Array<{
+        type: string;
+        name: string;
+        desc: string;
+        val: string;
+      }> = [];
 
-        for (let i = 0, len = child.length; i < len; i++) {
-          let item = child[i];
-          if (!item['类/属性名'] || !item['属性']) continue;
+      Object.values(list).forEach(item => {
+        const { name, children } = item;
+        children.forEach((subItem: any) => {
+          if (!subItem['类/属性名'] || !subItem['属性']) return;
+
           arr.push({
             type: name,
-            name: item['类/属性名'],
-            desc: item['说明'],
-            val: item['属性'],
+            name: subItem['类/属性名'],
+            desc: subItem['说明'],
+            val: subItem['属性'],
           });
-        }
-      }
+        });
+      });
       return arr;
     },
 
     // @todo
     handleList(data: any) {
-      for (let i in data) {
-        let name = data[i].name;
+      Object.values(data).forEach(item => {
+        const { name, children } = item;
         if (name === '样式模块词典') {
-          this.styleList = Object.freeze(this.handleStyleList(data[i].children)) as any[];
-        } else if (name === 'moo-css-base词典') {
-          for (let j in data[i].children) {
-            let name = data[i].children[j].name;
-            if (name === '颜色') {
-              this.mooColorList = Object.freeze(
-                this.handleMooColorList(data[i].children[j].children)
-              ) as any[];
-            } else if (name === '方法') {
-              this.mooFuncList = Object.freeze(
-                this.handleMooFuncList(data[i].children[j].children)
-              ) as any[];
-            } else if (name === '样式') {
-              this.mooClassList = Object.freeze(
-                this.handleMooClassList(data[i].children[j].children)
-              ) as any[];
-            }
-          }
+          this.styleList = Object.freeze(this.handleStyleList(children)) as any[];
+          return;
         }
-      }
+        if (name === 'moo-css-base词典') {
+          children.forEach((subItem: any) => {
+            switch (subItem.name) {
+              case '颜色':
+                this.mooColorList = Object.freeze(
+                  this.handleMooColorList(subItem.children)
+                ) as any[];
+                break;
+              case '方法':
+                this.mooFuncList = Object.freeze(this.handleMooFuncList(subItem.children)) as any[];
+                break;
+              case '样式':
+                this.mooClassList = Object.freeze(
+                  this.handleMooClassList(subItem.children)
+                ) as any[];
+                break;
+              default:
+                console.log(`unsupport type name: ${subItem}`);
+            }
+          });
+        }
+      });
     },
   },
 });
