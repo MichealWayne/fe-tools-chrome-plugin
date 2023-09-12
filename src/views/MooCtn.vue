@@ -36,7 +36,7 @@
         <span v-html="item.name"></span>
       </li>
     </ul>
-    <p class="u-link g-mt50 f-tc g-fs14" s-cr_blue @click.stop="back">返回主页</p>
+    <p class="u-link g-mt30 f-tc g-fs14" s-cr_blue @click.stop="back">返回主页</p>
   </section>
 </template>
 

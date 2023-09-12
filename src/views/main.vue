@@ -9,7 +9,7 @@
           <img class="m-logo u-link" src="/icon.png" alt="icon" @click="toHome" />
         </h1>
         <section>
-          <p class="u-c-middle g-mt50">
+          <p class="u-c-middle g-mt40">
             <input
               id="search"
               v-model="keywords"
@@ -74,7 +74,8 @@
               <em class="u-icon iconfont icon-moo g-center g-fs36"></em>
               <span class="g-fs12">Moo-CSS</span>
             </li>
-            <li class="f-tc" title="快速中英文翻译" @click="showCompName = 'LangTranslator'">
+            <!-- @todo 有道翻译API暂时关闭 <li class="f-tc" title="快速中英文翻译" @click="showCompName = 'LangTranslator'"> -->
+            <li class="f-tc" title="快速中英文翻译" @click="toYoudao">
               <em class="u-icon iconfont icon-fanyi g-center g-fs36"></em>
               <span class="g-fs12">快速翻译</span>
             </li>
@@ -203,6 +204,13 @@ export default defineComponent({
      */
     toHome() {
       jumpAction('https://github.com/MichealWayne/fe-tools');
+    },
+
+    /**
+     * 去有道翻译
+     */
+    toYoudao() {
+      jumpAction('https://fanyi.youdao.com/indexLLM.html#/');
     },
 
     /**
