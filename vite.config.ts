@@ -14,12 +14,14 @@ export default defineConfig({
   resolve: {
     //设置别名
     alias: {
+      // eslint-disable-next-line no-undef
       '@': path.resolve(__dirname, 'src'),
     },
   },
   plugins: [vue()],
   server: {
-    port: DEV_PORT, //启动端口
+    // dev启动端口
+    port: DEV_PORT,
     hmr: {
       host: 'localhost',
       port: DEV_PORT,
@@ -29,12 +31,12 @@ export default defineConfig({
       '/fe-tools': {
         target: 'https://blog.michealwayne.cn/',
         changeOrigin: true,
-        rewrite: (path: string) => path.replace(/^\/api/, ''),
+        rewrite: (pathStr: string) => pathStr.replace(/^\/api/, ''),
       },
       '/translate': {
         target: 'https://fanyi.youdao.com/',
         changeOrigin: true,
-        rewrite: (path: string) => path.replace(/^\/api/, ''),
+        rewrite: (pathStr: string) => pathStr.replace(/^\/api/, ''),
       },
     },
   },
