@@ -9,7 +9,7 @@
           <img class="m-logo u-link" src="/icon.png" alt="icon" @click="toHome" />
         </h1>
         <section>
-          <p class="u-c-middle g-mt40">
+          <p class="m-search_input u-c-middle g-mt40 g-pr">
             <input
               id="search"
               v-model="keywords"
@@ -22,6 +22,9 @@
               @blur="handleInputBlur"
               @input="handleInputInput"
             />
+            <span v-show="keywords" class="u-block u-close_ctn g-pa" @click="handleSearchClear">
+              <i class="u-icon icon-close"></i>
+            </span>
             <button s-color="blue" class="u-btn_il j-search g-fs18 g-ml10" @click="setSearchResult">
               Search
             </button>
@@ -68,7 +71,7 @@
           <ul class="m-others g-fs14 u-pt10 u-j-middle">
             <li class="f-tc" title="计算器，px/rem/vw换算" @click="showCompName = 'UnitCalculator'">
               <em class="u-icon iconfont icon-calc g-center g-fs36"></em>
-              <span class="g-fs12">单位计算器</span>
+              <span class="g-fs12">长度换算</span>
             </li>
             <li class="f-tc" title="快速搜索Moo-CSS模块/方法" @click="showCompName = 'MooCtn'">
               <em class="u-icon iconfont icon-moo g-center g-fs36"></em>
@@ -142,6 +145,8 @@ type ComponentDataTypes = {
   }>;
   feToolsList: Array<{ name: string; link: string; desc: string; target: any; children?: any }>;
 };
+
+const QR_CODE_TYPE = 'qr';
 
 export default defineComponent({
   name: 'MainContent',
@@ -217,11 +222,13 @@ export default defineComponent({
      * 输入框聚焦时，logo隐藏
      */
     handleInputFocus() {
-      if (this.keywords) this.logoFold = true;
+      if (this.keywords) {
+        this.logoFold = true;
+      }
     },
 
     /**
-     * 输入框失去焦点时，logo展示
+     * 输入框失去焦点时，如无输入内容则logo展示
      */
     handleInputBlur() {
       if (!this.keywords) {
@@ -231,7 +238,7 @@ export default defineComponent({
     },
 
     /**
-     * 输入时
+     * 输入搜索内容时
      */
     handleInputInput() {
       if (this.keywords) {
@@ -244,7 +251,7 @@ export default defineComponent({
      * 检索结果的点击
      */
     handleResultClick(item: any) {
-      if (item.type === 'qr') {
+      if (item.type === QR_CODE_TYPE) {
         // qr code
         this.showCompName = 'QRCode';
       } else {
@@ -256,7 +263,7 @@ export default defineComponent({
      * 结果的展示文案
      */
     getResultText(item: any) {
-      return item.type === 'qr' ? '生成二维码' : item.name;
+      return item.name || '--';
     },
 
     /**
@@ -268,6 +275,14 @@ export default defineComponent({
         tools: 's-simple',
         mark: 's-red',
       }[type];
+    },
+
+    /**
+     * 清除搜索结果
+     */
+    handleSearchClear() {
+      this.keywords = '';
+      this.handleInputBlur();
     },
 
     /**
@@ -328,9 +343,9 @@ export default defineComponent({
         // link
         this.resultList = [
           {
-            type: 'qr',
+            type: QR_CODE_TYPE,
             link: '',
-            name: 'qr',
+            name: '生成二维码',
           },
         ];
         return;
@@ -344,26 +359,27 @@ export default defineComponent({
         color?: string;
         children?: any;
       }> = [];
-      if (keywords && keywords.length > 2) {
+      if (keywords?.length > 2) {
         const FEToolsData = this.feToolsList || [];
 
+        // fe-tools链接匹配
         FEToolsData.forEach(item => {
           const IS_SUPPORT_KEYWORDS =
             item.name.includes(keywords) ||
-            (item.desc && item.desc.includes(keywords)) ||
+            item.desc?.includes(keywords) ||
             (item.target && item.target.join(' | ').includes(keywords));
 
           if (IS_SUPPORT_KEYWORDS) {
             if (!item.link) {
               if (item.children?.length) {
-                item.children.map((child: any) => {
+                item.children.forEach((child: any) => {
                   resultList.push({
                     label: 'tools',
                     color: 'orange',
                     link: child.link,
-                    name:
-                      child.name.replace(keywords, `<strong>${keywords}</strong>`) +
-                      ` <em>(${child.desc})</em>`,
+                    name: `${child.name.replace(keywords, `<strong>${keywords}</strong>`)} <em>(${
+                      child.desc
+                    })</em>`,
                   });
                 });
               }
@@ -372,30 +388,30 @@ export default defineComponent({
                 label: 'tools',
                 color: 'orange',
                 link: item.link,
-                name:
-                  item.name.replace(keywords, `<strong>${keywords}</strong>`) +
-                  ` <em s-ft_sub_>(${item.desc})</em>`,
+                name: `${item.name.replace(
+                  keywords,
+                  `<strong>${keywords}</strong>`
+                )} <em s-ft_sub_>(${item.desc})</em>`,
               });
             }
           }
         });
       }
 
-      // 收藏夹
+      // 收藏夹匹配
       const MarkList = this.markList || [];
-      if (MarkList) {
-        MarkList.forEach(item => {
-          if (item.title?.toLowerCase().includes(keywords)) {
-            resultList.push({
-              link: item.url as string,
-              name: item.title.replace(keywords, `<strong>${keywords}</strong>`) as string,
-              color: 'red',
-              label: 'mark',
-            });
-          }
-        });
-      }
+      MarkList?.forEach(item => {
+        if (item.title?.toLowerCase().includes(keywords)) {
+          resultList.push({
+            link: item.url as string,
+            name: item.title.replace(keywords, `<strong>${keywords}</strong>`) as string,
+            color: 'red',
+            label: 'mark',
+          });
+        }
+      });
 
+      // 默认检索匹配
       DEFAULT_SEARCH_LIST.forEach(item => {
         resultList.push({
           link: item.link + keywords,
@@ -405,6 +421,7 @@ export default defineComponent({
       this.resultList = resultList;
     },
 
+    // 隐藏弹窗模块（除了完整页面，Ctn为标志）
     hideFixCtn() {
       if (this.showCompName.includes('Ctn')) {
         return;

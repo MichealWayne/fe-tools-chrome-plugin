@@ -42,6 +42,8 @@ module.exports = {
         varsIgnorePattern: '^h$',
       },
     ],
+    indent: [0],
+    'no-alert': 'off',
     'no-unused-vars': [
       'error',
       {

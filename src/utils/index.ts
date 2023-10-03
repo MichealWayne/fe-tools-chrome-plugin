@@ -14,17 +14,15 @@
  * @example
  *   getUrlParam('fundCode'); // '000697'
  */
-export function getUrlParam(name: string, decode?: string) {
-  const reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)');
-  //匹配目标参数
+export function getUrlParam(name: string, decode?: (s: string) => string) {
+  const reg = new RegExp(`(^|&)${name}=([^&]*)(&|$)`);
   const res = window.location.search.substring(1).match(reg);
-
-  if (res) {
+  if (res !== null) {
     if (!decode) {
       return decodeURI(res[2]);
     } else {
       // eslint-disable-next-line no-eval
-      return eval(`${decode}(res[2])`);
+      return decode(res[2]);
     }
   }
   return null;
@@ -52,22 +50,24 @@ export function handleQRCode(url: string, type = 'canvas') {
       return qrnode.toDataURL('image/png');
     },
 
-    downloadQR() {
+    downloadQR(renderType = 'svg') {
       const qrnode = new AraleQRCode({
         text: url,
-        render: 'svg',
+        render: renderType === 'svg' ? renderType : 'canvas',
       });
 
       const ctn = document.createElement('div');
       ctn.appendChild(qrnode);
 
+      const blobType = renderType === 'svg' ? 'application/svg' : `image/${renderType}`;
+      alert(blobType);
       const blobContent = new Blob([ctn.innerHTML], {
-        type: 'application/svg',
+        type: `application/${blobType}`,
       });
       const blobUrl = window.URL.createObjectURL(blobContent);
       const eleLink = document.createElement('a');
 
-      eleLink.download = 'qr-code.svg';
+      eleLink.download = `qr-code.${renderType}`;
       eleLink.style.display = 'none';
       eleLink.href = blobUrl;
 

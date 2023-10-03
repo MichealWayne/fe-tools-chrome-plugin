@@ -10,10 +10,11 @@
       title="右键可保存二维码图片"
       alt="qrcode"
     />
+    <p class="f-tc g-fs12 g-mt10">*右键选中图片可保存二维码PNG图片</p>
     <button
-      class="u-btn u-w100 u-h40 g-center g-mt20"
+      class="u-btn u-w100 u-h40 g-center g-mt10"
       s-color="blue"
-      @click.stop="handleDownloadQR"
+      @click.stop="() => handleDownloadQR()"
     >
       下载SVG文件
     </button>
@@ -99,8 +100,8 @@ export default defineComponent({
     /**
      * 下载二维码
      */
-    handleDownloadQR() {
-      handleQRCode(this.qrdownloadUrl)!.downloadQR();
+    handleDownloadQR(type = 'svg') {
+      handleQRCode(this.qrdownloadUrl)!.downloadQR(type);
     },
   },
 });

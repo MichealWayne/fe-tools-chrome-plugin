@@ -61,6 +61,34 @@
   filter: blur(10px);
 }
 
+.icon-close {
+  position: relative;
+}
+
+.icon-close::before,
+.icon-close::after {
+  position: absolute;
+  content: ' ';
+  background-color: #666;
+  left: 20px;
+  width: 1px;
+  height: 15px;
+}
+.icon-close::before {
+  transform: rotate(45deg);
+}
+.icon-close::after {
+  transform: rotate(-45deg);
+}
+
+.m-search_input .u-close_ctn {
+  left: 335px;
+  top: 15px;
+  width: 30px;
+  height: 25px;
+  cursor: pointer;
+}
+
 .icon-postman {
   width: 40px;
   height: 40px;
