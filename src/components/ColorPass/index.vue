@@ -46,7 +46,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+export default {
+  name: 'ColorPass',
+};
+</script>
+
+<script lang="ts" setup>
+import { ref } from 'vue';
 
 import RemarkInfos from './RemarkInfos.vue';
 
@@ -61,73 +67,59 @@ import {
   checkHsb,
 } from '@/utils/color';
 
-export default defineComponent({
-  name: 'ColorPass',
+const hex = ref('');
+const rgb = ref('');
+const hsb = ref('');
 
-  components: {
-    'remark-infos': RemarkInfos,
-  },
+const stopPropagation = () => false;
 
-  data() {
-    return {
-      hex: '',
-      rgb: '',
-      hsb: '',
-    };
-  },
-  methods: {
-    stopPropagation() {
-      return false;
-    },
-    changeColor(e: Event) {
-      if (!e || !(e.target instanceof HTMLElement)) return;
-      const { type } = e.target.dataset;
+const changeColor = (e: Event) => {
+  if (!e || !(e.target instanceof HTMLElement)) return;
+  const { type } = e.target.dataset;
 
-      const setEmptyOutput = () => {
-        this.hsb = this.rgb = '';
-      };
+  const setEmptyOutput = () => {
+    hsb.value = rgb.value = '';
+  };
 
-      switch (type) {
-        case 'hex':
-          checkHex(
-            this.hex,
-            () => {
-              const divisionNum = 2;
-              this.rgb = hexToRgb(divisionString(this.hex, divisionNum)).join(',');
-              const rgbArr = this.rgb.split(',');
-              this.hsb = rgbToHsb(rgbArr).join(',');
-            },
-            setEmptyOutput
-          );
-          break;
-        case 'rgb':
-          checkRgb(
-            this.rgb,
-            () => {
-              const rgbArr = this.rgb.split(',');
-              this.hex = rgbToHex(rgbArr).join('');
-              this.hsb = rgbToHsb(rgbArr).join(',');
-            },
-            setEmptyOutput
-          );
-          break;
-        case 'hsb':
-          checkHsb(
-            this.hsb,
-            () => {
-              this.rgb = hsbToRgb(this.hsb.split(',').map(val => parseInt(val, 10))).join(',');
-              const rgbArr = this.rgb.split(',');
-              this.hex = rgbToHex(rgbArr).join('');
-            },
-            setEmptyOutput
-          );
-          break;
-        default:
-          console.error(`[Warning]illegal type:${type}(ColorPass)`);
-      }
-    },
-  },
-});
+  switch (type) {
+    case 'hex':
+      checkHex(
+        hex.value,
+        () => {
+          const divisionNum = 2;
+          rgb.value = hexToRgb(divisionString(hex.value, divisionNum)).join(',');
+          const rgbArr = rgb.value.split(',');
+          hsb.value = rgbToHsb(rgbArr).join(',');
+        },
+        setEmptyOutput
+      );
+      break;
+    case 'rgb':
+      checkRgb(
+        rgb.value,
+        () => {
+          const rgbArr = rgb.value.split(',');
+          hex.value = rgbToHex(rgbArr).join('');
+          hsb.value = rgbToHsb(rgbArr).join(',');
+        },
+        setEmptyOutput
+      );
+      break;
+    case 'hsb':
+      checkHsb(
+        hsb.value,
+        () => {
+          rgb.value = hsbToRgb(hsb.value.split(',').map(val => parseInt(val, 10))).join(',');
+          const rgbArr = rgb.value.split(',');
+          hex.value = rgbToHex(rgbArr).join('');
+        },
+        setEmptyOutput
+      );
+      break;
+    default:
+      console.error(`[Warning]illegal type:${type}(ColorPass)`);
+  }
+};
 </script>
 
 <style lang="less" module>

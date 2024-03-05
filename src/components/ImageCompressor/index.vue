@@ -2,7 +2,7 @@
   <div class="u-w400" @click.stop="stopPropagation">
     <!-- 实际的上传入口 -->
     <input
-      ref="uploadPic"
+      ref="uploadPicElem"
       class="z-hide"
       type="file"
       accept="image/*"
@@ -29,7 +29,7 @@
     <div v-if="imgUrl" class="f-tc g-pr">
       <em
         :class="$style.close"
-        class="u-icon icon-close u-link g-pa"
+        class="u-icon u-icon-close u-link g-pa"
         title="点击重置图片"
         @click="reset"
       >
@@ -63,150 +63,135 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+export default {
+  name: 'ImageCompressor',
+};
+</script>
+
+<script lang="ts" setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 import { getCompressedImageBase64, handleInputUploadImageFile } from '@/utils/image';
 
 import IconInbox from './IconInbox.vue';
 import IconReset from './IconReset.vue';
 
-export default defineComponent({
-  name: 'ImageCompressor',
+// 图片压缩比例
+const compressRate = ref<number>();
 
-  components: {
-    'icon-inbox': IconInbox,
-    'icon-reset': IconReset,
-  },
+// 页面展示的图片地址
+const imgUrl = ref('');
 
-  data() {
-    return {
-      // 图片压缩比例
-      compressRate: '',
+// 图片压缩后的base64字符串
+const base64result = ref('');
 
-      // 页面展示的图片地址
-      imgUrl: '',
+// 上传图标元素
+const uploadPicElem = ref<any>(null);
 
-      // 图片压缩后的base64字符串
-      base64result: '',
-    };
-  },
+const stopPropagation = () => false;
 
-  mounted() {
-    this.setEvents();
-  },
+/**
+ * base64结果点击选中文案
+ */
+const textFocus = (e: Event) => {
+  if (!e || !(e.target instanceof HTMLTextAreaElement)) return;
+  e.target.select();
+};
 
-  beforeUnmount() {
-    this.removeEvents();
-  },
+/**
+ * 重置状态
+ */
+const reset = () => {
+  imgUrl.value = '';
+  base64result.value = '';
+};
 
-  methods: {
-    stopPropagation() {
-      return false;
-    },
+/**
+ * 比例调整输入框失焦时重新压缩
+ */
+const handleRateBlur = () => {
+  getCompressedImageBase64(imgUrl.value, compressRate.value)
+    .then(base64 => {
+      base64result.value = base64;
+    })
+    .catch(e => {
+      console.error(e);
+      alert('转换失败，请重试');
+    });
+};
 
-    /**
-     * base64结果点击选中文案
-     */
-    textFocus(e: Event) {
-      if (!e || !(e.target instanceof HTMLTextAreaElement)) return;
-      e.target.select();
-    },
+/**
+ * 图片文件上传
+ */
+const handleFileList = (fileList?: FileList) => {
+  handleInputUploadImageFile(fileList, compressRate.value)
+    .then(({ imgUrl: newImgUrl, base64result: newBase64result }) => {
+      imgUrl.value = newImgUrl;
+      base64result.value = newBase64result;
+    })
+    .catch(e => alert(e));
+};
 
-    /**
-     * 重置状态
-     */
-    reset() {
-      this.imgUrl = '';
-      this.base64result = '';
-    },
+/**
+ * 实际调用的文件上传输入框处理
+ */
+const _handleInputChange = (e: Event) => {
+  if (!e || !(e.target instanceof HTMLInputElement)) return;
 
-    /**
-     * 比例调整输入框失焦时重新压缩
-     */
-    handleRateBlur() {
-      getCompressedImageBase64(this.imgUrl, this.compressRate)
-        .then(base64 => {
-          this.base64result = base64;
-        })
-        .catch(e => {
-          console.error(e);
-          alert('转换失败，请重试');
-        });
-    },
+  handleFileList(e.target.files!);
+};
 
-    /**
-     * 图片文件上传
-     */
-    handleFileList(fileList?: FileList) {
-      handleInputUploadImageFile(fileList, this.compressRate)
-        .then(({ imgUrl, base64result }) => {
-          this.imgUrl = imgUrl;
-          this.base64result = base64result;
-        })
-        .catch(e => alert(e));
-    },
+/**
+ * 拖拽上传文件
+ */
+const handleBoxDrag = (e: Event) => {
+  if (!e) return;
 
-    /**
-     * 实际调用的文件上传输入框处理
-     */
-    _handleInputChange(e: Event) {
-      if (!e || !(e.target instanceof HTMLInputElement)) return;
+  // 取消浏览器默认拖拽效果
+  e.preventDefault();
 
-      this.handleFileList(e.target.files!);
-    },
+  // 获取拖拽中的文件对象
+  const { files } = (e as DragEvent).dataTransfer!;
+  handleFileList(files);
+};
+const handleBoxClick = () => {
+  (uploadPicElem.value as HTMLInputElement).click();
+};
 
-    /**
-     * 拖拽上传文件
-     */
-    handleBoxDrag(e: Event) {
-      if (!e) return;
+const setEvents = () => {
+  const box = document.querySelector('#dragbox');
 
-      // 取消浏览器默认拖拽效果
-      e.preventDefault();
+  // forbid default
+  document.addEventListener('drop', e => {
+    e.preventDefault();
+  });
 
-      // 获取拖拽中的文件对象
-      const { files } = (e as DragEvent).dataTransfer!;
-      this.handleFileList(files);
-    },
-    handleBoxClick() {
-      (this.$refs.uploadPic as HTMLInputElement).click();
-    },
+  if (!box) return;
 
-    /**
-     * 事件设置
-     */
-    setEvents() {
-      const box = document.querySelector('#dragbox');
+  box.addEventListener('dragover', e => {
+    box?.classList.add('over');
+    e.preventDefault();
+  });
+  box.addEventListener('dragleave', e => {
+    box?.classList.remove('over');
+    e.preventDefault();
+  });
 
-      // forbid default
-      document.addEventListener('drop', e => {
-        e.preventDefault();
-      });
+  box.addEventListener('drop', handleBoxDrag, false);
+};
+const removeEvents = () => {
+  const box = document.querySelector('#dragbox');
+  if (!box) return;
 
-      if (!box) return;
+  box.removeEventListener('drop', handleBoxDrag);
+};
 
-      box.addEventListener('dragover', e => {
-        box?.classList.add('over');
-        e.preventDefault();
-      });
-      box.addEventListener('dragleave', e => {
-        box?.classList.remove('over');
-        e.preventDefault();
-      });
+onMounted(() => {
+  setEvents();
+});
 
-      box.addEventListener('drop', this.handleBoxDrag, false);
-    },
-
-    /**
-     * 事件移除
-     */
-    removeEvents() {
-      const box = document.querySelector('#dragbox');
-      if (!box) return;
-
-      box.removeEventListener('drop', this.handleBoxDrag);
-    },
-  },
+onBeforeUnmount(() => {
+  removeEvents();
 });
 </script>
 

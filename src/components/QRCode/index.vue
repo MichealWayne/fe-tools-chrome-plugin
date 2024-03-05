@@ -22,87 +22,84 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+export default {
+  name: 'QRCode',
+};
+</script>
+
+<script lang="ts" setup>
+import { defineProps, ref, watch, toRefs, onMounted } from 'vue';
 
 import { getLocalTabUrl } from '@/utils/chrome';
 import { handleQRCode } from '@/utils';
 
-export default defineComponent({
-  name: 'QRCode',
-
-  props: {
-    keywords: {
-      type: String,
-      default: '',
-    },
+const props = defineProps({
+  keywords: {
+    type: String,
+    default: '',
   },
+});
 
-  data() {
-    return {
-      originWords: '',
+const { keywords } = toRefs(props);
 
-      QRUrl: '',
-      qrdownloadUrl: '',
-    };
-  },
+const originWords = ref('');
 
-  watch: {
-    keywords(newVal, oldVal) {
-      if (newVal !== oldVal && newVal !== this.originWords) {
-        this.originWords = newVal;
-      }
-    },
-    originWords(newVal, oldVal) {
-      if (newVal && newVal !== oldVal) {
-        this.handleQR();
-      }
-    },
-  },
+const QRUrl = ref('');
+const qrdownloadUrl = ref('');
 
-  mounted() {
-    this.originWords = this.keywords || '';
-    this.handleQR();
-  },
+const handleStop = (e: Event) => {
+  e.stopPropagation();
+};
 
-  methods: {
-    handleStop(e: Event) {
-      e.stopPropagation();
-    },
+/**
+ * 手动更新
+ */
+const handleUpdate = () => {
+  handleQR();
+};
 
-    /**
-     * 手动更新
-     */
-    handleUpdate() {
-      this.handleQR();
-    },
+/**
+ * 生成二维码
+ */
+const handleQR = () => {
+  const keywords = originWords.value;
+  const useInputUrl = keywords?.includes('http');
 
-    /**
-     * 生成二维码
-     */
-    handleQR() {
-      const keywords = this.originWords;
-      const useInputUrl = keywords?.includes('http');
+  if (useInputUrl) {
+    // 输入链接
+    qrdownloadUrl.value = keywords;
+    QRUrl.value = handleQRCode(keywords)!.getImgUrl();
+  } else {
+    // 当前tab的URL
+    getLocalTabUrl((url: string) => {
+      originWords.value = url;
+      qrdownloadUrl.value = url;
+      QRUrl.value = handleQRCode(url)!.getImgUrl();
+    });
+  }
+};
 
-      if (useInputUrl) {
-        // 输入链接
-        this.qrdownloadUrl = keywords;
-        this.QRUrl = handleQRCode(keywords)!.getImgUrl();
-      } else {
-        // 当前tab的URL
-        getLocalTabUrl((url: string) => {
-          this.originWords = url;
-          this.qrdownloadUrl = url;
-          this.QRUrl = handleQRCode(url)!.getImgUrl();
-        });
-      }
-    },
+/**
+ * 下载二维码
+ */
+const handleDownloadQR = (type = 'svg') => {
+  handleQRCode(qrdownloadUrl.value)!.downloadQR(type);
+};
 
-    /**
-     * 下载二维码
-     */
-    handleDownloadQR(type = 'svg') {
-      handleQRCode(this.qrdownloadUrl)!.downloadQR(type);
-    },
-  },
+watch(keywords, (newVal, oldVal) => {
+  if (newVal !== oldVal && newVal !== originWords.value) {
+    originWords.value = newVal;
+  }
+});
+
+watch(originWords, (newVal, oldVal) => {
+  if (newVal && newVal !== oldVal) {
+    handleQR();
+  }
+});
+
+onMounted(() => {
+  originWords.value = keywords.value || '';
+  handleQR();
 });
 </script>

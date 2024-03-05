@@ -1,7 +1,7 @@
 /*
  * @author Wayne
  * @Date 2022-11-27 17:45:33
- * @LastEditTime 2023-07-09 14:12:04
+ * @LastEditTime 2024-03-04 19:16:45
  */
 module.exports = {
   parser: 'vue-eslint-parser',
@@ -43,6 +43,8 @@ module.exports = {
       },
     ],
     indent: [0],
+    'no-console': 'off',
+    'no-extra-parens': [0],
     'no-alert': 'off',
     'no-unused-vars': [
       'error',

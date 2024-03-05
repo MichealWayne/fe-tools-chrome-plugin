@@ -1,7 +1,7 @@
 /**
  * @author Wayne
  * @Date 2019-10-02 14:48:29
- * @LastEditTime 2023-07-24 14:31:28
+ * @LastEditTime 2023-11-26 10:02:13
  */
 
 import { AnyFunc, AnyObj } from '@/types';
@@ -13,7 +13,10 @@ import { IS_DEV } from '@/constant';
  * @param {string} url
  */
 export function jumpAction(url: string) {
-  if (!url) return;
+  if (!url) {
+    IS_DEV && console.warn(`no jump url.(jumpAction, url: ${url})`);
+    return;
+  }
   try {
     chrome.tabs.create({
       url,
@@ -61,12 +64,13 @@ export function getMarkTree(cb: AnyFunc) {
         });
       }
 
-      if (item.children && item.children.length) {
+      if (item.children?.length) {
         clearUpFavorite(item.children);
       }
       i--;
     }
   }
+
   try {
     chrome.bookmarks.getTree(function (bookmarkArray: any[]) {
       try {

@@ -60,61 +60,58 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+export default {
+  name: 'UnitCalculator',
+};
+</script>
+
+<script lang="ts" setup>
+import { ref } from 'vue';
 
 const DEFAULT_REM_RATE = 75;
 const DEFAULT_FIXED_NUMBER = 6;
 
-export default defineComponent({
-  name: 'UnitCalculator',
+// 默认rem转换比例
+const defaultRate = ref(parseFloat(localStorage.getItem('feTools_rate') || '') || DEFAULT_REM_RATE);
+// 默认保留位数
+const defaultKeep = ref(
+  parseInt(localStorage.getItem('feTools_keep') || '', 10) || DEFAULT_FIXED_NUMBER
+);
 
-  data() {
-    return {
-      // 默认rem转换比例
-      defaultRate: parseFloat(localStorage.getItem('feTools_rate') || '') || DEFAULT_REM_RATE,
-      // 默认保留位数
-      defaultKeep: parseInt(localStorage.getItem('feTools_keep') || '', 10) || DEFAULT_FIXED_NUMBER,
+const px = ref('');
+const vw = ref('');
+const rem = ref('');
 
-      px: '',
-      vw: '',
-      rem: '',
-    };
-  },
-  methods: {
-    stopPropagation() {
-      return false;
-    },
+const stopPropagation = () => false;
 
-    /**
-     * 监听单位值改变
-     */
-    changeValue(e: Event) {
-      if (!e || !(e.target instanceof HTMLElement)) return;
+/**
+ * 监听单位值改变
+ */
+const changeValue = (e: Event) => {
+  if (!e || !(e.target instanceof HTMLElement)) return;
 
-      const { type } = e.target!.dataset;
-      const rate = this.defaultRate;
-      const keep = this.defaultKeep;
+  const { type } = e.target!.dataset;
+  const rate = defaultRate.value;
+  const keep = defaultKeep.value;
 
-      if (!rate || Number.isNaN(rate) || Number.isNaN(keep)) return;
+  if (!rate || Number.isNaN(rate) || Number.isNaN(keep)) return;
 
-      const SizeUnit = 10;
-      switch (type) {
-        case 'px':
-          this.rem = (parseFloat(this.px) / rate).toFixed(keep);
-          this.vw = (parseFloat(this.rem) * SizeUnit).toFixed(keep);
-          break;
-        case 'vw':
-          this.rem = (parseFloat(this.vw) / SizeUnit).toFixed(keep);
-          this.px = (parseFloat(this.rem) * rate).toFixed(keep);
-          break;
-        case 'rem':
-          this.px = (parseFloat(this.rem) * rate).toFixed(keep);
-          this.vw = (parseFloat(this.rem) * SizeUnit).toFixed(keep);
-          break;
-        default:
-          console.error(`[Warning]illegal type:${type}(UnitCalculator)`);
-      }
-    },
-  },
-});
+  const SizeUnit = 10;
+  switch (type) {
+    case 'px':
+      rem.value = (parseFloat(px.value) / rate).toFixed(keep);
+      vw.value = (parseFloat(rem.value) * SizeUnit).toFixed(keep);
+      break;
+    case 'vw':
+      rem.value = (parseFloat(vw.value) / SizeUnit).toFixed(keep);
+      px.value = (parseFloat(rem.value) * rate).toFixed(keep);
+      break;
+    case 'rem':
+      px.value = (parseFloat(rem.value) * rate).toFixed(keep);
+      vw.value = (parseFloat(rem.value) * SizeUnit).toFixed(keep);
+      break;
+    default:
+      console.error(`[Warning]illegal type:${type}(UnitCalculator)`);
+  }
+};
 </script>

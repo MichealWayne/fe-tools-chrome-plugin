@@ -100,12 +100,12 @@ export function hexToRgb(hex: string[]) {
  * @return {number[]}
  */
 export function hsbToRgb(hsb: number[]) {
-  let r = 0,
-    g = 0,
-    b = 0;
+  let r = 0;
+  let g = 0;
+  let b = 0;
   const h = hsb[0];
-  let s = hsb[1],
-    v = hsb[2];
+  let s = hsb[1];
+  let v = hsb[2];
   s = s / 100;
   v = v / 100;
   const i = Math.round((h / 60) % 6);
