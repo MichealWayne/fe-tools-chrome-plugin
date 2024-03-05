@@ -16,8 +16,10 @@
           placeholder="请输入Api地址"
         />
 
-        <span s-cr_blue class="u-pm_xdemo u-link g-ml10" @click="setDemo('GET')">Get示例</span>
-        <span s-cr_blue class="u-pm_xdemo u-link" @click="setDemo('POST')">Post示例</span>
+        <span s-cr_blue class="u-pm_xdemo u-link g-ml10" @click="setDemoData('GET')">Get示例</span>
+        <span s-cr_blue class="u-pm_xdemo u-link g-ml10" @click="setDemoData('POST')"
+          >Post示例</span
+        >
       </div>
 
       <div class="g-mt20 u-w800 g-center">
@@ -80,10 +82,10 @@
 
         <div v-show="tapType === 'json'" id="tab-json" class="m-tab_ctn g-pr">
           <div id="formattingMsg"><span class="x-loading"></span>格式化中...</div>
-          <div id="jfCallbackName_start" class="callback-name" v-html="jfCallbackName_start"></div>
+          <div id="jfCallbackNameStart" class="callback-name" v-html="jfCallbackNameStart"></div>
           <div id="jfContent" v-html="errorMsgForJson || resultContent"></div>
           <pre id="jfContent_pre"></pre>
-          <div id="jfCallbackName_end" class="callback-name" v-html="jfCallbackName_end"></div>
+          <div id="jfCallbackNameEnd" class="callback-name" v-html="jfCallbackNameEnd"></div>
         </div>
 
         <div v-show="tapType === 'header'" id="tab-header" class="m-tab_ctn g-fs16">
@@ -130,8 +132,8 @@ export default defineComponent({
       resultContent: '',
       paramContent: '',
       responseHeaders: [],
-      jfCallbackName_start: '',
-      jfCallbackName_end: '',
+      jfCallbackNameStart: '',
+      jfCallbackNameEnd: '',
       errorMsgForJson: '',
     };
   },
@@ -163,25 +165,20 @@ export default defineComponent({
           try {
             body = JSON.parse(bodyStr);
           } catch (e) {
-            alert('参数格式有误(' + (e as Error).message + ')');
+            alert(`参数格式有误(${(e as Error).message})`);
           }
           if (this.contentType === 'multipart/form-data') {
-            let fd = new FormData();
-            for (let i in body) {
-              fd.append(i, body[i] as string);
-            }
+            const fd = new FormData();
+            Object.keys(body).forEach(key => fd.append(key, body[key] as string));
+
             requestBody = fd;
           } else {
-            let arr = [];
-            for (let i in body) {
-              arr.push(i + '=' + body[i]);
-            }
+            const arr = Object.keys(body).map(key => `${key}=${body[key]}`);
             requestBody = arr.join('&');
           }
         }
       }
 
-      // @todo
       xhr.addEventListener('readystatechange', (resp: any) => {
         let result = 'Loading...';
         switch (resp.target.readyState) {
@@ -209,6 +206,7 @@ export default defineComponent({
             this.jsonFormat(result);
             this.showTap = true;
             break;
+          default:
         }
         this.resultContent = result || '无数据';
       });
@@ -221,10 +219,11 @@ export default defineComponent({
       }
     },
 
+    // eslint-disable-next-line complexity
     jsonFormat(source: string) {
       this.errorMsgForJson = '';
-      this.jfCallbackName_start = '';
-      this.jfCallbackName_end = '';
+      this.jfCallbackNameStart = '';
+      this.jfCallbackNameEnd = '';
 
       if (!source) {
         return false;
@@ -238,9 +237,9 @@ export default defineComponent({
       // 下面校验给定字符串是否为一个合法的json
       try {
         // 再看看是不是jsonp的格式
-        let reg = /^([\w\.]+)\(\s*([\s\S]*)\s*\)$/gim;
-        let matches = reg.exec(source);
-        if (matches != null) {
+        const reg = /^([\w\.]+)\(\s*([\s\S]*)\s*\)$/gim;
+        const matches = reg.exec(source);
+        if (matches) {
           funcName = matches[1];
           source = matches[2];
         }
@@ -265,7 +264,7 @@ export default defineComponent({
       }
 
       // 是json格式，可以进行JSON自动格式化
-      if (jsonObj != null && typeof jsonObj === 'object' && !this.errorMsgForJson.length) {
+      if (jsonObj !== null && typeof jsonObj === 'object' && !this.errorMsgForJson.length) {
         try {
           // 要尽量保证格式化的东西一定是一个json，所以需要把内容进行JSON.stringify处理
           source = JSON.stringify(jsonObj);
@@ -274,21 +273,25 @@ export default defineComponent({
           this.errorMsgForJson = (err as any).message;
         }
 
-        if (!this.errorMsgForJson.length) {
+        if (!this.errorMsgForJson?.length) {
           // 格式化
           JSONFormat(source);
 
           // 如果是JSONP格式的，需要把方法名也显示出来
-          if (funcName != null) {
-            this.jfCallbackName_start = funcName + '(';
-            this.jfCallbackName_end = ')';
+          if (funcName !== null) {
+            this.jfCallbackNameStart = funcName + '(';
+            this.jfCallbackNameEnd = ')';
           } else {
-            this.jfCallbackName_start = '';
-            this.jfCallbackName_end = '';
+            this.jfCallbackNameStart = '';
+            this.jfCallbackNameEnd = '';
           }
         }
       }
 
+      this.handleJsonErrorDisplay();
+    },
+
+    handleJsonErrorDisplay() {
       // 不是json，都格式化不了，一定会出错
       if (this.errorMsgForJson) {
         const el = document.querySelector('#optionBar');
@@ -296,7 +299,7 @@ export default defineComponent({
       }
     },
 
-    setDemo: function (type: string) {
+    setDemoData(type: string) {
       switch (type) {
         case 'GET':
           this.urlContent = 'https://blog.michealwayne.cn/fe-tools/package.json';

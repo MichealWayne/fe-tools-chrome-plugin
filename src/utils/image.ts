@@ -1,7 +1,7 @@
 /**
  * @author Wayne
  * @Date 2019-10-04 17:27:22
- * @LastEditTime 2023-08-28 21:23:31
+ * @LastEditTime 2024-03-04 15:40:34
  */
 import { compressImg, getFileBase64 } from './index';
 
@@ -11,7 +11,7 @@ import { compressImg, getFileBase64 } from './index';
  * @param rate
  * @returns
  */
-export function getCompressedImageBase64(imgUrl: string, rate: number | string): Promise<string> {
+export function getCompressedImageBase64(imgUrl: string, rate = 1): Promise<string> {
   return new Promise((resolve, reject) => {
     const rateNum = Number(rate) || 1;
     if (rateNum > 0 && rateNum <= 1) {

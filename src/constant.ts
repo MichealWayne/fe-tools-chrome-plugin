@@ -1,7 +1,7 @@
 /**
  * @author Wayne
  * @Date 2019-10-08 13:54:41
- * @LastEditTime 2023-07-25 19:34:58
+ * @LastEditTime 2023-09-12 11:01:38
  */
 
 export const IS_DEV = import.meta.env.MODE === 'development';
@@ -10,7 +10,8 @@ export const API_HOST = import.meta.env.VITE_API_HOST;
 
 export const AJAX_INTERFACE = {
   getFeTools: `get ${API_HOST}fe-tools/datas/tools.json`,
-  handleTranslate: `get ${IS_DEV ? '' : 'https://fanyi.youdao.com'}/translate`,
+  // handleTranslate: `get ${IS_DEV ? '' : 'https://fanyi.youdao.com'}/translate`,
+  handleTranslate: `get ${IS_DEV ? '/translate' : 'https://translate.appworlds.cn'}`,
   getMooCSS: `get ${API_HOST}fe-tools/datas/moo-css.json`,
   getRegex: `get ${API_HOST}fe-tools/datas/regex.json`,
   getUtilFuncs: `get ${API_HOST}fe-tools/stable/data/yafReflectionMap.json`,

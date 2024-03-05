@@ -17,13 +17,12 @@
 export function getUrlParam(name: string, decode?: (s: string) => string) {
   const reg = new RegExp(`(^|&)${name}=([^&]*)(&|$)`);
   const res = window.location.search.substring(1).match(reg);
-  if (res !== null) {
+  if (res) {
     if (!decode) {
       return decodeURI(res[2]);
-    } else {
-      // eslint-disable-next-line no-eval
-      return decode(res[2]);
     }
+    // eslint-disable-next-line no-eval
+    return decode(res[2]);
   }
   return null;
 }
