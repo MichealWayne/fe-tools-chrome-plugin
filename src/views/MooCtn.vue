@@ -42,6 +42,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { langManager } from '@/utils/i18n';
 
 import { AnyFunc } from '@/types';
 import { jumpAction } from '@/utils/chrome';
@@ -93,6 +94,13 @@ export default defineComponent({
     });
   },
   methods: {
+    /**
+     * 翻译方法
+     */
+    t(key: string) {
+      return langManager.t(key);
+    },
+
     toMooHome() {
       jumpAction('https://blog.michealwayne.cn/Moo-CSS/docs/');
     },

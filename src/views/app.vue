@@ -1,7 +1,7 @@
 <!--
  * @author Wayne
  * @Date 2022-03-01 16:49:14
- * @LastEditTime 2023-07-09 14:14:33
+ * @LastEditTime 2025-09-02 21:10:05
 -->
 <template>
   <div>
@@ -23,7 +23,7 @@ import { getUrlParam } from '@/utils';
 import Translate from '@/components/LangTranslator/index.vue';
 
 import Main from './main.vue';
-import PostMan from './PostMan.vue';
+import PostMan from '../components/PostMan/PostManMain.vue';
 
 export default defineComponent({
   name: 'App',

@@ -183,3 +183,184 @@ export function rgbToHsb(rgb: string[]) {
 
   return [hsbH.toFixed(0), `${(hsbS * 100).toFixed(0)}%`, `${(hsbB * 100).toFixed(0)}%`];
 }
+
+/**
+ * Convert RGB to CMYK
+ * @param rgb RGB color array [r, g, b]
+ * @returns CMYK color array [c, m, y, k]
+ */
+export function rgbToCmyk(rgb: number[]): number[] {
+  const [r, g, b] = rgb.map(value => value / 255);
+  const k = 1 - Math.max(r, g, b);
+
+  if (k === 1) {
+    return [0, 0, 0, 100];
+  }
+
+  const c = ((1 - r - k) / (1 - k)) * 100;
+  const m = ((1 - g - k) / (1 - k)) * 100;
+  const y = ((1 - b - k) / (1 - k)) * 100;
+
+  return [Math.round(c), Math.round(m), Math.round(y), Math.round(k * 100)];
+}
+
+/**
+ * Convert CMYK to RGB
+ * @param cmyk CMYK color array [c, m, y, k]
+ * @returns RGB color array [r, g, b]
+ */
+export function cmykToRgb(cmyk: number[]): number[] {
+  const [c, m, y, k] = cmyk.map(value => value / 100);
+
+  const r = Math.round(255 * (1 - c) * (1 - k));
+  const g = Math.round(255 * (1 - m) * (1 - k));
+  const b = Math.round(255 * (1 - y) * (1 - k));
+
+  return [r, g, b];
+}
+
+/**
+ * Convert RGB to HSL
+ * @param rgb RGB color array [r, g, b]
+ * @returns HSL color array [h, s%, l%]
+ */
+export function rgbToHsl(rgb: string[]): string[] {
+  const [r, g, b] = rgb.map(val => Number(val) / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
+    h *= 60;
+  }
+
+  return [h.toFixed(0), `${(s * 100).toFixed(0)}%`, `${(l * 100).toFixed(0)}%`];
+}
+
+/**
+ * Convert HSL to RGB
+ * @param hsl HSL color array [h, s%, l%]
+ * @returns RGB color array [r, g, b]
+ */
+export function hslToRgb(hsl: string[]): number[] {
+  const h = Number(hsl[0]);
+  const s = Number(hsl[1].replace('%', '')) / 100;
+  const l = Number(hsl[2].replace('%', '')) / 100;
+
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+
+  let r = 0,
+    g = 0,
+    b = 0;
+
+  if (h >= 0 && h < 60) {
+    r = c;
+    g = x;
+    b = 0;
+  } else if (h >= 60 && h < 120) {
+    r = x;
+    g = c;
+    b = 0;
+  } else if (h >= 120 && h < 180) {
+    r = 0;
+    g = c;
+    b = x;
+  } else if (h >= 180 && h < 240) {
+    r = 0;
+    g = x;
+    b = c;
+  } else if (h >= 240 && h < 300) {
+    r = x;
+    g = 0;
+    b = c;
+  } else if (h >= 300 && h < 360) {
+    r = c;
+    g = 0;
+    b = x;
+  }
+
+  return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+}
+
+/**
+ * Check if HSL is a valid color format
+ * @param hsl HSL color string
+ * @param success Callback for successful validation
+ * @param fail Callback for failed validation
+ */
+export function checkHsl(hsl: string, success: AnyFunc, fail: AnyFunc) {
+  const hslArr = hsl.split(',');
+  if (
+    hslArr.length === 3 &&
+    hslArr[0] !== '' &&
+    hslArr[1].endsWith('%') &&
+    hslArr[2].endsWith('%')
+  ) {
+    success();
+  } else {
+    fail();
+  }
+}
+
+/**
+ * Color name to hex conversion map
+ */
+const COLOR_NAMES: Record<string, string> = {
+  red: 'ff0000',
+  green: '00ff00',
+  blue: '0000ff',
+  yellow: 'ffff00',
+  cyan: '00ffff',
+  magenta: 'ff00ff',
+  white: 'ffffff',
+  black: '000000',
+  gray: '808080',
+  orange: 'ffa500',
+  purple: '800080',
+  pink: 'ffc0cb',
+  brown: 'a52a2a',
+  navy: '000080',
+  olive: '808000',
+  lime: '00ff00',
+  maroon: '800000',
+  silver: 'c0c0c0',
+  teal: '008080',
+};
+
+/**
+ * Convert color name to hex
+ * @param colorName Color name
+ * @returns Hex color code or undefined if not found
+ */
+export function colorNameToHex(colorName: string): string | undefined {
+  return COLOR_NAMES[colorName.toLowerCase()];
+}
+
+/**
+ * Convert hex to color name
+ * @param hex Hex color code
+ * @returns Color name or undefined if not found
+ */
+export function hexToColorName(hex: string): string | undefined {
+  const normalizedHex = hex.toLowerCase();
+  return Object.entries(COLOR_NAMES).find(([, value]) => value === normalizedHex)?.[0];
+}

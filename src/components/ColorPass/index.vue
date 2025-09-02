@@ -1,6 +1,6 @@
 <template>
   <section s-bg_white @click.stop="stopPropagation">
-    <p :class="$style.title">颜色表示方式转化</p>
+    <p :class="$style.title">{{ t('colorpass.title') }}</p>
     <!--颜色输入-->
     <section :class="$style.content">
       <div class="m-color-input">
@@ -9,7 +9,7 @@
           v-model="hex"
           maxlength="6"
           data-type="hex"
-          placeholder="16进制表示，如ff0000"
+          :placeholder="t('colorpass.hexPlaceholder')"
           @keyup="changeColor"
         />
       </div>
@@ -20,7 +20,7 @@
           v-model="rgb"
           maxlength="11"
           data-type="rgb"
-          placeholder="RGB表示，逗号分隔，如255,0,0"
+          :placeholder="t('colorpass.rgbPlaceholder')"
           @keyup="changeColor"
         />
       </div>
@@ -31,7 +31,18 @@
           v-model="hsb"
           maxlength="13"
           data-type="hsb"
-          placeholder="HSB表示，逗号分隔，如0,100%,100%"
+          :placeholder="t('colorpass.hsbPlaceholder')"
+          @keyup="changeColor"
+        />
+      </div>
+
+      <div class="m-color-input">
+        <span>HSL：</span>
+        <input
+          v-model="hsl"
+          maxlength="13"
+          data-type="hsl"
+          :placeholder="t('colorpass.hslPlaceholder')"
           @keyup="changeColor"
         />
       </div>
@@ -53,8 +64,11 @@ export default {
 
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { langManager } from '@/utils/i18n';
 
 import RemarkInfos from './RemarkInfos.vue';
+
+const t = (key: string) => langManager.t(key);
 
 import {
   hsbToRgb,
@@ -65,11 +79,15 @@ import {
   checkHex,
   checkRgb,
   checkHsb,
+  rgbToHsl,
+  hslToRgb,
+  checkHsl,
 } from '@/utils/color';
 
 const hex = ref('');
 const rgb = ref('');
 const hsb = ref('');
+const hsl = ref('');
 
 const stopPropagation = () => false;
 
@@ -78,7 +96,7 @@ const changeColor = (e: Event) => {
   const { type } = e.target.dataset;
 
   const setEmptyOutput = () => {
-    hsb.value = rgb.value = '';
+    hsb.value = rgb.value = hsl.value = '';
   };
 
   switch (type) {
@@ -90,6 +108,7 @@ const changeColor = (e: Event) => {
           rgb.value = hexToRgb(divisionString(hex.value, divisionNum)).join(',');
           const rgbArr = rgb.value.split(',');
           hsb.value = rgbToHsb(rgbArr).join(',');
+          hsl.value = rgbToHsl(rgbArr).join(',');
         },
         setEmptyOutput
       );
@@ -101,6 +120,7 @@ const changeColor = (e: Event) => {
           const rgbArr = rgb.value.split(',');
           hex.value = rgbToHex(rgbArr).join('');
           hsb.value = rgbToHsb(rgbArr).join(',');
+          hsl.value = rgbToHsl(rgbArr).join(',');
         },
         setEmptyOutput
       );
@@ -112,6 +132,20 @@ const changeColor = (e: Event) => {
           rgb.value = hsbToRgb(hsb.value.split(',').map(val => parseInt(val, 10))).join(',');
           const rgbArr = rgb.value.split(',');
           hex.value = rgbToHex(rgbArr).join('');
+          hsl.value = rgbToHsl(rgbArr).join(',');
+        },
+        setEmptyOutput
+      );
+      break;
+    case 'hsl':
+      checkHsl(
+        hsl.value,
+        () => {
+          const hslArr = hsl.value.split(',');
+          rgb.value = hslToRgb(hslArr).join(',');
+          const rgbArr = rgb.value.split(',');
+          hex.value = rgbToHex(rgbArr).join('');
+          hsb.value = rgbToHsb(rgbArr).join(',');
         },
         setEmptyOutput
       );

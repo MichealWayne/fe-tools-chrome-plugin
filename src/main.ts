@@ -7,6 +7,7 @@ import { createApp } from 'vue';
 
 import 'moo-css-base/pc.css';
 import './styles/popup.less';
+import './styles/i18n.less';
 
 import App from './views/app.vue';
 

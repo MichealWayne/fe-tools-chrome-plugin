@@ -1,3 +1,8 @@
+<!--
+ * @author Wayne
+ * @Date 2023-07-17 19:55:15
+ * @LastEditTime 2025-04-22 13:36:03
+-->
 <template>
   <article class="m-color-intro g-fs12" s-ft_sub_>
     <p>注：</p>
@@ -8,6 +13,7 @@
     <p>
       HSB：又称HSV，在HSB模式中，H(hues)表示色相，S(saturation)表示饱和度，B（brightness）表示亮度。
     </p>
+    <p>HSL：在HSL模式中，H(hues)表示色相，S(saturation)表示饱和度，L(luminance)表示亮度。</p>
   </article>
 </template>
 

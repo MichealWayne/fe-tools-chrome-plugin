@@ -2,7 +2,7 @@
 <template>
   <section class="m-regex">
     <p class="m-filter_ctn u-c-middle">
-      <input v-model="filterTxt" class="u-input" type="text" placeholder="筛选" />
+      <input v-model="filterTxt" class="u-input" type="text" :placeholder="t('regex.filter')" />
     </p>
     <ul class="g-mt30">
       <li
@@ -18,7 +18,9 @@
         <p class="g-fs14">
           {{ item.name }}
           <span v-if="item.description" class="g-fs12">（{{ item.description }}）</span>
-          <a class="u-link g-fs12 g-ml5" s-cr_blue @click="handleRegTest(index)">测试</a>
+          <a class="u-link g-fs12 g-ml5" s-cr_blue @click="handleRegTest(index)">{{
+            t('regex.test')
+          }}</a>
         </p>
         <p class="g-mt10">
           <figure>
@@ -27,23 +29,26 @@
         </p>
         <p class="j-fold m-regex_input g-mt10">
           <input
-            placeholder="请输入测试字符串"
+            :placeholder="t('regex.inputTest')"
             :class="'j-regInput_' + index"
             class="u-input"
             type="text"
           /><button class="u-btn_il g-ml10" s-color="blue" @click="handleRegTestClick(index)">
-            测试
+            {{ t('regex.test') }}
           </button>
         </p>
         <p :class="'j-regOutput_' + index" class="j-fold f-tc g-mt10"></p>
       </li>
     </ul>
-    <p class="m-regex_back g-mt50 f-tc g-fs14" s-cr_blue @click="back">返回主页</p>
+    <p class="m-regex_back g-mt50 f-tc g-fs14" s-cr_blue @click="back">
+      {{ t('common.backHome') }}
+    </p>
   </section>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { langManager } from '@/utils/i18n';
 
 import { AnyFunc } from '@/types';
 import ajax from '@/api';
@@ -76,6 +81,10 @@ export default defineComponent({
     });
   },
   methods: {
+    t(key: string) {
+      return langManager.t(key);
+    },
+
     handleRegTest(index: number) {
       if (this.regexList[index]) {
         this.regexList[index].isOpened = true;
@@ -89,7 +98,7 @@ export default defineComponent({
           this.regexList[index] && new RegExp(this.regexList[index].regexStr).test($input.value);
         document.querySelector(`.j-regOutput_${index}`)!.innerHTML = `<span s-color="${
           (res && 'blue') || 'red'
-        }">结果：${res}</span>`;
+        }">${this.t('regex.result')}：${res}</span>`;
       } catch (err) {
         alert((err as Error).message);
       }

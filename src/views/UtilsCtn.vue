@@ -1,8 +1,3 @@
-<!--
- * @author Wayne
- * @Date 2023-07-25 19:28:57
- * @LastEditTime 2023-08-27 10:43:10
--->
 <template>
   <section class="m-moo">
     <section>
@@ -11,7 +6,7 @@
           id="search"
           v-model="keywords"
           class="m-s_input g-fs16 u-w300"
-          placeholder="请输入方法名或模块名"
+          :placeholder="t('utils.searchPlaceholder')"
           autocomplete="off"
           type="text"
           autofocus
@@ -19,7 +14,7 @@
           @blur="handleInputBlur"
         />
         <button class="u-btn_il j-search g-fs18 g-ml10" s-color="blue" @click="setSearchResult">
-          Search
+          {{ t('common.search') }}
         </button>
       </p>
     </section>
@@ -45,6 +40,7 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { langManager } from '@/utils/i18n';
 
 import { AnyFunc } from '@/types';
 import { jumpAction } from '@/utils/chrome';
@@ -83,6 +79,16 @@ export default defineComponent({
   },
 
   methods: {
+    t(key: string) {
+      return langManager.t(key);
+    },
+    /**
+     * 翻译方法
+     */
+    t(key: string) {
+      return langManager.t(key);
+    },
+
     toUtilFuncsHome() {
       jumpAction('https://blog.michealwayne.cn/fe-tools/stable/');
     },
