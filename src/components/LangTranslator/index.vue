@@ -1,8 +1,3 @@
-<!--
- * @author Wayne
- * @Date 2023-06-27 14:16:17
- * @LastEditTime 2023-07-25 09:57:24
--->
 <template>
   <div
     :class="{ 'u-j-middle': !inPopup, 'm-big_translate': !inPopup }"
@@ -11,24 +6,39 @@
     @click.stop="stopPropagation"
   >
     <section>
-      <p>原文（<a class="u-link" s-cr_blue @click="reset">清空</a>）</p>
+      <p>
+        {{ t('langTranslator.original') }}（<a class="u-link" s-cr_blue @click="reset">{{
+          t('common.clear')
+        }}</a
+        >）
+      </p>
       <textarea
         v-model="originTxt"
-        placeholder="输入或粘贴要翻译的内容"
+        :placeholder="t('langTranslator.placeholder')"
         class="u-textarea"
       ></textarea>
     </section>
 
     <section>
-      <p>结果（<a class="u-link" s-cr_blue @click="handleTranslate(originTxt)">重新翻译</a>）</p>
+      <p>
+        {{ t('langTranslator.result') }}（<a
+          class="u-link"
+          s-cr_blue
+          @click="handleTranslate(originTxt)"
+          >{{ t('langTranslator.retranslate') }}</a
+        >）
+      </p>
       <textarea v-model="resultTxt" class="u-textarea" @click.stop="textFocus"></textarea>
     </section>
-    <p v-if="inPopup" class="u-link g-mt10 f-tc g-fs14" s-cr_blue @click.stop="back">返回主页</p>
+    <p v-if="inPopup" class="u-link g-mt10 f-tc g-fs14" s-cr_blue @click.stop="back">
+      {{ t('common.backHome') }}
+    </p>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { langManager } from '@/utils/i18n';
 
 import { AnyFunc } from '@/types/index';
 import { getUrlParam } from '@/utils';
@@ -81,6 +91,9 @@ export default defineComponent({
   },
 
   methods: {
+    t(key: string) {
+      return langManager.t(key);
+    },
     stopPropagation() {
       return false;
     },

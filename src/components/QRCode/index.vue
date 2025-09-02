@@ -1,22 +1,29 @@
 <template>
   <div>
     <p class="m-qr_search u-c-middle" @click.stop="handleStop">
-      <input v-model="originWords" placeholder="请输入地址" class="u-input" type="text" />
-      <button class="u-btn u-w80 g-ml10" s-color="blue" @click.stop="handleUpdate">更新</button>
+      <input
+        v-model="originWords"
+        :placeholder="t('qrcode.inputPlaceholder')"
+        class="u-input"
+        type="text"
+      />
+      <button class="u-btn u-w80 g-ml10" s-color="blue" @click.stop="handleUpdate">
+        {{ t('qrcode.generate') }}
+      </button>
     </p>
     <img
       class="u-icon u-w200 g-mt20 g-center"
       :src="QRUrl"
-      title="右键可保存二维码图片"
+      :title="t('qrcode.rightClickTip')"
       alt="qrcode"
     />
-    <p class="f-tc g-fs12 g-mt10">*右键选中图片可保存二维码PNG图片</p>
+    <p class="f-tc g-fs12 g-mt10">{{ t('qrcode.saveImageTip') }}</p>
     <button
       class="u-btn u-w100 u-h40 g-center g-mt10"
       s-color="blue"
       @click.stop="() => handleDownloadQR()"
     >
-      下载SVG文件
+      {{ t('qrcode.downloadSvg') }}
     </button>
   </div>
 </template>
@@ -29,6 +36,9 @@ export default {
 
 <script lang="ts" setup>
 import { defineProps, ref, watch, toRefs, onMounted } from 'vue';
+import { langManager } from '@/utils/i18n';
+
+const t = (key: string) => langManager.t(key);
 
 import { getLocalTabUrl } from '@/utils/chrome';
 import { handleQRCode } from '@/utils';

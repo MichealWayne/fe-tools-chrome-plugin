@@ -3,6 +3,14 @@
 -->
 <template>
   <section class="m-ctn u-pt20 f-ovhidden">
+    <!-- 语言切换器 -->
+    <div class="language-switcher-header">
+      <select v-model="currentLang" @change="handleLanguageChange" class="lang-select">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+
     <div v-show="!showCompName.includes('Ctn')" class="m-main_ctn">
       <div :class="{ 'f-blur': showCompName }">
         <h1 :class="{ 'z-fold': logoFold }" class="f-tc j-logo_ctn f-ovhidden">
@@ -14,7 +22,7 @@
               id="search"
               v-model="keywords"
               class="m-s_input g-fs16 u-w300"
-              placeholder="请输入关键词或二维码生成地址"
+              :placeholder="t('searchPlaceholder')"
               autocomplete="off"
               type="text"
               autofocus
@@ -26,7 +34,7 @@
               <i class="u-icon icon-close"></i>
             </span>
             <button s-color="blue" class="u-btn_il j-search g-fs18 g-ml10" @click="setSearchResult">
-              Search
+              {{ t('common.search') }}
             </button>
           </p>
           <ul class="m-searchList u-w420 j-searchList g-center">
@@ -43,54 +51,78 @@
         </section>
         <section class="g-mt30 g-center">
           <ul class="m-others g-fs14 u-pt10 u-j-middle">
-            <li
-              class="f-tc"
-              title="输入框地址URL或当前页面URL生成二维码"
-              @click="showCompName = 'QRCode'"
-            >
+            <li class="f-tc" :title="t('descriptions.qrCode')" @click="showCompName = 'QRCode'">
               <em class="u-icon iconfont icon-erweima g-fs36"></em>
-              <span class="g-fs12">生成二维码</span>
+              <span class="g-fs12">{{ t('tools.qrCode') }}</span>
             </li>
             <li
               class="f-tc"
-              title="本地或在线图片压缩/转为base64字符串"
+              :title="t('descriptions.imageCompressor')"
               @click="showCompName = 'ImageCompressor'"
             >
               <em class="u-icon iconfont icon-compress-file g-fs36"></em>
-              <span class="g-fs12">图片压缩/base64</span>
+              <span class="g-fs12">{{ t('tools.imageCompressor') }}</span>
             </li>
-            <li class="f-tc" title="rgb/hxb/hex色值换算" @click="showCompName = 'ColorPass'">
+            <li
+              class="f-tc"
+              :title="t('descriptions.colorPass')"
+              @click="showCompName = 'ColorPass'"
+            >
               <em class="u-icon iconfont icon-chanyexietong g-fs36"></em>
-              <span class="g-fs12">色值换算</span>
+              <span class="g-fs12">{{ t('tools.colorPass') }}</span>
             </li>
-            <li class="f-tc" title="简版PostMan" @click="toPostMan">
+            <li class="f-tc" :title="t('descriptions.postMan')" @click="toPostMan">
               <em class="u-icon icon-postman g-center g-fs36"></em>
-              <span class="g-fs12">PostMan</span>
+              <span class="g-fs12">{{ t('tools.postMan') }}</span>
             </li>
           </ul>
           <ul class="m-others g-fs14 u-pt10 u-j-middle">
-            <li class="f-tc" title="计算器，px/rem/vw换算" @click="showCompName = 'UnitCalculator'">
+            <li
+              class="f-tc"
+              :title="t('descriptions.unitCalculator')"
+              @click="showCompName = 'UnitCalculator'"
+            >
               <em class="u-icon iconfont icon-calc g-center g-fs36"></em>
-              <span class="g-fs12">长度换算</span>
+              <span class="g-fs12">{{ t('tools.unitCalculator') }}</span>
             </li>
-            <li class="f-tc" title="快速搜索Moo-CSS模块/方法" @click="showCompName = 'MooCtn'">
+            <li class="f-tc" :title="t('descriptions.mooCtn')" @click="showCompName = 'MooCtn'">
               <em class="u-icon iconfont icon-moo g-center g-fs36"></em>
-              <span class="g-fs12">Moo-CSS</span>
+              <span class="g-fs12">{{ t('tools.mooCtn') }}</span>
             </li>
             <!-- @todo 有道翻译API暂时关闭 <li class="f-tc" title="快速中英文翻译" @click="showCompName = 'LangTranslator'"> -->
-            <li class="f-tc" title="快速中英文翻译" @click="toYoudao">
+            <li class="f-tc" :title="t('descriptions.langTranslator')" @click="toYoudao">
               <em class="u-icon iconfont icon-fanyi g-center g-fs36"></em>
-              <span class="g-fs12">快速翻译</span>
+              <span class="g-fs12">{{ t('tools.langTranslator') }}</span>
             </li>
-            <li class="f-tc" title="常用正则表达式查询" @click="showCompName = 'RegexCtn'">
+            <li class="f-tc" :title="t('descriptions.regexCtn')" @click="showCompName = 'RegexCtn'">
               <em class="u-icon iconfont icon-regex g-center g-fs36"></em>
-              <span class="g-fs12">正则查询</span>
+              <span class="g-fs12">{{ t('tools.regexCtn') }}</span>
             </li>
           </ul>
           <ul class="m-others g-fs14 u-pt10 u-j-middle">
-            <li class="f-tc" title="常用工具方法查询" @click="showCompName = 'UtilsCtn'">
+            <li class="f-tc" :title="t('descriptions.utilsCtn')" @click="showCompName = 'UtilsCtn'">
               <em class="u-icon icon-utils g-center g-fs36"></em>
-              <span class="g-fs12">工具方法</span>
+              <span class="g-fs12">{{ t('tools.utilsCtn') }}</span>
+            </li>
+            <li class="f-tc" :title="t('descriptions.jsonCtn')" @click="showCompName = 'JsonCtn'">
+              <em class="u-icon iconfont icon-utils g-center g-fs36"></em>
+              <span class="g-fs12">{{ t('tools.jsonCtn') }}</span>
+            </li>
+            <li
+              class="f-tc"
+              :title="t('descriptions.svgEditor')"
+              @click="showCompName = 'SvgEditor'"
+            >
+              <em class="u-icon iconfont icon-compress-file g-center g-fs36"></em>
+              <span class="g-fs12">{{ t('tools.svgEditor') }}</span>
+            </li>
+            <li
+              class="f-tc"
+              :title="t('descriptions.dateConverter')"
+              @click="showCompName = 'DateConverter'"
+            >
+              <em class="u-icon iconfont icon-calc g-center g-fs36"></em>
+              <span class="g-fs12">{{ t('tools.dateConverter') }}</span>
             </li>
           </ul>
         </section>
@@ -119,6 +151,7 @@ import { defineComponent } from 'vue';
 import { getUrlParam } from '@/utils';
 import { getMarkTree, jumpAction } from '@/utils/chrome';
 import ajax from '@/api';
+import { langManager } from '@/utils/i18n';
 
 import MooCtn from './MooCtn.vue';
 import RegexCtn from './RegexCtn.vue';
@@ -127,6 +160,7 @@ import UtilsCtn from './UtilsCtn.vue';
 import { DEFAULT_SEARCH_LIST } from '@/constant';
 
 import CompMap from '@/components/';
+console.log('CompMap', CompMap);
 
 type ComponentDataTypes = {
   keywords: string;
@@ -144,6 +178,8 @@ type ComponentDataTypes = {
     children?: any;
   }>;
   feToolsList: Array<{ name: string; link: string; desc: string; target: any; children?: any }>;
+  currentLang: string;
+  languageChangeHandler?: (lang: string) => void;
 };
 
 const QR_CODE_TYPE = 'qr';
@@ -173,6 +209,10 @@ export default defineComponent({
       resultList: [],
       // 远程工具信息列表
       feToolsList: [],
+      // 当前语言
+      currentLang: langManager.getCurrentLanguage(),
+      // 语言变化处理器
+      languageChangeHandler: undefined,
     };
   },
 
@@ -194,9 +234,36 @@ export default defineComponent({
       .catch((e: Error) => {
         alert(e?.message || '链接信息获取失败');
       });
+
+    // 监听语言变化
+    this.languageChangeHandler = (newLang: string) => {
+      this.currentLang = newLang;
+    };
+    langManager.addListener(this.languageChangeHandler);
+  },
+
+  beforeUnmount() {
+    // 清理语言监听器
+    if (this.languageChangeHandler) {
+      langManager.removeListener(this.languageChangeHandler);
+    }
   },
 
   methods: {
+    /**
+     * 获取翻译文本
+     */
+    t(key: string): string {
+      return langManager.t(key);
+    },
+
+    /**
+     * 处理语言切换
+     */
+    handleLanguageChange() {
+      langManager.setLanguage(this.currentLang);
+    },
+
     /**
      * 前往简易postman
      */

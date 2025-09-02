@@ -1,7 +1,7 @@
 <template>
   <section s-bg_white @click.stop="stopPropagation">
     <div class="u-w500">
-      <h4>rem/vw/px换算</h4>
+      <h4>{{ t('unitCalculator.title') }}</h4>
       <section class="u-p20">
         <div class="m-color-input">
           <span class="g-fs14">px：</span>
@@ -9,7 +9,7 @@
             v-model="px"
             maxlength="4"
             data-type="px"
-            placeholder="px单位"
+            :placeholder="t('unitCalculator.pxPlaceholder')"
             @keyup="changeValue"
           />
         </div>
@@ -20,7 +20,7 @@
             v-model="vw"
             maxlength="4"
             data-type="vw"
-            placeholder="vw单位,1rem=10vw"
+            :placeholder="t('unitCalculator.vwPlaceholder')"
             @keyup="changeValue"
           />
         </div>
@@ -31,26 +31,26 @@
             v-model="rem"
             maxlength="4"
             data-type="rem"
-            placeholder="rem单位"
+            :placeholder="t('unitCalculator.remPlaceholder')"
             @keyup="changeValue"
           />
         </div>
 
         <div class="m-color-input u-l-middle">
-          <span class="g-fs14">rem比例：</span>
+          <span class="g-fs14">{{ t('unitCalculator.remRatio') }}：</span>
           <input
             v-model="defaultRate"
             maxlength="4"
             data-type="rgb"
-            placeholder="rem转换比例,默认1rem=75px"
+            :placeholder="t('unitCalculator.remRatioPlaceholder')"
             @keyup="changeValue"
           />
-          <span class="g-fs14">保留位数：</span>
+          <span class="g-fs14">{{ t('unitCalculator.keepDigits') }}：</span>
           <input
             v-model="defaultKeep"
             maxlength="4"
             data-type="rgb"
-            placeholder="保留位数,默认保留6位小数"
+            :placeholder="t('unitCalculator.keepDigitsPlaceholder')"
             @keyup="changeValue"
           />
         </div>
@@ -67,6 +67,9 @@ export default {
 
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { langManager } from '@/utils/i18n';
+
+const t = (key: string) => langManager.t(key);
 
 const DEFAULT_REM_RATE = 75;
 const DEFAULT_FIXED_NUMBER = 6;

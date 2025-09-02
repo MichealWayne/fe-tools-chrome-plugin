@@ -21,8 +21,8 @@
       <!-- 文件上传交互入口，点击/拖拽文件上传 -->
       <icon-inbox />
       <p class="g-fs14" s-ft_sub>
-        点击图标或拖拽图片至此处<br />
-        <em class="g-fs12">(*.jpg/*.png/*.gif格式)</em>
+        {{ t('imageCompressor.dragTip') }}<br />
+        <em class="g-fs12">{{ t('imageCompressor.formatTip') }}</em>
       </p>
     </div>
     <!-- 上传效果图片展示 -->
@@ -30,7 +30,7 @@
       <em
         :class="$style.close"
         class="u-icon u-icon-close u-link g-pa"
-        title="点击重置图片"
+        :title="t('imageCompressor.resetTip')"
         @click="reset"
       >
         <icon-reset />
@@ -44,7 +44,7 @@
         v-model="compressRate"
         class="u-input u-w200 u-p10 g-fs14"
         type="number"
-        placeholder="图片压缩比例(0~1, 默认1)"
+        :placeholder="t('imageCompressor.compressRatio')"
         min="0"
         max="1"
         @blur="handleRateBlur"
@@ -70,6 +70,9 @@ export default {
 
 <script lang="ts" setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { langManager } from '@/utils/i18n';
+
+const t = (key: string) => langManager.t(key);
 
 import { getCompressedImageBase64, handleInputUploadImageFile } from '@/utils/image';
 
