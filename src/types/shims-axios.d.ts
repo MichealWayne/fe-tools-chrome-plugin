@@ -3,6 +3,7 @@ import { AxiosRequestConfig } from 'axios';
  * 自定义扩展axios模块
  * @author Maybe
  */
+// 扩展 AxiosInstance 的调用签名，支持泛型返回
 declare module 'axios' {
   export interface AxiosInstance {
     <T = any>(config: AxiosRequestConfig): Promise<T>;

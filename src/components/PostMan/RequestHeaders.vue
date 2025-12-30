@@ -1,29 +1,39 @@
 <template>
   <div class="request-headers">
     <div class="section-header">
-      <h3>请求头</h3>
-      <button @click="addHeader" class="add-btn"><i class="fas fa-plus"></i> 添加</button>
+      <h3>{{ t('postman.headers.title') }}</h3>
+      <button @click="addHeader" class="add-btn">
+        <i class="fas fa-plus"></i> {{ t('postman.headers.add') }}
+      </button>
     </div>
 
     <div class="headers-list">
       <div v-for="(header, index) in headers" :key="index" class="header-item">
         <input
           v-model="header.key"
-          placeholder="Header Key"
+          :placeholder="t('postman.headers.headerKey')"
           class="header-input"
           @input="updateHeaders"
         />
         <input
           v-model="header.value"
-          placeholder="Header Value"
+          :placeholder="t('postman.headers.headerValue')"
           class="header-input"
           @input="updateHeaders"
         />
-        <button @click="removeHeader(index)" class="remove-btn">X</button>
+        <button @click="removeHeader(index)" class="remove-btn" :title="t('postman.actions.remove')">
+          ×
+        </button>
       </div>
     </div>
   </div>
 </template>
+
+<script lang="ts">
+export default {
+  name: 'RequestHeaders',
+};
+</script>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';

@@ -1,27 +1,34 @@
 /**
  * @author Wayne
  * @Date 2023-07-09 20:15:18
- * @LastEditTime 2025-03-31 16:48:59
+ * @LastEditTime 2025-09-08 09:44:48
  */
-// eslint-disable-next-line filenames/match-exported
+
+// 导入所有组件
+import QRCode from './QRCode/index.vue';
+import JsonCtn from './JsonCtn/index.vue';
+import SvgEditor from './SvgEditor/index.vue';
+import DateConverter from './DateConverter/index.vue';
+import ImageCompressor from './ImageCompressor/index.vue';
+import ColorPass from './ColorPass/index.vue';
+import LangTranslator from './LangTranslator/index.vue';
+import UnitCalculator from './UnitCalculator/index.vue';
+import LinuxCommand from './LinuxCommand/index.vue';
+import PageScreenshot from './PageScreenshot/index.vue';
+
 const CompMap: {
   [componentName: string]: any;
-} = {};
-
-const requireComponents = import.meta.globEager('./**/index.vue');
-
-// 遍历出每个组件的路径
-Object.keys(requireComponents).forEach(fileName => {
-  const reqComponent = requireComponents[fileName];
-  // 如果是 index.vue 文件，只使用文件夹名称作为组件名
-  const reqComName =
-    reqComponent.name ||
-    reqComponent.default?.name ||
-    (fileName.includes('/index.vue')
-      ? fileName.replace(/\.\/(.*)\/index\.vue/, '$1')
-      : fileName.replace(/\.\/(.*)\.vue/, '$1'));
-
-  CompMap[reqComName] = reqComponent.default?.name ? reqComponent.default : reqComponent;
-});
+} = {
+  QRCode,
+  JsonCtn,
+  SvgEditor,
+  DateConverter,
+  ImageCompressor,
+  ColorPass,
+  LangTranslator,
+  UnitCalculator,
+  LinuxCommand,
+  PageScreenshot,
+};
 
 export default CompMap;

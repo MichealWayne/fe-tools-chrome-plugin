@@ -6,8 +6,8 @@
     <!-- 语言切换器 -->
     <div class="language-switcher-header">
       <select v-model="currentLang" @change="handleLanguageChange" class="lang-select">
-        <option value="zh">中文</option>
-        <option value="en">English</option>
+        <option value="zh">{{ t('languageOptions.zh') }}</option>
+        <option value="en">{{ t('languageOptions.en') }}</option>
       </select>
     </div>
 
@@ -50,7 +50,7 @@
           </ul>
         </section>
         <section class="g-mt30 g-center">
-          <ul class="m-others g-fs14 u-pt10 u-j-middle">
+          <ul class="m-others m-others--grid g-fs14 u-pt10">
             <li class="f-tc" :title="t('descriptions.qrCode')" @click="showCompName = 'QRCode'">
               <em class="u-icon iconfont icon-erweima g-fs36"></em>
               <span class="g-fs12">{{ t('tools.qrCode') }}</span>
@@ -75,8 +75,6 @@
               <em class="u-icon icon-postman g-center g-fs36"></em>
               <span class="g-fs12">{{ t('tools.postMan') }}</span>
             </li>
-          </ul>
-          <ul class="m-others g-fs14 u-pt10 u-j-middle">
             <li
               class="f-tc"
               :title="t('descriptions.unitCalculator')"
@@ -98,8 +96,6 @@
               <em class="u-icon iconfont icon-regex g-center g-fs36"></em>
               <span class="g-fs12">{{ t('tools.regexCtn') }}</span>
             </li>
-          </ul>
-          <ul class="m-others g-fs14 u-pt10 u-j-middle">
             <li class="f-tc" :title="t('descriptions.utilsCtn')" @click="showCompName = 'UtilsCtn'">
               <em class="u-icon icon-utils g-center g-fs36"></em>
               <span class="g-fs12">{{ t('tools.utilsCtn') }}</span>
@@ -123,6 +119,22 @@
             >
               <em class="u-icon iconfont icon-calc g-center g-fs36"></em>
               <span class="g-fs12">{{ t('tools.dateConverter') }}</span>
+            </li>
+            <li
+              class="f-tc"
+              :title="t('descriptions.linuxCommand')"
+              @click="showCompName = 'LinuxCommand'"
+            >
+              <em class="u-icon icon-utils g-center g-fs36"></em>
+              <span class="g-fs12">{{ t('tools.linuxCommand') }}</span>
+            </li>
+            <li
+              class="f-tc"
+              :title="t('descriptions.pageScreenshot')"
+              @click="showCompName = 'PageScreenshot'"
+            >
+              <em class="u-icon icon-utils g-center g-fs36"></em>
+              <span class="g-fs12">{{ t('tools.pageScreenshot') }}</span>
             </li>
           </ul>
         </section>
@@ -232,7 +244,7 @@ export default defineComponent({
         this.feToolsList = list;
       })
       .catch((e: Error) => {
-        alert(e?.message || '链接信息获取失败');
+        alert(e?.message || t('errors.fetchLinksFailed'));
       });
 
     // 监听语言变化
@@ -253,8 +265,8 @@ export default defineComponent({
     /**
      * 获取翻译文本
      */
-    t(key: string): string {
-      return langManager.t(key);
+    t(key: string, params?: Record<string, string | number>): string {
+      return langManager.t(key, params);
     },
 
     /**
@@ -412,7 +424,7 @@ export default defineComponent({
           {
             type: QR_CODE_TYPE,
             link: '',
-            name: '生成二维码',
+            name: t('search.qrCodeResult'),
           },
         ];
         return;
@@ -482,7 +494,7 @@ export default defineComponent({
       DEFAULT_SEARCH_LIST.forEach(item => {
         resultList.push({
           link: item.link + keywords,
-          name: `在${item.name}中搜索: <strong>${keywords}</strong>`,
+          name: t('search.searchIn', { site: item.name, keywords }),
         });
       });
       this.resultList = resultList;

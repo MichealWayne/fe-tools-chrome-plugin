@@ -3,9 +3,11 @@
     <div class="postman-header">
       <h1>{{ t('postman.title') }}</h1>
       <div class="header-actions">
-        <button @click="saveRequest" class="save-btn"><i class="fas fa-save"></i> 保存请求</button>
+        <button @click="saveRequest" class="save-btn">
+          <i class="fas fa-save"></i> {{ t('postman.saveRequest') }}
+        </button>
         <button @click="loadRequest" class="load-btn">
-          <i class="fas fa-folder-open"></i> 加载请求
+          <i class="fas fa-folder-open"></i> {{ t('postman.loadRequest') }}
         </button>
       </div>
     </div>
@@ -17,93 +19,13 @@
       v-model:current-environment="currentEnvironment"
     />
 
-    <!-- 请求配置区域 -->
-    <div class="request-section">
-      <div class="request-line">
-        <select v-model="request.method" class="method-select">
-          <option value="GET">GET</option>
-          <option value="POST">POST</option>
-          <option value="PUT">PUT</option>
-          <option value="DELETE">DELETE</option>
-          <option value="PATCH">PATCH</option>
-          <option value="HEAD">HEAD</option>
-          <option value="OPTIONS">OPTIONS</option>
-        </select>
-
-        <input
-          v-model="request.url"
-          :placeholder="t('postman.urlPlaceholder')"
-          class="url-input"
-          @keyup.enter="sendRequest"
-        />
-
-        <button @click="sendRequest" :disabled="loading || !request.url" class="send-btn">
-          <i v-if="loading" class="fas fa-spinner fa-spin"></i>
-          <i v-else class="fas fa-paper-plane"></i>
-          {{ loading ? '请求中...' : '发送' }}
-        </button>
-      </div>
-
-      <!-- 请求配置标签页 -->
-      <div class="request-tabs">
-        <button
-          v-for="tab in requestTabs"
-          :key="tab.key"
-          @click="activeRequestTab = tab.key"
-          :class="['tab-btn', { active: activeRequestTab === tab.key }]"
-        >
-          {{ tab.label }}
-        </button>
-      </div>
-
-      <div class="request-tab-content">
-        <!-- 请求头 -->
-        <RequestHeaders v-if="activeRequestTab === 'headers'" v-model="request.headers" />
-
-        <!-- 请求体 -->
-        <RequestBody v-if="activeRequestTab === 'body'" v-model="request.body" />
-
-        <!-- 认证 -->
-        <div v-if="activeRequestTab === 'auth'" class="auth-section">
-          <div class="auth-type">
-            <label>认证类型：</label>
-            <select v-model="request.auth.type" class="auth-select">
-              <option value="none">无认证</option>
-              <option value="bearer">Bearer Token</option>
-              <option value="basic">Basic Auth</option>
-              <option value="api-key">API Key</option>
-            </select>
-          </div>
-
-          <div v-if="request.auth.type === 'bearer'" class="auth-config">
-            <input
-              v-model="request.auth.token"
-              placeholder="输入 Bearer Token"
-              class="auth-input"
-            />
-          </div>
-
-          <div v-else-if="request.auth.type === 'basic'" class="auth-config">
-            <input v-model="request.auth.username" placeholder="用户名" class="auth-input" />
-            <input
-              v-model="request.auth.password"
-              type="password"
-              placeholder="密码"
-              class="auth-input"
-            />
-          </div>
-
-          <div v-else-if="request.auth.type === 'api-key'" class="auth-config">
-            <input v-model="request.auth.key" placeholder="API Key 名称" class="auth-input" />
-            <input v-model="request.auth.value" placeholder="API Key 值" class="auth-input" />
-            <select v-model="request.auth.location" class="auth-select">
-              <option value="header">Header</option>
-              <option value="query">Query Parameter</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- 请求配置面板 -->
+    <RequestPanel
+      :request="request"
+      :loading="loading"
+      @send-request="sendRequest"
+      @update:request="handleRequestUpdate"
+    />
 
     <!-- 响应区域 -->
     <ResponseViewer
@@ -124,17 +46,24 @@
   </div>
 </template>
 
+<script lang="ts">
+export default {
+  name: 'PostManMain',
+};
+</script>
+
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { langManager } from '@/utils/i18n';
 
-const t = (key: string) => langManager.t(key);
 import axios, { AxiosResponse, Method } from 'axios';
-import RequestHeaders from './RequestHeaders.vue';
-import RequestBody from './RequestBody.vue';
+import RequestPanel from './RequestPanel.vue';
 import ResponseViewer from './ResponseViewer.vue';
 import RequestHistory from './RequestHistory.vue';
 import EnvironmentVariables from './EnvironmentVariables.vue';
+
+const t = (key: string, params?: Record<string, string | number>) =>
+  langManager.t(key, params);
 
 // 接口定义
 interface Header {
@@ -161,7 +90,7 @@ interface AuthConfig {
 }
 
 interface RequestConfig {
-  method: string;
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
   url: string;
   headers: Header[];
   body: RequestBodyData;
@@ -173,6 +102,8 @@ interface ResponseData {
   statusText: string;
   headers: Record<string, string>;
   data: any;
+  responseTime: number;
+  size: number;
 }
 
 interface HistoryItem {
@@ -207,7 +138,7 @@ const envRef = ref();
 
 // 请求配置
 const request = reactive<RequestConfig>({
-  method: 'GET',
+  method: 'GET' as const,
   url: '',
   headers: [],
   body: {
@@ -225,13 +156,6 @@ const currentEnvironment = ref('');
 // 请求历史
 const requestHistory = ref<HistoryItem[]>([]);
 
-// 标签页配置
-const requestTabs = [
-  { key: 'headers', label: '请求头' },
-  { key: 'body', label: '请求体' },
-  { key: 'auth', label: '认证' },
-];
-
 // 组件挂载时加载数据
 onMounted(() => {
   loadFromStorage();
@@ -240,7 +164,7 @@ onMounted(() => {
 // 发送请求
 const sendRequest = async () => {
   if (!request.url.trim()) {
-    error.value = '请输入请求 URL';
+    error.value = t('postman.request.missingUrl');
     return;
   }
 
@@ -347,6 +271,8 @@ const sendRequest = async () => {
       statusText: axiosResponse.statusText,
       headers: axiosResponse.headers as Record<string, string>,
       data: axiosResponse.data,
+      responseTime: responseTime.value,
+      size: JSON.stringify(axiosResponse.data).length,
     };
 
     // 计算响应大小
@@ -381,13 +307,13 @@ const sendRequest = async () => {
         responseSize.value = new Blob([responseStr]).size;
       } else if (err.request) {
         // 请求已发出但没有收到响应
-        error.value = '网络错误：无法连接到服务器';
+        error.value = t('postman.request.networkError');
       } else {
         // 其他错误
-        error.value = `请求错误：${err.message}`;
+        error.value = t('postman.request.requestError', { message: err.message });
       }
     } else {
-      error.value = `未知错误：${(err as Error).message}`;
+      error.value = t('postman.request.unknownError', { message: (err as Error).message });
     }
   } finally {
     loading.value = false;
@@ -407,7 +333,7 @@ const addToHistory = (item: HistoryItem) => {
 };
 
 const loadHistoryItem = (item: HistoryItem) => {
-  request.method = item.method;
+  request.method = item.method as any;
   request.url = item.url;
 
   // 转换 headers 格式
@@ -474,7 +400,7 @@ const loadRequest = () => {
         // 加载请求配置
         Object.assign(request, requestData);
       } catch (error) {
-        alert('加载失败：文件格式错误');
+        alert(t('postman.request.loadFailed'));
       }
     };
     reader.readAsText(file);
@@ -505,6 +431,11 @@ const loadFromStorage = () => {
   } catch (error) {
     console.error('加载本地数据失败:', error);
   }
+};
+
+// 处理请求更新
+const handleRequestUpdate = (newRequest: any) => {
+  Object.assign(request, newRequest);
 };
 
 // 暴露给父组件的方法

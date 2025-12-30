@@ -27,19 +27,19 @@
           <div class="date-converter__radio-group">
             <label class="date-converter__radio">
               <input type="radio" v-model="inputType" value="timestamp" />
-              <span>Unix时间戳</span>
+              <span>{{ t('dateConverter.inputTypes.timestamp') }}</span>
             </label>
             <label class="date-converter__radio">
               <input type="radio" v-model="inputType" value="iso" />
-              <span>ISO格式</span>
+              <span>{{ t('dateConverter.inputTypes.iso') }}</span>
             </label>
             <label class="date-converter__radio">
               <input type="radio" v-model="inputType" value="local" />
-              <span>本地时间</span>
+              <span>{{ t('dateConverter.inputTypes.local') }}</span>
             </label>
             <label class="date-converter__radio">
               <input type="radio" v-model="inputType" value="custom" />
-              <span>自定义格式</span>
+              <span>{{ t('dateConverter.inputTypes.custom') }}</span>
             </label>
           </div>
 
@@ -49,7 +49,7 @@
                 type="number"
                 v-model.number="inputTimestamp"
                 class="date-converter__input"
-                placeholder="Unix时间戳（秒）"
+                :placeholder="t('dateConverter.placeholders.timestampSeconds')"
                 @input="convertFromTimestamp"
               />
               <div class="date-converter__unit-selector">
@@ -60,7 +60,7 @@
                     value="seconds"
                     @change="convertFromTimestamp"
                   />
-                  <span>秒</span>
+                  <span>{{ t('dateConverter.units.seconds') }}</span>
                 </label>
                 <label class="date-converter__radio">
                   <input
@@ -69,7 +69,7 @@
                     value="milliseconds"
                     @change="convertFromTimestamp"
                   />
-                  <span>毫秒</span>
+                  <span>{{ t('dateConverter.units.milliseconds') }}</span>
                 </label>
               </div>
             </template>
@@ -79,7 +79,7 @@
                 type="text"
                 v-model="inputIso"
                 class="date-converter__input"
-                placeholder="ISO格式 (YYYY-MM-DDTHH:mm:ss.sssZ)"
+                :placeholder="t('dateConverter.placeholders.iso')"
                 @input="convertFromIso"
               />
             </template>
@@ -99,14 +99,14 @@
                   type="text"
                   v-model="inputCustom"
                   class="date-converter__input"
-                  placeholder="输入日期字符串"
+                  :placeholder="t('dateConverter.placeholders.customInput')"
                   @input="convertFromCustom"
                 />
                 <input
                   type="text"
                   v-model="customFormat"
                   class="date-converter__format-input"
-                  placeholder="格式 (例如: YYYY-MM-DD HH:mm:ss)"
+                  :placeholder="t('dateConverter.placeholders.customFormat')"
                   @input="convertFromCustom"
                 />
               </div>
@@ -122,7 +122,7 @@
       <!-- 时区选择 -->
       <div class="date-converter__timezone-panel">
         <div class="date-converter__panel-header">
-          <span>时区设置</span>
+          <span>{{ t('dateConverter.timezoneTitle') }}</span>
         </div>
         <select
           v-model="selectedTimezone"
@@ -138,46 +138,52 @@
       <!-- 输出区域 -->
       <div class="date-converter__output-panel">
         <div class="date-converter__panel-header">
-          <span>转换结果</span>
+          <span>{{ t('dateConverter.outputTitle') }}</span>
           <div class="date-converter__panel-controls">
             <span
               class="date-converter__btn-link"
               @click="copyToClipboard"
               :class="{ 'date-converter__btn-disabled': !hasValidDate }"
             >
-              复制
+              {{ t('common.copy') }}
             </span>
           </div>
         </div>
 
         <div class="date-converter__results">
           <div class="date-converter__result-item">
-            <div class="date-converter__result-label">Unix时间戳（秒）:</div>
+            <div class="date-converter__result-label">
+              {{ t('dateConverter.resultLabels.timestampSeconds') }}
+            </div>
             <div class="date-converter__result-value">{{ outputTimestampSeconds }}</div>
           </div>
 
           <div class="date-converter__result-item">
-            <div class="date-converter__result-label">Unix时间戳（毫秒）:</div>
+            <div class="date-converter__result-label">
+              {{ t('dateConverter.resultLabels.timestampMilliseconds') }}
+            </div>
             <div class="date-converter__result-value">{{ outputTimestampMilliseconds }}</div>
           </div>
 
           <div class="date-converter__result-item">
-            <div class="date-converter__result-label">ISO格式:</div>
+            <div class="date-converter__result-label">{{ t('dateConverter.resultLabels.iso') }}</div>
             <div class="date-converter__result-value">{{ outputIso }}</div>
           </div>
 
           <div class="date-converter__result-item">
-            <div class="date-converter__result-label">本地时间:</div>
+            <div class="date-converter__result-label">{{ t('dateConverter.resultLabels.local') }}</div>
             <div class="date-converter__result-value">{{ outputLocal }}</div>
           </div>
 
           <div class="date-converter__result-item">
-            <div class="date-converter__result-label">UTC时间:</div>
+            <div class="date-converter__result-label">{{ t('dateConverter.resultLabels.utc') }}</div>
             <div class="date-converter__result-value">{{ outputUtc }}</div>
           </div>
 
           <div class="date-converter__result-item">
-            <div class="date-converter__result-label">相对时间:</div>
+            <div class="date-converter__result-label">
+              {{ t('dateConverter.resultLabels.relative') }}
+            </div>
             <div class="date-converter__result-value">{{ outputRelative }}</div>
           </div>
         </div>
@@ -187,52 +193,62 @@
     <!-- 日期计算工具 -->
     <div class="date-converter__calculator">
       <div class="date-converter__panel-header">
-        <span>日期计算</span>
+        <span>{{ t('dateConverter.calculator.title') }}</span>
       </div>
 
       <div class="date-converter__calculator-content">
         <div class="date-converter__calculator-row">
-          <span class="date-converter__calculator-label">添加/减去:</span>
+          <span class="date-converter__calculator-label">
+            {{ t('dateConverter.calculator.label') }}
+          </span>
           <input
             type="number"
             v-model.number="calculationValue"
             class="date-converter__calculator-input"
           />
           <select v-model="calculationUnit" class="date-converter__calculator-unit">
-            <option value="seconds">秒</option>
-            <option value="minutes">分钟</option>
-            <option value="hours">小时</option>
-            <option value="days">天</option>
-            <option value="weeks">周</option>
-            <option value="months">月</option>
-            <option value="years">年</option>
+            <option value="seconds">{{ t('dateConverter.units.seconds') }}</option>
+            <option value="minutes">{{ t('dateConverter.units.minutes') }}</option>
+            <option value="hours">{{ t('dateConverter.units.hours') }}</option>
+            <option value="days">{{ t('dateConverter.units.days') }}</option>
+            <option value="weeks">{{ t('dateConverter.units.weeks') }}</option>
+            <option value="months">{{ t('dateConverter.units.months') }}</option>
+            <option value="years">{{ t('dateConverter.units.years') }}</option>
           </select>
-          <button class="u-btn_il" s-color="blue" @click="calculateDate(true)">添加</button>
-          <button class="u-btn_il" @click="calculateDate(false)">减去</button>
+          <button class="u-btn_il" s-color="blue" @click="calculateDate(true)">
+            {{ t('dateConverter.calculator.add') }}
+          </button>
+          <button class="u-btn_il" @click="calculateDate(false)">
+            {{ t('dateConverter.calculator.subtract') }}
+          </button>
         </div>
 
         <div class="date-converter__calculator-result" v-if="calculationResult">
-          <div class="date-converter__result-label">计算结果:</div>
+          <div class="date-converter__result-label">
+            {{ t('dateConverter.resultLabels.calculationResult') }}
+          </div>
           <div class="date-converter__result-value">{{ calculationResult }}</div>
         </div>
       </div>
     </div>
 
     <div class="date-converter__tips">
-      <h4>使用提示：</h4>
+      <h4>{{ t('dateConverter.tips.title') }}</h4>
       <ul>
-        <li>Unix时间戳是从1970年1月1日UTC开始计算的秒数</li>
-        <li>ISO格式遵循国际标准，包含时区信息</li>
-        <li>时区转换会影响显示的本地时间</li>
-        <li>日期计算可用于计算未来或过去的日期</li>
+        <li>{{ t('dateConverter.tips.item1') }}</li>
+        <li>{{ t('dateConverter.tips.item2') }}</li>
+        <li>{{ t('dateConverter.tips.item3') }}</li>
+        <li>{{ t('dateConverter.tips.item4') }}</li>
       </ul>
     </div>
 
     <div v-if="successVisible" class="date-converter__success-modal">
       <div class="date-converter__modal-content">
-        <h4>操作成功</h4>
+        <h4>{{ t('dateConverter.modal.successTitle') }}</h4>
         <p>{{ successMessage }}</p>
-        <button class="u-btn_il" s-color="blue" @click="successVisible = false">确定</button>
+        <button class="u-btn_il" s-color="blue" @click="successVisible = false">
+          {{ t('common.ok') }}
+        </button>
       </div>
     </div>
   </section>
@@ -242,7 +258,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { langManager } from '@/utils/i18n';
 
-const t = (key: string) => langManager.t(key);
+const t = (key: string, params?: Record<string, string | number>) =>
+  langManager.t(key, params);
 import DOMPurify from 'dompurify';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -285,15 +302,15 @@ const calculationUnit = ref('days');
 const calculationResult = ref('');
 
 // 时区列表
-const timezones = [
-  { value: 'Asia/Shanghai', label: '中国标准时间 (UTC+8)' },
-  { value: 'Asia/Tokyo', label: '日本标准时间 (UTC+9)' },
-  { value: 'Europe/London', label: '英国标准时间 (UTC+0/+1)' },
-  { value: 'Europe/Paris', label: '中欧标准时间 (UTC+1/+2)' },
-  { value: 'America/New_York', label: '美国东部时间 (UTC-5/-4)' },
-  { value: 'America/Los_Angeles', label: '美国太平洋时间 (UTC-8/-7)' },
-  { value: 'UTC', label: '协调世界时 (UTC)' },
-];
+const timezones = computed(() => [
+  { value: 'Asia/Shanghai', label: t('dateConverter.timezones.asiaShanghai') },
+  { value: 'Asia/Tokyo', label: t('dateConverter.timezones.asiaTokyo') },
+  { value: 'Europe/London', label: t('dateConverter.timezones.europeLondon') },
+  { value: 'Europe/Paris', label: t('dateConverter.timezones.europeParis') },
+  { value: 'America/New_York', label: t('dateConverter.timezones.americaNewYork') },
+  { value: 'America/Los_Angeles', label: t('dateConverter.timezones.americaLosAngeles') },
+  { value: 'UTC', label: t('dateConverter.timezones.utc') },
+]);
 
 // 计算属性
 const hasValidDate = computed(() => currentDate.value !== null);
@@ -369,7 +386,7 @@ const convertFromTimestamp = () => {
     inputLocalString.value = currentDate.value.format('YYYY-MM-DDTHH:mm');
     inputCustom.value = currentDate.value.format(customFormat.value);
   } catch (e) {
-    error.value = `转换失败：${(e as Error).message}`;
+    error.value = t('dateConverter.messages.convertFailed', { message: (e as Error).message });
     currentDate.value = null;
   }
 };
@@ -388,7 +405,7 @@ const convertFromIso = () => {
     currentDate.value = dayjs(sanitizedInput);
 
     if (!currentDate.value.isValid()) {
-      throw new Error('无效的ISO日期格式');
+      throw new Error(t('dateConverter.messages.invalidIso'));
     }
 
     // 更新其他输入框
@@ -396,7 +413,7 @@ const convertFromIso = () => {
     inputLocalString.value = currentDate.value.format('YYYY-MM-DDTHH:mm');
     inputCustom.value = currentDate.value.format(customFormat.value);
   } catch (e) {
-    error.value = `转换失败：${(e as Error).message}`;
+    error.value = t('dateConverter.messages.convertFailed', { message: (e as Error).message });
     currentDate.value = null;
   }
 };
@@ -413,7 +430,7 @@ const convertFromLocalString = () => {
     currentDate.value = dayjs(inputLocalString.value);
 
     if (!currentDate.value.isValid()) {
-      throw new Error('无效的日期格式');
+      throw new Error(t('dateConverter.messages.invalidDate'));
     }
 
     // 更新其他输入框
@@ -421,7 +438,7 @@ const convertFromLocalString = () => {
     inputIso.value = currentDate.value.toISOString();
     inputCustom.value = currentDate.value.format(customFormat.value);
   } catch (e) {
-    error.value = `转换失败：${(e as Error).message}`;
+    error.value = t('dateConverter.messages.convertFailed', { message: (e as Error).message });
     currentDate.value = null;
   }
 };
@@ -442,7 +459,7 @@ const convertFromCustom = () => {
     currentDate.value = dayjs(sanitizedInput, sanitizedFormat);
 
     if (!currentDate.value.isValid()) {
-      throw new Error('无效的日期格式');
+      throw new Error(t('dateConverter.messages.invalidDate'));
     }
 
     // 更新其他输入框
@@ -450,7 +467,7 @@ const convertFromCustom = () => {
     inputIso.value = currentDate.value.toISOString();
     inputLocalString.value = currentDate.value.format('YYYY-MM-DDTHH:mm');
   } catch (e) {
-    error.value = `转换失败：${(e as Error).message}`;
+    error.value = t('dateConverter.messages.convertFailed', { message: (e as Error).message });
     currentDate.value = null;
   }
 };
@@ -465,7 +482,7 @@ const updateAllOutputs = () => {
 // 日期计算
 const calculateDate = (isAdd: boolean) => {
   if (!currentDate.value || calculationValue.value === null) {
-    error.value = '请先输入有效的日期和计算值';
+    error.value = t('dateConverter.messages.calculateRequired');
     return;
   }
 
@@ -475,7 +492,7 @@ const calculateDate = (isAdd: boolean) => {
 
     calculationResult.value = `${result.format('YYYY-MM-DD HH:mm:ss')} (${result.fromNow()})`;
   } catch (e) {
-    error.value = `计算失败：${(e as Error).message}`;
+    error.value = t('dateConverter.messages.calculateFailed', { message: (e as Error).message });
   }
 };
 
@@ -483,18 +500,18 @@ const calculateDate = (isAdd: boolean) => {
 const copyToClipboard = () => {
   if (!currentDate.value) return;
 
-  const textToCopy = `Unix时间戳(秒): ${outputTimestampSeconds.value}
-Unix时间戳(毫秒): ${outputTimestampMilliseconds.value}
-ISO格式: ${outputIso.value}
-本地时间(${selectedTimezone.value}): ${outputLocal.value}
-UTC时间: ${outputUtc.value}
-相对时间: ${outputRelative.value}`;
+  const textToCopy = `${t('dateConverter.resultLabels.timestampSeconds')} ${outputTimestampSeconds.value}
+${t('dateConverter.resultLabels.timestampMilliseconds')} ${outputTimestampMilliseconds.value}
+${t('dateConverter.resultLabels.iso')} ${outputIso.value}
+${t('dateConverter.resultLabels.local')} (${selectedTimezone.value}): ${outputLocal.value}
+${t('dateConverter.resultLabels.utc')} ${outputUtc.value}
+${t('dateConverter.resultLabels.relative')} ${outputRelative.value}`;
 
   try {
     navigator.clipboard.writeText(textToCopy);
-    showSuccess('已复制到剪贴板！');
+    showSuccess(t('dateConverter.messages.copySuccess'));
   } catch (e) {
-    error.value = `复制失败：${(e as Error).message}`;
+    error.value = t('dateConverter.messages.copyFailed', { message: (e as Error).message });
   }
 };
 
@@ -517,15 +534,19 @@ const handleBack = () => {
 
 <style lang="less" scoped>
 .date-converter {
-  padding: 16px;
-  max-width: 800px;
+  padding: 22px 26px 18px;
+  max-width: 880px;
   margin: 0 auto;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   height: calc(100vh - 40px); /* Set a fixed height with some padding */
   overflow-y: auto; /* Add vertical scrollbar when content exceeds height */
   scrollbar-width: thin; /* For Firefox */
   scrollbar-color: #bbb #f5f5f5; /* For Firefox */
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
+  border: 1px solid #e2e9ff;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
 
   /* Webkit scrollbar styling */
   &::-webkit-scrollbar {
@@ -554,7 +575,7 @@ const handleBack = () => {
     margin-bottom: 16px;
     position: sticky;
     top: 0;
-    background-color: #fff;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(245, 248, 255, 0.96) 100%);
     padding: 6px 0;
     z-index: 10;
 
@@ -562,12 +583,13 @@ const handleBack = () => {
       h4.date-converter__title {
         margin: 0 0 6px;
         font-size: 16px;
-        font-weight: 500;
+        font-weight: 600;
+        color: #1f2a44;
       }
 
       p {
         margin: 0;
-        color: #666;
+        color: #6b7a99;
         font-size: 13px;
       }
     }
@@ -576,19 +598,23 @@ const handleBack = () => {
   &__back-btn {
     flex-shrink: 0;
     font-size: 13px;
-    padding: 4px 8px;
-    background-color: #f0f7ff;
-    color: #1890ff;
-    border: 1px solid #d6e8ff;
-    border-radius: 4px;
+    padding: 6px 10px;
+    background-color: #fff;
+    color: #2969f7;
+    border: 1px solid #dbe3f9;
+    border-radius: 10px;
     cursor: pointer;
     display: inline-block;
     gap: 4px;
-    transition: all 0.2s;
+    box-shadow: 0 6px 14px rgba(28, 63, 124, 0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, color 0.15s ease,
+      border-color 0.15s ease;
 
     &:hover {
-      background-color: #e6f4ff;
-      color: #0c7ad9;
+      color: #1f55d1;
+      border-color: #b9c7ef;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(41, 105, 247, 0.18);
     }
 
     i {
@@ -607,14 +633,16 @@ const handleBack = () => {
   &__timezone-panel,
   &__output-panel,
   &__calculator {
-    background-color: #f9f9f9;
-    border-radius: 8px;
+    background-color: #fff;
+    border-radius: 12px;
     padding: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s ease;
+    border: 1px solid #e4e9f7;
+    box-shadow: 0 6px 14px rgba(28, 63, 124, 0.06);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
 
     &:hover {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 10px 20px rgba(28, 63, 124, 0.12);
+      transform: translateY(-1px);
     }
   }
 
@@ -623,24 +651,25 @@ const handleBack = () => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
-    font-weight: 500;
-    border-bottom: 1px solid #eee;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e9ff;
     padding-bottom: 8px;
 
     span {
       font-size: 16px;
+      color: #1f2a44;
     }
   }
 
   &__btn-link {
-    color: #1890ff;
+    color: #2969f7;
     cursor: pointer;
     font-size: 14px;
     transition: color 0.2s;
 
     &:hover {
       text-decoration: underline;
-      color: #40a9ff;
+      color: #1f55d1;
     }
 
     &.date-converter__btn-disabled {
@@ -670,11 +699,11 @@ const handleBack = () => {
     align-items: center;
     cursor: pointer;
     padding: 4px 8px;
-    border-radius: 4px;
+    border-radius: 8px;
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: #f0f0f0;
+      background-color: #f3f6ff;
     }
 
     input {
@@ -689,15 +718,15 @@ const handleBack = () => {
   &__input {
     width: 100%;
     padding: 10px;
-    border: 1px solid #d9d9d9;
-    border-radius: 4px;
+    border: 1px solid #dbe3f9;
+    border-radius: 8px;
     font-size: 14px;
     transition: all 0.3s;
 
     &:focus {
-      border-color: #40a9ff;
+      border-color: #2969f7;
       outline: none;
-      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+      box-shadow: 0 0 0 3px rgba(41, 105, 247, 0.18);
     }
   }
 
@@ -715,30 +744,30 @@ const handleBack = () => {
 
   &__format-input {
     padding: 10px;
-    border: 1px solid #d9d9d9;
-    border-radius: 4px;
+    border: 1px solid #dbe3f9;
+    border-radius: 8px;
     font-size: 14px;
     transition: all 0.3s;
 
     &:focus {
-      border-color: #40a9ff;
+      border-color: #2969f7;
       outline: none;
-      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+      box-shadow: 0 0 0 3px rgba(41, 105, 247, 0.18);
     }
   }
 
   &__timezone-select {
     width: 100%;
     padding: 10px;
-    border: 1px solid #d9d9d9;
-    border-radius: 4px;
+    border: 1px solid #dbe3f9;
+    border-radius: 8px;
     font-size: 14px;
     transition: all 0.3s;
 
     &:focus {
-      border-color: #40a9ff;
+      border-color: #2969f7;
       outline: none;
-      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+      box-shadow: 0 0 0 3px rgba(41, 105, 247, 0.18);
     }
   }
 
@@ -773,20 +802,22 @@ const handleBack = () => {
     align-items: center;
     padding: 10px;
     background-color: #fff;
-    border-radius: 4px;
-    border: 1px solid #eee;
-    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 10px;
+    border: 1px solid #e4e9f7;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 18px rgba(28, 63, 124, 0.12);
     }
   }
 
   &__result-label {
     width: 180px;
     font-weight: 500;
-    color: #555;
+    color: #4a5a78;
   }
 
   &__result-value {
@@ -794,8 +825,10 @@ const handleBack = () => {
     word-break: break-all;
     font-family: monospace;
     padding: 4px 8px;
-    background-color: #f9f9f9;
-    border-radius: 3px;
+    background-color: #f6f8ff;
+    border-radius: 6px;
+    border: 1px solid #e2e9ff;
+    color: #2b3a55;
   }
 
   &__calculator {
@@ -822,30 +855,30 @@ const handleBack = () => {
     &-input {
       width: 120px;
       padding: 10px;
-      border: 1px solid #d9d9d9;
-      border-radius: 4px;
+      border: 1px solid #dbe3f9;
+      border-radius: 8px;
       font-size: 14px;
       transition: all 0.3s;
 
       &:focus {
-        border-color: #40a9ff;
+        border-color: #2969f7;
         outline: none;
-        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        box-shadow: 0 0 0 3px rgba(41, 105, 247, 0.18);
       }
     }
 
     &-unit {
       width: 100px;
       padding: 10px;
-      border: 1px solid #d9d9d9;
-      border-radius: 4px;
+      border: 1px solid #dbe3f9;
+      border-radius: 8px;
       font-size: 14px;
       transition: all 0.3s;
 
       &:focus {
-        border-color: #40a9ff;
+        border-color: #2969f7;
         outline: none;
-        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        box-shadow: 0 0 0 3px rgba(41, 105, 247, 0.18);
       }
     }
 
@@ -853,9 +886,10 @@ const handleBack = () => {
       display: flex;
       align-items: center;
       padding: 12px;
-      background-color: #f0f8ff;
-      border-radius: 4px;
-      border: 1px solid #d0e6ff;
+      background-color: #eef4ff;
+      border-radius: 10px;
+      border: 1px solid #cfe0ff;
+      color: #1f2a44;
     }
   }
 
@@ -870,16 +904,16 @@ const handleBack = () => {
   }
 
   &__tips {
-    background-color: #f9f9f9;
-    border-radius: 8px;
+    background-color: #f6f8ff;
+    border-radius: 12px;
     padding: 16px;
     margin-top: 16px;
-    border-left: 4px solid #1890ff;
+    border-left: 4px solid #2969f7;
 
     h4 {
       margin-top: 0;
       margin-bottom: 8px;
-      color: #1890ff;
+      color: #1f2a44;
     }
 
     ul {
@@ -888,7 +922,7 @@ const handleBack = () => {
 
       li {
         margin-bottom: 6px;
-        color: #666;
+        color: #6b7a99;
       }
     }
   }
@@ -909,17 +943,17 @@ const handleBack = () => {
 
   &__modal-content {
     background-color: #fff;
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 20px;
     width: 300px;
     text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 12px 24px rgba(28, 63, 124, 0.18);
     animation: slideUp 0.3s ease;
 
     h4 {
       margin-top: 0;
       margin-bottom: 16px;
-      color: #52c41a;
+      color: #2fb36b;
     }
 
     p {
@@ -948,7 +982,7 @@ const handleBack = () => {
   }
 
   @media (max-width: 768px) {
-    padding: 12px;
+    padding: 16px;
     height: calc(100vh - 24px);
 
     &__result-item {
@@ -985,5 +1019,35 @@ const handleBack = () => {
       }
     }
   }
+}
+
+.date-converter .u-btn_il {
+  min-width: 140px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid #dbe3f9;
+  background: #fff;
+  color: #2b3a55;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(28, 63, 124, 0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease,
+    color 0.15s ease, border-color 0.15s ease;
+}
+
+.date-converter .u-btn_il:hover {
+  transform: translateY(-1px);
+  border-color: #b9c7ef;
+}
+
+.date-converter .u-btn_il[s-color='blue'] {
+  background: linear-gradient(135deg, #2969f7 0%, #4d7fff 100%);
+  border-color: #2c66f7;
+  color: #fff;
+  box-shadow: 0 10px 18px rgba(41, 105, 247, 0.25);
+}
+
+.date-converter .u-btn_il[s-color='blue']:hover {
+  box-shadow: 0 14px 24px rgba(41, 105, 247, 0.32);
 }
 </style>

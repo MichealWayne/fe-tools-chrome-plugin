@@ -6,9 +6,14 @@
  */
 
 @import 'moo-css-base/mobileColors.less';
+@import './design-system.less';
 @import './fonticon.less';
 @import './animation.less';
-@blue: #2969f7;
+
+// 兼容性变量（逐步迁移到CSS变量）
+@blue: var(--color-primary);
+@red: var(--color-error);
+@white: var(--color-background-light);
 
 [s-cr_blue] {
   color: @blue;
@@ -176,6 +181,10 @@
 }
 .m-others {
   color: #8795a8;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px 6px;
+  justify-items: center;
 
   li:hover {
     opacity: 0.8;
@@ -221,7 +230,7 @@
 
 .m-others {
   li {
-    width: 25%;
+    width: 100%;
     cursor: pointer;
   }
 }

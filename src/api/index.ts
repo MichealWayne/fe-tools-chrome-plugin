@@ -2,105 +2,106 @@
  * @description handle ajax
  * @author Wayne
  * @time 2019.10.08
+ * @updated 2024.04.15
  */
 
-import axios, { AxiosResponse } from 'axios';
-import { AnyObj } from '../types';
-
+import { ApiClient } from './client';
 import { AJAX_INTERFACE } from '@/constant';
+import { API_HOST } from '@/constant';
+import {
+  ApiResponse,
+  ToolsData,
+  TranslateRequest,
+  TranslateResponse,
+  MooCSSData,
+  RegexData,
+  LinuxCommand,
+  UtilFunction,
+} from '@/types/api';
 
-/**
- * @function handleSuccess
- * @description request sucess callback
- * @param {object} res
- * @return {promise}
- */
-function handleSuccess(res: AxiosResponse<any>, url: string) {
-  const { statusText, status, data } = res;
-
-  let result: AnyObj = {};
-  if (typeof data === 'object') {
-    result = data;
-    if (Array.isArray(data)) {
-      result.list = data;
-    }
-  } else {
-    result.data = data;
+// FeTools API 服务：封装各资源请求
+class FeToolsService extends ApiClient {
+  constructor() {
+    super({ baseURL: API_HOST });
   }
 
-  return Promise.resolve({
-    success: true,
-    message: statusText,
-    statusCode: status,
-    url,
-    ...result,
-  });
-}
-
-/**
- * @function handleError
- * @description request fail callback
- * @param {object} res
- * @return {promise}
- */
-function handleError(err: any, url: string) {
-  const { response, message } = err || {};
-
-  let msg;
-  let statusCode;
-
-  if (response && response instanceof Object) {
-    const { data, statusText } = response;
-
-    statusCode = response.status;
-    msg = data.message || statusText;
-  } else {
-    // eslint-disable-next-line no-magic-numbers
-    statusCode = 600;
-    msg = message || `Network Error(${url})`;
+  // 工具列表
+  async getFeTools(): Promise<ApiResponse<ToolsData[]>> {
+    return this.get<ToolsData[]>('/fe-tools/datas/tools.json');
   }
 
-  return Promise.reject({
-    success: false,
-    statusCode,
-    message: msg,
-  });
+  // 翻译接口
+  async handleTranslate(data: TranslateRequest): Promise<ApiResponse<TranslateResponse>> {
+    return this.post<TranslateResponse>('/translate', data);
+  }
+
+  // MooCSS 数据
+  async getMooCSS(): Promise<ApiResponse<MooCSSData[]>> {
+    return this.get<MooCSSData[]>('/fe-tools/datas/moo-css.json');
+  }
+
+  // 正则表达式库
+  async getRegex(): Promise<ApiResponse<RegexData[]>> {
+    return this.get<RegexData[]>('/fe-tools/datas/regex.json');
+  }
+
+  // Linux 命令文档
+  async getLinuxCommands(): Promise<ApiResponse<LinuxCommand[]>> {
+    return this.get<LinuxCommand[]>('/fe-tools/datas/linux-commands.json');
+  }
+
+  // 工具函数元数据
+  async getUtilFuncs(): Promise<ApiResponse<UtilFunction[]>> {
+    return this.get<UtilFunction[]>('/fe-tools/stable/data/yafReflectionMap.json');
+  }
 }
 
-export function get(url: string, ...rest: any[]) {
-  return axios
-    .get(url, typeof rest[0] === 'function' ? {} : { params: rest[0], timeout: 8000 })
-    .catch(e => console.warn(e))
-    .then(res => handleSuccess(res!, url))
-    .catch(e => handleError(e, url));
+// 创建服务实例
+export const feToolsService = new FeToolsService();
+
+// 兼容旧的API调用方式
+export function get<T = unknown>(
+  url: string,
+  params?: Record<string, unknown>
+): Promise<ApiResponse<T>> {
+  return feToolsService.get<T>(url, params);
 }
 
-export function post(url: string, ...rest: any[]) {
-  return axios
-    .post(url, rest[0], {
-      timeout: 10000,
-    })
-    .catch(e => console.warn(e))
-    .then(res => handleSuccess(res!, url))
-    .catch(e => handleError(e, url));
+// 兼容旧的API调用方式
+export function post<T = unknown>(url: string, data?: unknown): Promise<ApiResponse<T>> {
+  return feToolsService.post<T>(url, data);
 }
 
-const AjaxMethods = {
-  get,
-  post,
-};
+// 动态生成API方法（保持向后兼容）
+// 动态 API 映射的类型约束
+interface ApiMethods {
+  [key: string]: (data?: unknown) => Promise<ApiResponse<unknown>>;
+}
 
-const api: any = {};
+// 动态 API 容器
+const api: ApiMethods = {};
+
+// 解析 "METHOD /path" 字符串并返回调用函数
 function handleAjax(info: string) {
-  const _info = info.split(' ');
-  return function (datas: AnyObj) {
-    return AjaxMethods[_info[0] as keyof typeof AjaxMethods](_info[1], datas);
+  const [method, url] = info.split(' ');
+  return function (data?: unknown) {
+    if (!method || !url) {
+      throw new Error(`Invalid API configuration: ${info}`);
+    }
+    if (method.toLowerCase() === 'get') {
+      return feToolsService.get(url, data as Record<string, unknown>);
+    } else if (method.toLowerCase() === 'post') {
+      return feToolsService.post(url, data);
+    }
+    throw new Error(`Unsupported HTTP method: ${method}`);
   };
 }
 
-// eslint-disable-next-line guard-for-in
+// 生成API方法
 for (const key in AJAX_INTERFACE) {
-  api[key] = handleAjax(AJAX_INTERFACE[key as keyof typeof AJAX_INTERFACE]);
+  if (Object.prototype.hasOwnProperty.call(AJAX_INTERFACE, key)) {
+    api[key] = handleAjax(AJAX_INTERFACE[key as keyof typeof AJAX_INTERFACE]);
+  }
 }
 
 export default api;

@@ -119,7 +119,7 @@ const handleRateBlur = () => {
     })
     .catch(e => {
       console.error(e);
-      alert('转换失败，请重试');
+      alert(t('imageCompressor.messages.convertFailed'));
     });
 };
 

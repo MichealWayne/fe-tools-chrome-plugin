@@ -38,10 +38,10 @@ export default {
 import { defineProps, ref, watch, toRefs, onMounted } from 'vue';
 import { langManager } from '@/utils/i18n';
 
-const t = (key: string) => langManager.t(key);
-
 import { getLocalTabUrl } from '@/utils/chrome';
 import { handleQRCode } from '@/utils';
+
+const t = (key: string) => langManager.t(key);
 
 const props = defineProps({
   keywords: {

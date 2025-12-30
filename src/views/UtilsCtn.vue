@@ -29,12 +29,14 @@
     </ul>
 
     <ul class="m-module-list">
-      <li v-for="(item, index) in moduleList" :key="index" @click="toUtilFuncDoc(item)">
-        {{ item }}
+      <li v-for="(item, index) in moduleList" :key="index" @click="toUtilFuncDoc(item.name)">
+        {{ item.name }}
       </li>
     </ul>
 
-    <p class="u-link g-mt30 f-tc g-fs14" s-cr_blue @click.stop="back">返回主页</p>
+    <p class="u-link g-mt30 f-tc g-fs14" s-cr_blue @click.stop="back">
+      {{ t('common.backHome') }}
+    </p>
   </section>
 </template>
 
@@ -42,15 +44,15 @@
 import { defineComponent } from 'vue';
 import { langManager } from '@/utils/i18n';
 
-import { AnyFunc } from '@/types';
+import { AnyFunc, AnyObj } from '@/types';
 import { jumpAction } from '@/utils/chrome';
 import ajax from '@/api';
 
 type ComponentDataTypes = {
   keywords: string;
-  resultList: any[];
-  moduleList: any[];
-  funcsList: any[];
+  resultList: AnyObj[];
+  moduleList: AnyObj[];
+  funcsList: AnyObj[];
 };
 export default defineComponent({
   name: 'UtilsCtn',
@@ -65,7 +67,6 @@ export default defineComponent({
   data(): ComponentDataTypes {
     return {
       keywords: '',
-
       moduleList: [],
       resultList: [],
       funcsList: [],
@@ -73,13 +74,22 @@ export default defineComponent({
   },
 
   mounted() {
-    ajax.getUtilFuncs().then((data: any) => {
-      this.handleList(data);
-    });
+    if (ajax && ajax.getUtilFuncs) {
+      ajax
+        .getUtilFuncs()
+        .then((data: any) => {
+          if (data && (data.success || data.list || data.data || Array.isArray(data))) {
+            this.handleList(data.list || data.data || data);
+          }
+        })
+        .catch((error: any) => {
+          console.error('Failed to load util functions:', error);
+        });
+    }
   },
 
   methods: {
-    t(key: string) {
+    translate(key: string) {
       return langManager.t(key);
     },
     /**
@@ -102,16 +112,26 @@ export default defineComponent({
     },
 
     handleList(list: any) {
-      const ModuleSet = new Set();
-      Object.keys(list).forEach(key => {
-        const item = list[key];
-        const { query = '' } = item;
-        const label = query;
-        if (label) ModuleSet.add(label);
-      });
+      if (!list) return;
 
-      this.moduleList = Array.from(ModuleSet);
-      this.funcsList = Array.from(ModuleSet).map(item => {
+      const ModuleSet = new Set<string>();
+
+      if (Array.isArray(list)) {
+        list.forEach((item: unknown) => {
+          if (typeof item === 'string') {
+            ModuleSet.add(item);
+          }
+        });
+      } else if (typeof list === 'object') {
+        Object.keys(list).forEach(key => {
+          const item = list[key];
+          const query = item?.query || '';
+          if (query) ModuleSet.add(query);
+        });
+      }
+
+      this.moduleList = Array.from(ModuleSet).map(item => ({ name: item }));
+      this.funcsList = Array.from(ModuleSet).map((item: string) => {
         const infos = item.split('.');
         const label = infos[0];
         const name = infos[infos.length - 1];
@@ -137,25 +157,29 @@ export default defineComponent({
 
     getResultLabel(type: string) {
       return (
-        {
-          css: 's-simple',
-          moo: 's-red',
-          'moo-f': 's-blue',
-        } as any
-      )[type];
+        (
+          {
+            css: 's-simple',
+            moo: 's-red',
+            'moo-f': 's-blue',
+          } as Record<string, string>
+        )[type] || ''
+      );
     },
 
     setSearchResult() {
       const keywords = this.keywords.toLowerCase();
 
       const { funcsList } = this;
-      this.resultList = funcsList.filter(
-        item => item.name.includes(keywords) || item.label.includes(keywords)
-      );
+      this.resultList = funcsList.filter((item: AnyObj) => {
+        const name = (item.name as string) || '';
+        const label = (item.label as string) || '';
+        return name.includes(keywords) || label.includes(keywords);
+      });
     },
 
-    handleResultClick(item: any) {
-      this.toUtilFuncDoc(item.query);
+    handleResultClick(item: AnyObj) {
+      this.toUtilFuncDoc(item.query as string);
     },
   },
 });

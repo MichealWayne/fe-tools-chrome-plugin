@@ -1,60 +1,88 @@
 <template>
   <div class="request-body">
     <div class="section-header">
-      <h3>请求体</h3>
+      <h3>{{ t('postman.body.title') }}</h3>
       <select v-model="bodyType" @change="onBodyTypeChange" class="body-type-select">
-        <option value="none">None</option>
-        <option value="json">JSON</option>
-        <option value="form-data">Form Data</option>
-        <option value="x-www-form-urlencoded">x-www-form-urlencoded</option>
-        <option value="raw">Raw</option>
+        <option value="none">{{ t('postman.body.types.none') }}</option>
+        <option value="json">{{ t('postman.body.types.json') }}</option>
+        <option value="form-data">{{ t('postman.body.types.formData') }}</option>
+        <option value="x-www-form-urlencoded">{{ t('postman.body.types.xForm') }}</option>
+        <option value="raw">{{ t('postman.body.types.raw') }}</option>
       </select>
     </div>
 
     <div v-if="bodyType === 'json'" class="json-body">
       <textarea
         v-model="jsonBody"
-        placeholder="输入 JSON 数据"
+        :placeholder="t('postman.body.jsonPlaceholder')"
         class="json-textarea"
         @input="updateBody"
       ></textarea>
-      <button @click="formatJson" class="format-btn">格式化 JSON</button>
+      <button @click="formatJson" class="format-btn">{{ t('postman.actions.formatJson') }}</button>
     </div>
 
     <div v-else-if="bodyType === 'form-data'" class="form-data-body">
       <div v-for="(item, index) in formData" :key="index" class="form-item">
-        <input v-model="item.key" placeholder="Key" class="form-input" @input="updateBody" />
-        <input v-model="item.value" placeholder="Value" class="form-input" @input="updateBody" />
+        <input
+          v-model="item.key"
+          :placeholder="t('postman.body.formKey')"
+          class="form-input"
+          @input="updateBody"
+        />
+        <input
+          v-model="item.value"
+          :placeholder="t('postman.body.formValue')"
+          class="form-input"
+          @input="updateBody"
+        />
         <button @click="removeFormItem(index)" class="remove-btn">
           <i class="fas fa-trash"></i>
         </button>
       </div>
-      <button @click="addFormItem" class="add-btn"><i class="fas fa-plus"></i> 添加字段</button>
+      <button @click="addFormItem" class="add-btn">
+        <i class="fas fa-plus"></i> {{ t('postman.actions.addField') }}
+      </button>
     </div>
 
     <div v-else-if="bodyType === 'x-www-form-urlencoded'" class="urlencoded-body">
       <div v-for="(item, index) in urlencodedData" :key="index" class="form-item">
-        <input v-model="item.key" placeholder="Key" class="form-input" @input="updateBody" />
-        <input v-model="item.value" placeholder="Value" class="form-input" @input="updateBody" />
+        <input
+          v-model="item.key"
+          :placeholder="t('postman.body.formKey')"
+          class="form-input"
+          @input="updateBody"
+        />
+        <input
+          v-model="item.value"
+          :placeholder="t('postman.body.formValue')"
+          class="form-input"
+          @input="updateBody"
+        />
         <button @click="removeUrlencodedItem(index)" class="remove-btn">
           <i class="fas fa-trash"></i>
         </button>
       </div>
       <button @click="addUrlencodedItem" class="add-btn">
-        <i class="fas fa-plus"></i> 添加字段
+        <i class="fas fa-plus"></i> {{ t('postman.actions.addField') }}
       </button>
     </div>
 
     <div v-else-if="bodyType === 'raw'" class="raw-body">
       <textarea
         v-model="rawBody"
-        placeholder="输入原始数据"
+        :placeholder="t('postman.body.rawPlaceholder')"
         class="raw-textarea"
         @input="updateBody"
       ></textarea>
     </div>
   </div>
 </template>
+
+<script lang="ts">
+export default {
+  name: 'RequestBody',
+};
+</script>
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
@@ -122,7 +150,7 @@ const formatJson = () => {
     jsonBody.value = JSON.stringify(parsed, null, 2);
     updateBody();
   } catch (error) {
-    alert('JSON 格式错误');
+    alert(t('postman.body.jsonFormatError'));
   }
 };
 
