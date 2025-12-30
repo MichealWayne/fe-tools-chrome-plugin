@@ -1,7 +1,7 @@
 /**
  * @author Wayne
  * @Date 2019-10-08 13:54:41
- * @LastEditTime 2023-09-12 11:01:38
+ * @LastEditTime 2025-09-08 09:51:41
  */
 
 export const IS_DEV = import.meta.env.MODE === 'development';
@@ -15,6 +15,7 @@ export const AJAX_INTERFACE = {
   getMooCSS: `get ${API_HOST}fe-tools/datas/moo-css.json`,
   getRegex: `get ${API_HOST}fe-tools/datas/regex.json`,
   getUtilFuncs: `get ${API_HOST}fe-tools/stable/data/yafReflectionMap.json`,
+  getLinuxCommands: `get ${API_HOST}fe-tools/datas/linux-commands.json`,
 };
 
 // 默认搜索

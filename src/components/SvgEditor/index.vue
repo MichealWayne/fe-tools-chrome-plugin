@@ -18,7 +18,7 @@
             <span>{{ t('svgEditor.svgInput') }}</span>
             <div class="svg-editor__panel-controls">
               <span v-if="svgInput" class="svg-editor__btn-link" @click="clearInput">
-                {{ t('svgEditor.clear') }}
+                {{ t('svgEditor.clearInput') }}
               </span>
               <span class="svg-editor__btn-link" @click="loadExample">
                 {{ t('svgEditor.loadExample') }}
@@ -50,7 +50,7 @@
           <div class="svg-editor__controls">
             <div class="svg-editor__options">
               <div class="svg-editor__options-header" @click="toggleOptionsPanel">
-                <h4>优化选项</h4>
+                <h4>{{ t('svgEditor.optionsTitle') }}</h4>
                 <span class="svg-editor__options-toggle">
                   <i
                     class="u-icon"
@@ -62,39 +62,39 @@
                 <div class="svg-editor__option-group">
                   <label class="svg-editor__checkbox">
                     <input type="checkbox" v-model="options.removeComments" />
-                    <span>移除注释</span>
+                    <span>{{ t('svgEditor.options.removeComments') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
                     <input type="checkbox" v-model="options.removeEmptyAttrs" />
-                    <span>移除空属性</span>
+                    <span>{{ t('svgEditor.options.removeEmptyAttrs') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
                     <input type="checkbox" v-model="options.removeEmptyText" />
-                    <span>移除空文本</span>
+                    <span>{{ t('svgEditor.options.removeEmptyText') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
                     <input type="checkbox" v-model="options.removeHiddenElems" />
-                    <span>移除隐藏元素</span>
+                    <span>{{ t('svgEditor.options.removeHiddenElems') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
                     <input type="checkbox" v-model="options.removeMetadata" />
-                    <span>移除元数据</span>
+                    <span>{{ t('svgEditor.options.removeMetadata') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
                     <input type="checkbox" v-model="options.removeUnusedNS" />
-                    <span>移除未使用的命名空间</span>
+                    <span>{{ t('svgEditor.options.removeUnusedNS') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
                     <input type="checkbox" v-model="options.cleanupIDs" />
-                    <span>清理 ID</span>
+                    <span>{{ t('svgEditor.options.cleanupIDs') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
                     <input type="checkbox" v-model="options.convertColors" />
-                    <span>优化颜色值</span>
+                    <span>{{ t('svgEditor.options.convertColors') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
                     <input type="checkbox" v-model="options.removeViewBox" />
-                    <span>保留 viewBox</span>
+                    <span>{{ t('svgEditor.options.removeViewBox') }}</span>
                   </label>
                 </div>
               </div>
@@ -105,14 +105,14 @@
                   @click="optimizeSvg"
                   :disabled="!svgInput"
                 >
-                  优化 SVG
+                  {{ t('svgEditor.actions.optimizeSvg') }}
                 </button>
                 <button
                   class="u-btn_il svg-editor__action-btn"
                   @click="previewSvg"
                   :disabled="!svgInput"
                 >
-                  预览
+                  {{ t('svgEditor.actions.preview') }}
                 </button>
               </div>
             </div>
@@ -123,34 +123,35 @@
       <div class="svg-editor__output-section">
         <div class="svg-editor__panel">
           <div class="svg-editor__panel-header">
-            <span>优化后的 SVG</span>
+            <span>{{ t('svgEditor.outputTitle') }}</span>
             <div class="svg-editor__panel-controls">
               <span
                 class="svg-editor__btn-link"
                 @click="copyToClipboard"
                 :class="{ 'svg-editor__btn-link--disabled': !optimizedSvg }"
               >
-                复制
+                {{ t('svgEditor.actions.copy') }}
               </span>
               <span
                 class="svg-editor__btn-link"
                 @click="downloadSvg"
                 :class="{ 'svg-editor__btn-link--disabled': !optimizedSvg }"
               >
-                下载
+                {{ t('svgEditor.actions.download') }}
               </span>
             </div>
           </div>
           <textarea
             v-model="optimizedSvg"
             class="svg-editor__textarea"
-            placeholder="优化后的 SVG 将显示在这里"
+            :placeholder="t('svgEditor.outputPlaceholder')"
             :disabled="!optimizedSvg"
           />
           <div class="svg-editor__stats" v-if="stats.show">
             <p>
-              原始大小: {{ stats.originalSize }} | 优化后: {{ stats.optimizedSize }} | 减少:
-              {{ stats.reduction }}
+              {{ t('svgEditor.stats.originalSize') }}: {{ stats.originalSize }} |
+              {{ t('svgEditor.stats.optimizedSize') }}: {{ stats.optimizedSize }} |
+              {{ t('svgEditor.stats.reduction') }}: {{ stats.reduction }}
             </p>
           </div>
         </div>
@@ -159,20 +160,22 @@
 
     <div class="svg-editor__preview" v-if="showPreview">
       <div class="svg-editor__preview-header">
-        <h4>SVG 预览</h4>
-        <span class="svg-editor__btn-link" @click="showPreview = false">关闭</span>
+        <h4>{{ t('svgEditor.previewTitle') }}</h4>
+        <span class="svg-editor__btn-link" @click="showPreview = false">{{
+          t('svgEditor.actions.close')
+        }}</span>
       </div>
       <div class="svg-editor__preview-content" v-html="sanitizedPreviewSvg"></div>
     </div>
 
     <div class="svg-editor__tips">
-      <h4>使用提示：</h4>
+      <h4>{{ t('svgEditor.tips.title') }}</h4>
       <ul>
-        <li>直接输入 SVG 代码或上传 SVG 文件</li>
-        <li>选择需要的优化选项</li>
-        <li>点击"优化 SVG"按钮生成优化后的代码</li>
-        <li>使用"预览"按钮查看 SVG 效果</li>
-        <li>优化后可以复制代码或下载 SVG 文件</li>
+        <li>{{ t('svgEditor.tips.item1') }}</li>
+        <li>{{ t('svgEditor.tips.item2') }}</li>
+        <li>{{ t('svgEditor.tips.item3') }}</li>
+        <li>{{ t('svgEditor.tips.item4') }}</li>
+        <li>{{ t('svgEditor.tips.item5') }}</li>
       </ul>
     </div>
 
@@ -184,7 +187,7 @@
           s-color="blue"
           @click="successVisible = false"
         >
-          确定
+          {{ t('common.ok') }}
         </button>
       </div>
     </div>
@@ -195,7 +198,8 @@
 import { ref, reactive, computed, defineOptions, defineProps } from 'vue';
 import { langManager } from '@/utils/i18n';
 
-const t = (key: string) => langManager.t(key);
+const t = (key: string, params?: Record<string, string | number>) =>
+  langManager.t(key, params);
 import DOMPurify from 'dompurify';
 
 defineOptions({
@@ -291,7 +295,7 @@ const optimizeSvg = () => {
   error.value = '';
 
   if (!svgInput.value) {
-    error.value = '请输入 SVG 代码';
+    error.value = t('svgEditor.messages.inputRequired');
     return;
   }
 
@@ -303,7 +307,9 @@ const optimizeSvg = () => {
     // 检查解析错误
     const parserError = svgDoc.querySelector('parsererror');
     if (parserError) {
-      throw new Error('SVG 解析错误: ' + parserError.textContent);
+      throw new Error(
+        t('svgEditor.messages.parseError', { message: parserError.textContent || '' })
+      );
     }
 
     // 应用优化
@@ -358,10 +364,10 @@ const optimizeSvg = () => {
     stats.reduction = `${reduction}%`;
 
     optimizedSvg.value = optimized;
-    showSuccess('SVG 优化成功！');
+    showSuccess(t('svgEditor.messages.optimizeSuccess'));
   } catch (e) {
     console.error(e);
-    error.value = `优化失败：${(e as Error).message}`;
+    error.value = t('svgEditor.messages.optimizeFailed', { message: (e as Error).message });
     optimizedSvg.value = '';
   }
 };
@@ -369,7 +375,7 @@ const optimizeSvg = () => {
 // 预览 SVG
 const previewSvg = () => {
   if (!svgInput.value) {
-    error.value = '请输入 SVG 代码';
+    error.value = t('svgEditor.messages.inputRequired');
     return;
   }
 
@@ -382,9 +388,9 @@ const copyToClipboard = async () => {
 
   try {
     await navigator.clipboard.writeText(optimizedSvg.value);
-    showSuccess('已复制到剪贴板！');
+    showSuccess(t('svgEditor.messages.copySuccess'));
   } catch (err) {
-    error.value = '复制失败，请手动复制';
+    error.value = t('svgEditor.messages.copyFailed');
   }
 };
 
@@ -402,7 +408,7 @@ const downloadSvg = () => {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  showSuccess('SVG 文件已下载！');
+  showSuccess(t('svgEditor.messages.downloadSuccess'));
 };
 
 // 显示成功消息
@@ -590,9 +596,9 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
 <style lang="less" scoped>
 .svg-editor {
-  padding: 10px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
+  padding: 22px 26px 18px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   max-width: 100%;
   overflow-x: hidden;
   overflow-y: auto;
@@ -601,6 +607,10 @@ const formatBytes = (bytes: number, decimals = 2) => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
+  border: 1px solid #e2e9ff;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
   scrollbar-width: thin;
   scrollbar-color: #bbb #f5f5f5;
 
@@ -629,7 +639,7 @@ const formatBytes = (bytes: number, decimals = 2) => {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 8px;
-    border-bottom: 1px solid #eaeaea;
+    border-bottom: 1px solid #e2e9ff;
 
     &-content {
       flex: 1;
@@ -639,11 +649,11 @@ const formatBytes = (bytes: number, decimals = 2) => {
       font-size: 16px;
       font-weight: 600;
       margin: 0 0 4px 0;
-      color: #1a1a1a;
+      color: #1f2a44;
     }
 
     p {
-      color: #666;
+      color: #6b7a99;
       margin: 0;
       font-size: 12px;
       line-height: 1.4;
@@ -653,20 +663,24 @@ const formatBytes = (bytes: number, decimals = 2) => {
   &__home-btn {
     flex-shrink: 0;
     font-size: 13px;
-    padding: 4px 8px;
-    background-color: #f0f7ff;
-    color: #1890ff;
-    border: 1px solid #d6e8ff;
-    border-radius: 4px;
+    padding: 6px 10px;
+    background-color: #fff;
+    color: #2969f7;
+    border: 1px solid #dbe3f9;
+    border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 4px;
-    transition: all 0.2s ease;
+    box-shadow: 0 6px 14px rgba(28, 63, 124, 0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, color 0.15s ease,
+      border-color 0.15s ease;
 
     &:hover {
-      background-color: #e6f4ff;
-      color: #0c7ad9;
+      color: #1f55d1;
+      border-color: #b9c7ef;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(41, 105, 247, 0.18);
     }
 
     i {
@@ -687,17 +701,18 @@ const formatBytes = (bytes: number, decimals = 2) => {
   }
 
   &__panel {
-    border: 1px solid #e8e8e8;
-    border-radius: 4px;
+    border: 1px solid #e4e9f7;
+    border-radius: 12px;
     background-color: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 6px 14px rgba(28, 63, 124, 0.06);
     height: 100%;
     display: flex;
     flex-direction: column;
-    transition: box-shadow 0.2s ease;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
 
     &:hover {
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 10px 20px rgba(28, 63, 124, 0.12);
+      transform: translateY(-1px);
     }
 
     &-header {
@@ -705,14 +720,14 @@ const formatBytes = (bytes: number, decimals = 2) => {
       justify-content: space-between;
       align-items: center;
       padding: 8px 12px;
-      border-bottom: 1px solid #e8e8e8;
-      background-color: #fafafa;
-      border-radius: 4px 4px 0 0;
+      border-bottom: 1px solid #e2e9ff;
+      background-color: #f6f8ff;
+      border-radius: 12px 12px 0 0;
 
       span {
         font-size: 14px;
         font-weight: 500;
-        color: #333;
+        color: #1f2a44;
       }
     }
 
@@ -725,8 +740,8 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
   &__options-panel {
     border-top: none;
-    background-color: #fafafa;
-    border-bottom: 1px solid #e8e8e8;
+    background-color: #f7f9ff;
+    border-bottom: 1px solid #e2e9ff;
     padding: 10px 0;
     transition: all 0.3s ease;
   }
@@ -743,12 +758,12 @@ const formatBytes = (bytes: number, decimals = 2) => {
     align-items: center;
     gap: 6px;
     font-size: 13px;
-    color: #555;
+    color: #4a5a78;
     padding: 4px 0;
     transition: all 0.2s ease;
 
     &:hover {
-      color: #333;
+      color: #1f2a44;
     }
 
     input {
@@ -769,13 +784,14 @@ const formatBytes = (bytes: number, decimals = 2) => {
     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
     font-size: 13px;
     line-height: 1.5;
-    color: #333;
+    color: #2b3a55;
     min-height: 300px;
+    background-color: #fff;
     transition: background-color 0.2s ease;
 
     &:focus {
       outline: none;
-      background-color: #fafafa;
+      background-color: #f6f8ff;
     }
   }
 
@@ -789,12 +805,12 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
   &__action-buttons {
     padding: 12px;
-    border-top: 1px solid #e8e8e8;
-    background-color: #fafafa;
+    border-top: 1px solid #e2e9ff;
+    background-color: #f6f8ff;
     display: flex;
     gap: 8px;
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
   }
 
   &__action-btn {
@@ -802,16 +818,35 @@ const formatBytes = (bytes: number, decimals = 2) => {
     flex: 1;
     font-size: 13px;
     padding: 6px 12px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid #dbe3f9;
+    background: #fff;
+    color: #2b3a55;
+    box-shadow: 0 6px 14px rgba(28, 63, 124, 0.08);
 
     &:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 18px rgba(41, 105, 247, 0.18);
     }
 
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
+  }
+
+  &__action-btn[s-color='blue'],
+  &__success-btn[s-color='blue'] {
+    background: linear-gradient(135deg, #2969f7 0%, #4d7fff 100%);
+    border-color: #2c66f7;
+    color: #fff;
+    box-shadow: 0 10px 18px rgba(41, 105, 247, 0.25);
+  }
+
+  &__action-btn[s-color='blue']:hover:not(:disabled),
+  &__success-btn[s-color='blue']:hover {
+    box-shadow: 0 14px 24px rgba(41, 105, 247, 0.32);
   }
 
   &__btn-link {
@@ -822,7 +857,7 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
     &:hover {
       text-decoration: underline;
-      color: #1a4fc4;
+      color: #1f55d1;
     }
 
     &--disabled {
@@ -861,10 +896,10 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
   &__stats {
     padding: 8px 12px;
-    background-color: #f6ffed;
-    border-top: 1px solid #b7eb8f;
+    background-color: #f0f6ff;
+    border-top: 1px solid #cfe0ff;
     font-size: 12px;
-    color: #52c41a;
+    color: #2a64d6;
 
     p {
       margin: 0;
@@ -873,25 +908,25 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
   &__preview {
     margin-top: 10px;
-    border: 1px solid #e8e8e8;
-    border-radius: 4px;
+    border: 1px solid #e4e9f7;
+    border-radius: 12px;
     background-color: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 6px 14px rgba(28, 63, 124, 0.06);
 
     &-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 8px 12px;
-      border-bottom: 1px solid #e8e8e8;
-      background-color: #fafafa;
-      border-radius: 4px 4px 0 0;
+      border-bottom: 1px solid #e2e9ff;
+      background-color: #f6f8ff;
+      border-radius: 12px 12px 0 0;
 
       h4 {
         margin: 0;
         font-size: 14px;
         font-weight: 500;
-        color: #333;
+        color: #1f2a44;
       }
     }
 
@@ -902,9 +937,9 @@ const formatBytes = (bytes: number, decimals = 2) => {
       align-items: center;
       min-height: 150px;
       max-height: 250px;
-      background-color: #f9f9f9;
+      background-color: #f6f8ff;
       overflow: auto;
-      border-radius: 0 0 4px 4px;
+      border-radius: 0 0 12px 12px;
 
       svg {
         max-width: 100%;
@@ -921,17 +956,17 @@ const formatBytes = (bytes: number, decimals = 2) => {
   &__tips {
     margin-top: 10px;
     padding: 12px;
-    background-color: #f0f9ff;
-    border: 1px solid #bae7ff;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    background-color: #f6f8ff;
+    border: 1px solid #e2e9ff;
+    border-radius: 12px;
+    box-shadow: 0 6px 14px rgba(28, 63, 124, 0.06);
     position: relative;
 
     h4 {
       margin: 0 0 8px;
       font-size: 14px;
       font-weight: 500;
-      color: #333;
+      color: #1f2a44;
     }
 
     ul {
@@ -941,7 +976,7 @@ const formatBytes = (bytes: number, decimals = 2) => {
       li {
         margin-bottom: 4px;
         font-size: 12px;
-        color: #555;
+        color: #6b7a99;
 
         &:last-child {
           margin-bottom: 0;
@@ -965,9 +1000,9 @@ const formatBytes = (bytes: number, decimals = 2) => {
 
     &-content {
       padding: 16px;
-      border-radius: 4px;
+      border-radius: 12px;
       background-color: #fff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 12px 24px rgba(28, 63, 124, 0.18);
       max-width: 300px;
       width: 100%;
       text-align: center;
@@ -977,7 +1012,7 @@ const formatBytes = (bytes: number, decimals = 2) => {
     p {
       margin: 0 0 12px;
       font-size: 14px;
-      color: #333;
+      color: #2b3a55;
     }
 
     &__success-btn {

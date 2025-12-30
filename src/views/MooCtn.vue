@@ -14,7 +14,7 @@
           id="search"
           v-model="keywords"
           class="m-s_input g-fs16 u-w300"
-          placeholder="请输入模块或样式属性"
+          :placeholder="t('mooCss.searchPlaceholder')"
           autocomplete="off"
           type="text"
           autofocus
@@ -23,7 +23,7 @@
           @input="handleInputInput"
         />
         <button class="u-btn_il j-search g-fs18 g-ml10" s-color="blue" @click="setSearchResult">
-          Search
+          {{ t('common.search') }}
         </button>
       </p>
     </section>
@@ -36,7 +36,9 @@
         <span v-html="item.name"></span>
       </li>
     </ul>
-    <p class="u-link g-mt30 f-tc g-fs14" s-cr_blue @click.stop="back">返回主页</p>
+    <p class="u-link g-mt30 f-tc g-fs14" s-cr_blue @click.stop="back">
+      {{ t('common.backHome') }}
+    </p>
   </section>
 </template>
 

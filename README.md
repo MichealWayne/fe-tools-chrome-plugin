@@ -20,14 +20,18 @@
 - 快速翻译（`√`）
 - 简易 Postman（`√`）
 - 常用正则查询（`√`）
-- **LLM 接入及 Chat 问答机器人**
-- **AI 代码 review & 代码生成**
+- JSON 格式化与验证（`√`）
+- SVG 在线编辑器（`√`）
+- 日期/时间戳转换（`√`）
+- Linux 命令查询（`√`）
+- 页面截图（整页/节点截图并保存）（`√`）
 - 工具函数库搜索（`√`）
 - 搜索自定义拓展
+- 中英文切换（`√`）
 
 ### MileStone
 
-- 2023.Q3：GPT/LLM 能力接入、v2；
+- 2025: Manifest V3、页面截图、双语支持；
 - 2019: 插件 v1；
 
 [安装>>](https://github.com/MichealWayne/fe-tools/tree/master/chrome-extension)，（需要下载目录文件至本地进行离线安装，可参照此[安装教程](https://blog.csdn.net/jbk3311/article/details/103894936)）

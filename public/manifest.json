@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "fe-tools",
-  "version": "1.3.3",
+  "name": "fe-tools-dev",
+  "version": "1.3.2",
   "description": "前端开发的插件集合工具。",
   "icons": {
     "16": "icon.png",
@@ -14,7 +14,16 @@
     "default_popup": "index.html"
   },
   "homepage_url": "https://github.com/MichealWayne/fe-tools",
-  "permissions": ["contextMenus", "tabs", "bookmarks", "webRequest", "storage", "scripting"],
+  "permissions": [
+    "contextMenus",
+    "activeTab",
+    "tabs",
+    "bookmarks",
+    "webRequest",
+    "storage",
+    "scripting",
+    "downloads"
+  ],
   "host_permissions": ["*://*/*"],
   "omnibox": { "keyword": "fe" },
   "background": {

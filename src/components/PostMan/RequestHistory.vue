@@ -1,9 +1,11 @@
 <template>
   <div class="request-history">
     <div class="history-header">
-      <h3>请求历史</h3>
+      <h3>{{ t('postman.history.title') }}</h3>
       <div class="history-actions">
-        <button @click="clearHistory" class="clear-btn"><i class="fas fa-trash"></i> 清空</button>
+        <button @click="clearHistory" class="clear-btn">
+          <i class="fas fa-trash"></i> {{ t('postman.actions.clear') }}
+        </button>
         <button @click="toggleHistory" class="toggle-btn">
           <i :class="['fas', isExpanded ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
         </button>
@@ -13,7 +15,7 @@
     <div v-if="isExpanded" class="history-content">
       <div v-if="history.length === 0" class="no-history">
         <i class="fas fa-history"></i>
-        <p>暂无请求历史</p>
+        <p>{{ t('postman.history.empty') }}</p>
       </div>
 
       <div v-else class="history-list">
@@ -40,11 +42,18 @@
   </div>
 </template>
 
+<script lang="ts">
+export default {
+  name: 'RequestHistory',
+};
+</script>
+
 <script setup lang="ts">
 import { ref } from 'vue';
 import { langManager } from '@/utils/i18n';
 
-const t = (key: string) => langManager.t(key);
+const t = (key: string, params?: Record<string, string | number>) =>
+  langManager.t(key, params);
 
 interface HistoryItem {
   method: string;
@@ -77,7 +86,7 @@ const selectHistoryItem = (item: HistoryItem) => {
 };
 
 const clearHistory = () => {
-  if (confirm('确定要清空所有请求历史吗？')) {
+  if (confirm(t('postman.history.clearConfirm'))) {
     emit('clear-history');
   }
 };
@@ -93,13 +102,13 @@ const formatTime = (timestamp: number) => {
 
   if (diff < 60000) {
     // 1分钟内
-    return '刚刚';
+    return t('postman.history.justNow');
   } else if (diff < 3600000) {
     // 1小时内
-    return `${Math.floor(diff / 60000)}分钟前`;
+    return t('postman.history.minutesAgo', { minutes: Math.floor(diff / 60000) });
   } else if (diff < 86400000) {
     // 1天内
-    return `${Math.floor(diff / 3600000)}小时前`;
+    return t('postman.history.hoursAgo', { hours: Math.floor(diff / 3600000) });
   } else {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   }

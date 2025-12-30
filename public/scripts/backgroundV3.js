@@ -68,8 +68,54 @@ chrome.contextMenus.onClicked.addListener((data, tab) => {
 });
 
 // 监听来自 content script 的消息
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'handleTabCreate') {
     handleTabCreate(message.url);
+  } else if (message.action === 'captureVisibleTab') {
+    const targetWindowId = message.windowId ?? sender?.tab?.windowId;
+    chrome.tabs.captureVisibleTab(
+      targetWindowId,
+      {
+        format: 'png',
+      },
+      dataUrl => {
+        if (chrome.runtime.lastError) {
+          sendResponse({
+            success: false,
+            error: chrome.runtime.lastError.message,
+          });
+          return;
+        }
+        sendResponse({
+          success: true,
+          dataUrl,
+        });
+      }
+    );
+    return true;
+  } else if (message.action === 'downloadImage') {
+    const filename = message.filename || 'page-screenshot.png';
+    chrome.downloads.download(
+      {
+        url: message.dataUrl,
+        saveAs: true,
+        conflictAction: 'overwrite',
+        filename,
+      },
+      downloadId => {
+        if (chrome.runtime.lastError) {
+          sendResponse({
+            success: false,
+            error: chrome.runtime.lastError.message,
+          });
+          return;
+        }
+        sendResponse({
+          success: true,
+          downloadId,
+        });
+      }
+    );
+    return true;
   }
 });

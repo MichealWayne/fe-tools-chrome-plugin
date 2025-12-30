@@ -1,48 +1,48 @@
 <template>
   <section s-bg_white @click.stop="stopPropagation">
-    <p :class="$style.title">{{ t('colorpass.title') }}</p>
+    <p :class="$style.title">{{ t('colorPass.title') }}</p>
     <!--颜色输入-->
     <section :class="$style.content">
       <div class="m-color-input">
-        <span>HEX：</span>
+        <span>{{ t('colorPass.labels.hex') }}：</span>
         <input
           v-model="hex"
           maxlength="6"
           data-type="hex"
-          :placeholder="t('colorpass.hexPlaceholder')"
+          :placeholder="t('colorPass.hexPlaceholder')"
           @keyup="changeColor"
         />
       </div>
 
       <div class="m-color-input">
-        <span>RGB：</span>
+        <span>{{ t('colorPass.labels.rgb') }}：</span>
         <input
           v-model="rgb"
           maxlength="11"
           data-type="rgb"
-          :placeholder="t('colorpass.rgbPlaceholder')"
+          :placeholder="t('colorPass.rgbPlaceholder')"
           @keyup="changeColor"
         />
       </div>
 
       <div class="m-color-input">
-        <span>HSB：</span>
+        <span>{{ t('colorPass.labels.hsb') }}：</span>
         <input
           v-model="hsb"
           maxlength="13"
           data-type="hsb"
-          :placeholder="t('colorpass.hsbPlaceholder')"
+          :placeholder="t('colorPass.hsbPlaceholder')"
           @keyup="changeColor"
         />
       </div>
 
       <div class="m-color-input">
-        <span>HSL：</span>
+        <span>{{ t('colorPass.labels.hsl') }}：</span>
         <input
           v-model="hsl"
           maxlength="13"
           data-type="hsl"
-          :placeholder="t('colorpass.hslPlaceholder')"
+          :placeholder="t('colorPass.hslPlaceholder')"
           @keyup="changeColor"
         />
       </div>
@@ -68,8 +68,6 @@ import { langManager } from '@/utils/i18n';
 
 import RemarkInfos from './RemarkInfos.vue';
 
-const t = (key: string) => langManager.t(key);
-
 import {
   hsbToRgb,
   rgbToHex,
@@ -83,6 +81,8 @@ import {
   hslToRgb,
   checkHsl,
 } from '@/utils/color';
+
+const t = (key: string) => langManager.t(key);
 
 const hex = ref('');
 const rgb = ref('');

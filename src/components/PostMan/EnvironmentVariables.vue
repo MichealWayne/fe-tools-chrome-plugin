@@ -1,16 +1,16 @@
 <template>
   <div class="environment-variables">
     <div class="env-header">
-      <h3>环境变量</h3>
+      <h3>{{ t('postman.environments.title') }}</h3>
       <div class="env-actions">
         <select v-model="currentEnv" @change="switchEnvironment" class="env-select">
-          <option value="">选择环境</option>
+          <option value="">{{ t('postman.environments.selectEnv') }}</option>
           <option v-for="env in environments" :key="env.name" :value="env.name">
             {{ env.name }}
           </option>
         </select>
         <button @click="showAddEnvModal = true" class="add-env-btn">
-          <i class="fas fa-plus"></i> 新建环境
+          <i class="fas fa-plus"></i> {{ t('postman.environments.addEnv') }}
         </button>
         <button @click="toggleVariables" class="toggle-btn">
           <i :class="['fas', isExpanded ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
@@ -21,14 +21,14 @@
     <div v-if="isExpanded" class="env-content">
       <div v-if="!currentEnv" class="no-env-selected">
         <i class="fas fa-cog"></i>
-        <p>请选择或创建一个环境</p>
+        <p>{{ t('postman.environments.noEnvSelected') }}</p>
       </div>
 
       <div v-else class="variables-section">
         <div class="section-header">
-          <h4>{{ currentEnv }} 环境变量</h4>
+          <h4>{{ t('postman.environments.envTitle', { env: currentEnv }) }}</h4>
           <button @click="addVariable" class="add-var-btn">
-            <i class="fas fa-plus"></i> 添加变量
+            <i class="fas fa-plus"></i> {{ t('postman.environments.addVariable') }}
           </button>
         </div>
 
@@ -36,19 +36,19 @@
           <div v-for="(variable, index) in currentVariables" :key="index" class="variable-item">
             <input
               v-model="variable.key"
-              placeholder="变量名"
+              :placeholder="t('postman.environments.variableName')"
               class="var-input"
               @input="updateVariables"
             />
             <input
               v-model="variable.value"
-              placeholder="变量值"
+              :placeholder="t('postman.environments.variableValue')"
               class="var-input"
               @input="updateVariables"
             />
             <input
               v-model="variable.description"
-              placeholder="描述（可选）"
+              :placeholder="t('postman.environments.variableDesc')"
               class="var-input description"
               @input="updateVariables"
             />
@@ -60,13 +60,13 @@
 
         <div class="env-actions-bottom">
           <button @click="exportEnvironment" class="export-btn">
-            <i class="fas fa-download"></i> 导出
+            <i class="fas fa-download"></i> {{ t('postman.environments.export') }}
           </button>
           <button @click="showImportModal = true" class="import-btn">
-            <i class="fas fa-upload"></i> 导入
+            <i class="fas fa-upload"></i> {{ t('postman.environments.import') }}
           </button>
           <button @click="deleteEnvironment" class="delete-env-btn">
-            <i class="fas fa-trash"></i> 删除环境
+            <i class="fas fa-trash"></i> {{ t('postman.environments.deleteEnv') }}
           </button>
         </div>
       </div>
@@ -76,7 +76,7 @@
     <div v-if="showAddEnvModal" class="modal-overlay" @click="showAddEnvModal = false">
       <div class="modal" @click.stop>
         <div class="modal-header">
-          <h3>新建环境</h3>
+          <h3>{{ t('postman.environments.newEnvTitle') }}</h3>
           <button @click="showAddEnvModal = false" class="close-btn">
             <i class="fas fa-times"></i>
           </button>
@@ -84,14 +84,18 @@
         <div class="modal-body">
           <input
             v-model="newEnvName"
-            placeholder="环境名称"
+            :placeholder="t('postman.environments.envNamePlaceholder')"
             class="env-name-input"
             @keyup.enter="createEnvironment"
           />
         </div>
         <div class="modal-footer">
-          <button @click="showAddEnvModal = false" class="cancel-btn">取消</button>
-          <button @click="createEnvironment" class="confirm-btn">创建</button>
+          <button @click="showAddEnvModal = false" class="cancel-btn">
+            {{ t('postman.environments.cancel') }}
+          </button>
+          <button @click="createEnvironment" class="confirm-btn">
+            {{ t('postman.environments.confirm') }}
+          </button>
         </div>
       </div>
     </div>
@@ -100,7 +104,7 @@
     <div v-if="showImportModal" class="modal-overlay" @click="showImportModal = false">
       <div class="modal" @click.stop>
         <div class="modal-header">
-          <h3>导入环境变量</h3>
+          <h3>{{ t('postman.environments.importTitle') }}</h3>
           <button @click="showImportModal = false" class="close-btn">
             <i class="fas fa-times"></i>
           </button>
@@ -108,24 +112,35 @@
         <div class="modal-body">
           <textarea
             v-model="importData"
-            placeholder="粘贴 JSON 格式的环境变量数据"
+            :placeholder="t('postman.environments.importPlaceholder')"
             class="import-textarea"
           ></textarea>
         </div>
         <div class="modal-footer">
-          <button @click="showImportModal = false" class="cancel-btn">取消</button>
-          <button @click="importEnvironment" class="confirm-btn">导入</button>
+          <button @click="showImportModal = false" class="cancel-btn">
+            {{ t('postman.environments.cancel') }}
+          </button>
+          <button @click="importEnvironment" class="confirm-btn">
+            {{ t('postman.environments.importConfirm') }}
+          </button>
         </div>
       </div>
     </div>
   </div>
 </template>
 
+<script lang="ts">
+export default {
+  name: 'EnvironmentVariables',
+};
+</script>
+
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
 
-const t = (key: string) => langManager.t(key);
+const t = (key: string, params?: Record<string, string | number>) =>
+  langManager.t(key, params);
 
 interface Variable {
   key: string;
@@ -217,7 +232,7 @@ const createEnvironment = () => {
 const deleteEnvironment = () => {
   if (!currentEnv.value) return;
 
-  if (confirm(`确定要删除环境 "${currentEnv.value}" 吗？`)) {
+  if (confirm(t('postman.environments.deleteConfirm', { env: currentEnv.value }))) {
     const updatedEnvs = props.environments.filter(e => e.name !== currentEnv.value);
     emit('update:environments', updatedEnvs);
 
@@ -247,14 +262,14 @@ const importEnvironment = () => {
     const envData = JSON.parse(importData.value);
 
     if (!envData.name || !Array.isArray(envData.variables)) {
-      throw new Error('无效的环境数据格式');
+      throw new Error(t('postman.environments.invalidEnvData'));
     }
 
     const existingIndex = props.environments.findIndex(e => e.name === envData.name);
     let updatedEnvs;
 
     if (existingIndex >= 0) {
-      if (confirm(`环境 "${envData.name}" 已存在，是否覆盖？`)) {
+      if (confirm(t('postman.environments.envExistsConfirm', { env: envData.name }))) {
         updatedEnvs = [...props.environments];
         updatedEnvs[existingIndex] = envData;
       } else {
@@ -272,7 +287,7 @@ const importEnvironment = () => {
     importData.value = '';
     showImportModal.value = false;
   } catch (error) {
-    alert('导入失败：' + (error as Error).message);
+    alert(t('postman.environments.importFailed', { message: (error as Error).message }));
   }
 };
 

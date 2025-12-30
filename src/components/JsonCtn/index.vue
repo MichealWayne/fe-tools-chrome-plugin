@@ -24,7 +24,7 @@
         <textarea
           v-model="jsValue"
           class="json-converter__textarea"
-          placeholder="在此输入js对象，如var obj = { a: 1 }"
+          :placeholder="t('jsonCtn.inputPlaceholder')"
         />
         <div class="json-converter__error" v-if="error">
           {{ error }}
@@ -33,10 +33,10 @@
 
       <div class="json-converter__divider">
         <div class="json-converter__action-icons">
-          <a-tooltip title="转换">
+          <a-tooltip :title="t('jsonCtn.actions.convert')">
             <span class="action-icon to-json" @click="handleChange()">→</span>
           </a-tooltip>
-          <a-tooltip title="反向">
+          <a-tooltip :title="t('jsonCtn.actions.reverse')">
             <span class="action-icon to-js" @click="handleReverse()">←</span>
           </a-tooltip>
         </div>
@@ -44,9 +44,9 @@
 
       <div class="json-converter__panel">
         <div class="json-converter__panel-header">
-          <span>JSON 结果</span>
+          <span>{{ t('jsonCtn.jsonResult') }}</span>
           <div class="json-converter__panel-controls">
-            <a-tooltip title="复制到剪贴板">
+            <a-tooltip :title="t('jsonCtn.actions.copyToClipboard')">
               <a-button
                 type="link"
                 size="small"
@@ -54,17 +54,25 @@
                 :disabled="!jsonValue"
                 class="copy-btn"
               >
-                复制
+                {{ t('jsonCtn.actions.copy') }}
               </a-button>
             </a-tooltip>
             <a-dropdown v-if="jsonValue">
-              <a-button type="link" size="small" class="format-btn"> 格式 ▼ </a-button>
+              <a-button type="link" size="small" class="format-btn">
+                {{ t('jsonCtn.actions.format') }}
+              </a-button>
               <template #overlay>
                 <a-menu>
-                  <a-menu-item @click="formatJson(null)">默认格式</a-menu-item>
-                  <a-menu-item @click="formatJson(0)">压缩</a-menu-item>
-                  <a-menu-item @click="formatJson(2)">缩进 2 空格</a-menu-item>
-                  <a-menu-item @click="formatJson(4)">缩进 4 空格</a-menu-item>
+                  <a-menu-item @click="formatJson(null)">{{
+                    t('jsonCtn.actions.formatDefault')
+                  }}</a-menu-item>
+                  <a-menu-item @click="formatJson(0)">{{ t('jsonCtn.actions.formatMinify') }}</a-menu-item>
+                  <a-menu-item @click="formatJson(2)">{{
+                    t('jsonCtn.actions.formatIndent2')
+                  }}</a-menu-item>
+                  <a-menu-item @click="formatJson(4)">{{
+                    t('jsonCtn.actions.formatIndent4')
+                  }}</a-menu-item>
                 </a-menu>
               </template>
             </a-dropdown>
@@ -73,23 +81,27 @@
         <textarea
           v-model="jsonValue"
           class="json-converter__textarea"
-          placeholder="转换后的 JSON 将显示在这里"
+          :placeholder="t('jsonCtn.outputPlaceholder')"
           :disabled="!jsonValue"
         />
       </div>
     </div>
 
     <div class="json-converter__tips">
-      <h4>使用提示：</h4>
+      <h4>{{ t('jsonCtn.tips.title') }}</h4>
       <ul>
-        <li>支持标准 JavaScript 对象语法</li>
-        <li>支持 ECharts 配置对象转换</li>
-        <li>可以包含注释，转换时会自动忽略</li>
-        <li>反向转换可将 JSON 转回 JavaScript 对象格式</li>
+        <li>{{ t('jsonCtn.tips.item1') }}</li>
+        <li>{{ t('jsonCtn.tips.item2') }}</li>
+        <li>{{ t('jsonCtn.tips.item3') }}</li>
+        <li>{{ t('jsonCtn.tips.item4') }}</li>
       </ul>
     </div>
 
-    <a-modal v-model:visible="successVisible" title="操作成功" @ok="successVisible = false">
+    <a-modal
+      v-model:visible="successVisible"
+      :title="t('jsonCtn.modal.successTitle')"
+      @ok="successVisible = false"
+    >
       <p>{{ successMessage }}</p>
     </a-modal>
   </section>
@@ -99,7 +111,8 @@
 import { ref, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
 
-const t = (key: string) => langManager.t(key);
+const t = (key: string, params?: Record<string, string | number>) =>
+  langManager.t(key, params);
 import DOMPurify from 'dompurify';
 
 defineOptions({
@@ -171,18 +184,18 @@ const handleChange = (noMsg = false) => {
     // 安全地评估JS对象
     const obj = safeEval(jsStr);
     if (!obj) {
-      throw new Error('无法解析JavaScript对象');
+      throw new Error(t('jsonCtn.messages.parseFailed'));
     }
 
     // 格式化JSON
     jsonValue.value = JSON.stringify(obj, null, indentLevel.value);
 
     if (!noMsg) {
-      showSuccess('转换成功！');
+      showSuccess(t('jsonCtn.messages.convertSuccess'));
     }
   } catch (e) {
     console.error(e);
-    error.value = `转换失败：${(e as Error).message}`;
+    error.value = t('jsonCtn.messages.convertFailed', { message: (e as Error).message });
     jsonValue.value = '';
   }
 };
@@ -201,10 +214,10 @@ const handleReverse = () => {
 
     // 将JSON转为格式化的JS对象字符串
     jsValue.value = jsonToJsString(obj);
-    showSuccess('反向转换成功！');
+    showSuccess(t('jsonCtn.messages.reverseSuccess'));
   } catch (e) {
     console.error(e);
-    error.value = `反向转换失败：${(e as Error).message}`;
+    error.value = t('jsonCtn.messages.reverseFailed', { message: (e as Error).message });
   }
 };
 
@@ -277,10 +290,10 @@ const copyToClipboard = async () => {
 
   try {
     await navigator.clipboard.writeText(jsonValue.value);
-    showSuccess('已复制到剪贴板！');
+    showSuccess(t('jsonCtn.messages.copySuccess'));
   } catch (err) {
     console.error('复制失败:', err);
-    error.value = '复制失败，请手动复制';
+    error.value = t('jsonCtn.messages.copyFailed');
   }
 };
 
@@ -294,7 +307,7 @@ const formatJson = (spaces: number | null) => {
     jsonValue.value = JSON.stringify(obj, null, spaces);
   } catch (e) {
     console.error(e);
-    error.value = `格式化失败：${(e as Error).message}`;
+    error.value = t('jsonCtn.messages.formatFailed', { message: (e as Error).message });
   }
 };
 
@@ -318,8 +331,8 @@ const handleBack = () => {
 <style lang="less" scoped>
 .json-converter {
   padding: 16px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   &__header {
     margin-bottom: 16px;

@@ -8,11 +8,13 @@
         <span class="time">{{ response.responseTime }}ms</span>
         <span class="size">{{ formatSize(response.size) }}</span>
       </div>
-      <button @click="copyResponse" class="copy-btn">复制响应</button>
+      <button @click="copyResponse" class="copy-btn">{{ t('postman.actions.copyResponse') }}</button>
       <button
         @click="toggleFullscreen"
         class="fullscreen-btn"
-        :title="isFullscreen ? '退出全屏' : '全屏'"
+        :title="
+          isFullscreen ? t('postman.actions.exitFullscreen') : t('postman.actions.fullscreen')
+        "
       >
         <svg
           v-if="!isFullscreen"
@@ -58,10 +60,10 @@
 
     <div class="response-content">
       <!-- 响应体 -->
-      <div v-if="activeTab === 'body'" class="response-body">
+      <div :class="{ 'z-hide': activeTab !== 'body' }" class="response-body">
         <div v-if="isJsonResponse" class="json-viewer">
           <div id="formattingMsg" v-show="isFormatting">
-            <span class="x-loading"></span>格式化中...
+            <span class="x-loading"></span>{{ t('postman.response.formatting') }}
           </div>
           <div id="jfCallbackNameStart" class="callback-name" v-html="jfCallbackNameStart"></div>
           <div id="jfContent" v-html="errorMsgForJson || ''"></div>
@@ -77,7 +79,7 @@
       </div>
 
       <!-- 响应头 -->
-      <div v-else-if="activeTab === 'headers'" class="response-headers">
+      <div :class="{ 'z-hide': activeTab !== 'headers' }" class="response-headers">
         <div v-for="(value, key) in response.headers" :key="key" class="header-item">
           <span class="header-key">{{ key }}:</span>
           <span class="header-value">{{ value }}</span>
@@ -85,8 +87,10 @@
       </div>
 
       <!-- Cookies -->
-      <div v-else-if="activeTab === 'cookies'" class="response-cookies">
-        <div v-if="cookies.length === 0" class="no-cookies">没有 Cookies</div>
+      <div :class="{ 'z-hide': activeTab !== 'cookies' }" class="response-cookies">
+        <div v-if="cookies.length === 0" class="no-cookies">
+          {{ t('postman.response.noCookies') }}
+        </div>
         <div v-else>
           <div v-for="cookie in cookies" :key="cookie.name" class="cookie-item">
             <span class="cookie-name">{{ cookie.name }}:</span>
@@ -96,16 +100,23 @@
       </div>
     </div>
   </div>
-  <div v-else class="no-response">暂无响应数据</div>
+  <div v-else class="no-response">{{ t('postman.response.noResponse') }}</div>
 </template>
+
+<script lang="ts">
+export default {
+  name: 'ResponseViewer',
+};
+</script>
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
 import { langManager } from '@/utils/i18n';
 
-const t = (key: string) => langManager.t(key);
 import DOMPurify from 'dompurify';
 import JsonFormatEntrance from '@/utils/json-format.js';
+
+const t = (key: string) => langManager.t(key);
 
 interface ResponseData {
   status: number;
@@ -176,9 +187,13 @@ const cookies = computed(() => {
 
 // 标签页配置
 const tabs = computed(() => [
-  { key: 'body', label: '响应体' },
-  { key: 'headers', label: '响应头', count: Object.keys(props.response?.headers || {}).length },
-  { key: 'cookies', label: 'Cookies', count: cookies.value.length },
+  { key: 'body', label: t('postman.responseTabs.body') },
+  {
+    key: 'headers',
+    label: t('postman.responseTabs.headers'),
+    count: Object.keys(props.response?.headers || {}).length,
+  },
+  { key: 'cookies', label: t('postman.responseTabs.cookies'), count: cookies.value.length },
 ]);
 
 // JSON 格式化函数
