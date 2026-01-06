@@ -85,23 +85,11 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
+import type { FormDataEntry, RequestBodyData } from './types';
 
 const t = (key: string) => langManager.t(key);
-
-interface FormDataItem {
-  key: string;
-  value: string;
-}
-
-interface RequestBodyData {
-  type: string;
-  json?: string;
-  formData?: FormDataItem[];
-  urlencoded?: FormDataItem[];
-  raw?: string;
-}
 
 const props = defineProps<{
   modelValue: RequestBodyData;
@@ -113,8 +101,8 @@ const emit = defineEmits<{
 
 const bodyType = ref(props.modelValue.type || 'none');
 const jsonBody = ref(props.modelValue.json || '');
-const formData = ref<FormDataItem[]>(props.modelValue.formData || []);
-const urlencodedData = ref<FormDataItem[]>(props.modelValue.urlencoded || []);
+const formData = ref<FormDataEntry[]>(props.modelValue.formData || []);
+const urlencodedData = ref<FormDataEntry[]>(props.modelValue.urlencoded || []);
 const rawBody = ref(props.modelValue.raw || '');
 
 watch(

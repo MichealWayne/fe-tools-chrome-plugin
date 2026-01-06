@@ -1,8 +1,3 @@
-<!--
- * @author Wayne
- * @Date 2023-07-17 19:55:15
- * @LastEditTime 2025-04-22 13:36:03
--->
 <template>
   <article class="m-color-intro g-fs12" s-ft_sub_>
     <p>{{ t('colorPass.remarks.title') }}</p>
@@ -20,10 +15,14 @@ const t = (key: string) => langManager.t(key);
 </script>
 
 <style lang="less">
-// 颜色展示部分
+/**
+ * Color swatch preview section.
+ */
 .m-color-show {
-  height: 25px;
-  width: 25px;
+  height: 32px;
+  width: 32px;
   border-radius: 50%;
+  border: 1px solid #e2e9ff;
+  box-shadow: 0 6px 14px rgba(28, 63, 124, 0.12);
 }
 </style>

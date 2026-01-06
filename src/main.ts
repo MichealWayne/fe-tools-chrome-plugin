@@ -11,8 +11,12 @@ import './styles/i18n.less';
 
 import App from './views/app.vue';
 
-// 创建vue实例
+/**
+ * Create the Vue app instance.
+ */
 const app = createApp(App);
 
-// 挂载实例
+/**
+ * Mount the app to the extension root element.
+ */
 app.mount('#app');

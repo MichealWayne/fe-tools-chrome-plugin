@@ -81,9 +81,6 @@
       </li>
     </ul>
 
-    <p class="m-linux_back g-mt50 f-tc g-fs14" s-cr_blue @click="back">
-      {{ t('common.backHome') }}
-    </p>
   </section>
 </template>
 
@@ -122,7 +119,9 @@ const filterTxt = ref('');
 const commandList = ref<any[]>([]);
 const isLoading = ref(false);
 
-// 常用命令快捷按钮
+/**
+ * Commonly used command shortcuts for quick filtering.
+ */
 const quickCommands = ref([
   'ls',
   'cd',
@@ -146,7 +145,9 @@ const quickCommands = ref([
   'ssh',
 ]);
 
-// 获取Linux命令数据
+/**
+ * Fetch and normalize the Linux command list.
+ */
 const getLinuxCommands = async () => {
   try {
     isLoading.value = true;
@@ -166,24 +167,37 @@ const getLinuxCommands = async () => {
   }
 };
 
-// 过滤命令
+/**
+ * Placeholder hook for filtering (handled via computed).
+ */
 const handleFilter = () => {
-  // 过滤逻辑已通过 computed 属性处理
+  /**
+   * Filtering is handled in computed logic.
+   */
 };
 
-// 快速搜索
+/**
+ * Apply a quick-search keyword.
+ * @param command - Command keyword to filter by.
+ */
 const handleQuickSearch = (command: string) => {
   filterTxt.value = command;
 };
 
-// 切换命令详情显示
+/**
+ * Toggle the visibility of command details.
+ * @param index - Index of the command in the list.
+ */
 const handleCommandToggle = (index: number) => {
   const item = commandList.value[index];
   if (!item) return;
   item.isOpened = !item.isOpened;
 };
 
-// 判断命令是否可见
+/**
+ * Determine whether a command matches the current filter.
+ * @param item - Command record.
+ */
 const isCommandVisible = (item: any) => {
   if (!filterTxt.value.trim()) return true;
 
@@ -196,7 +210,9 @@ const isCommandVisible = (item: any) => {
   );
 };
 
-// 返回主页
+/**
+ * Navigate back to the previous view or home.
+ */
 const back = () => {
   if (typeof props.back === 'function') {
     props.back();

@@ -61,83 +61,37 @@ import RequestPanel from './RequestPanel.vue';
 import ResponseViewer from './ResponseViewer.vue';
 import RequestHistory from './RequestHistory.vue';
 import EnvironmentVariables from './EnvironmentVariables.vue';
+import { buildRequestPayload } from './utils/request-builder';
+import { loadPostmanStorage, savePostmanStorage } from './utils/storage';
+import type {
+  PostmanRequestConfig,
+  PostmanResponseData,
+  PostmanHistoryItem,
+  PostmanEnvironment,
+} from './types';
 
 const t = (key: string, params?: Record<string, string | number>) =>
   langManager.t(key, params);
 
-// 接口定义
-interface Header {
-  key: string;
-  value: string;
-}
+type EnvRef = {
+  replaceVariables: (value: string) => string;
+};
 
-interface RequestBodyData {
-  type: string;
-  json?: string;
-  formData?: Array<{ key: string; value: string }>;
-  urlencoded?: Array<{ key: string; value: string }>;
-  raw?: string;
-}
-
-interface AuthConfig {
-  type: string;
-  token?: string;
-  username?: string;
-  password?: string;
-  key?: string;
-  value?: string;
-  location?: string;
-}
-
-interface RequestConfig {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
-  url: string;
-  headers: Header[];
-  body: RequestBodyData;
-  auth: AuthConfig;
-}
-
-interface ResponseData {
-  status: number;
-  statusText: string;
-  headers: Record<string, string>;
-  data: any;
-  responseTime: number;
-  size: number;
-}
-
-interface HistoryItem {
-  method: string;
-  url: string;
-  headers: Record<string, string>;
-  body?: any;
-  timestamp: number;
-  status?: number;
-  responseTime?: number;
-}
-
-interface Variable {
-  key: string;
-  value: string;
-  description?: string;
-}
-
-interface Environment {
-  name: string;
-  variables: Variable[];
-}
-
-// 响应式数据
+/**
+ * Reactive state for request lifecycle and UI panels.
+ */
 const loading = ref(false);
 const error = ref('');
-const response = ref<ResponseData | null>(null);
+const response = ref<PostmanResponseData | null>(null);
 const responseTime = ref(0);
 const responseSize = ref(0);
 const activeRequestTab = ref('headers');
-const envRef = ref();
+const envRef = ref<EnvRef | null>(null);
 
-// 请求配置
-const request = reactive<RequestConfig>({
+/**
+ * Active request configuration edited by the user.
+ */
+const request = reactive<PostmanRequestConfig>({
   method: 'GET' as const,
   url: '',
   headers: [],
@@ -149,19 +103,27 @@ const request = reactive<RequestConfig>({
   },
 });
 
-// 环境变量
-const environments = ref<Environment[]>([]);
+/**
+ * Environment variable sets for templating requests.
+ */
+const environments = ref<PostmanEnvironment[]>([]);
 const currentEnvironment = ref('');
 
-// 请求历史
-const requestHistory = ref<HistoryItem[]>([]);
+/**
+ * Request history for quick replay and auditing.
+ */
+const requestHistory = ref<PostmanHistoryItem[]>([]);
 
-// 组件挂载时加载数据
+/**
+ * Load persisted request data on mount.
+ */
 onMounted(() => {
   loadFromStorage();
 });
 
-// 发送请求
+/**
+ * Send the configured request and store the response.
+ */
 const sendRequest = async () => {
   if (!request.url.trim()) {
     error.value = t('postman.request.missingUrl');
@@ -175,85 +137,15 @@ const sendRequest = async () => {
   const startTime = Date.now();
 
   try {
-    // 替换环境变量
-    const processedUrl = envRef.value?.replaceVariables(request.url) || request.url;
+    const resolveValue = (value: string) => envRef.value?.replaceVariables(value) || value;
+    const { url: finalUrl, headers, data: requestData } = buildRequestPayload(
+      request,
+      resolveValue
+    );
 
-    // 构建请求头
-    const headers: Record<string, string> = {};
-
-    // 添加用户自定义请求头
-    request.headers.forEach(header => {
-      if (header.key && header.value) {
-        const processedValue = envRef.value?.replaceVariables(header.value) || header.value;
-        headers[header.key] = processedValue;
-      }
-    });
-
-    // 处理认证
-    if (request.auth.type === 'bearer' && request.auth.token) {
-      const processedToken =
-        envRef.value?.replaceVariables(request.auth.token) || request.auth.token;
-      headers['Authorization'] = `Bearer ${processedToken}`;
-    } else if (request.auth.type === 'basic' && request.auth.username && request.auth.password) {
-      const credentials = btoa(`${request.auth.username}:${request.auth.password}`);
-      headers['Authorization'] = `Basic ${credentials}`;
-    } else if (request.auth.type === 'api-key' && request.auth.key && request.auth.value) {
-      const processedValue =
-        envRef.value?.replaceVariables(request.auth.value) || request.auth.value;
-      if (request.auth.location === 'header') {
-        headers[request.auth.key] = processedValue;
-      }
-    }
-
-    // 构建请求体
-    let requestData: any = undefined;
-
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
-      if (request.body.type === 'json' && request.body.json) {
-        const processedJson =
-          envRef.value?.replaceVariables(request.body.json) || request.body.json;
-        requestData = JSON.parse(processedJson);
-        headers['Content-Type'] = 'application/json';
-      } else if (request.body.type === 'form-data' && request.body.formData) {
-        const formData = new FormData();
-        request.body.formData.forEach(item => {
-          if (item.key && item.value) {
-            const processedValue = envRef.value?.replaceVariables(item.value) || item.value;
-            formData.append(item.key, processedValue);
-          }
-        });
-        requestData = formData;
-      } else if (request.body.type === 'x-www-form-urlencoded' && request.body.urlencoded) {
-        const params = new URLSearchParams();
-        request.body.urlencoded.forEach(item => {
-          if (item.key && item.value) {
-            const processedValue = envRef.value?.replaceVariables(item.value) || item.value;
-            params.append(item.key, processedValue);
-          }
-        });
-        requestData = params;
-        headers['Content-Type'] = 'application/x-www-form-urlencoded';
-      } else if (request.body.type === 'raw' && request.body.raw) {
-        const processedRaw = envRef.value?.replaceVariables(request.body.raw) || request.body.raw;
-        requestData = processedRaw;
-      }
-    }
-
-    // 处理 API Key 查询参数
-    let finalUrl = processedUrl;
-    if (
-      request.auth.type === 'api-key' &&
-      request.auth.location === 'query' &&
-      request.auth.key &&
-      request.auth.value
-    ) {
-      const processedValue =
-        envRef.value?.replaceVariables(request.auth.value) || request.auth.value;
-      const separator = finalUrl.includes('?') ? '&' : '?';
-      finalUrl += `${separator}${request.auth.key}=${encodeURIComponent(processedValue)}`;
-    }
-
-    // 发送请求
+    /**
+     * Dispatch the request via Axios and capture response metadata.
+     */
     const axiosResponse: AxiosResponse = await axios({
       method: request.method.toLowerCase() as Method,
       url: finalUrl,
@@ -265,7 +157,9 @@ const sendRequest = async () => {
     const endTime = Date.now();
     responseTime.value = endTime - startTime;
 
-    // 处理响应
+    /**
+     * Normalize response metadata for the viewer.
+     */
     response.value = {
       status: axiosResponse.status,
       statusText: axiosResponse.statusText,
@@ -275,11 +169,15 @@ const sendRequest = async () => {
       size: JSON.stringify(axiosResponse.data).length,
     };
 
-    // 计算响应大小
+    /**
+     * Measure response size for display.
+     */
     const responseStr = JSON.stringify(axiosResponse.data);
     responseSize.value = new Blob([responseStr]).size;
 
-    // 添加到历史记录
+    /**
+     * Persist the request in history for quick reuse.
+     */
     addToHistory({
       method: request.method,
       url: request.url,
@@ -295,21 +193,28 @@ const sendRequest = async () => {
 
     if (axios.isAxiosError(err)) {
       if (err.response) {
-        // 服务器响应了错误状态码
+        /**
+         * Server responded with an error status code.
+         */
+        const responseStr = JSON.stringify(err.response.data);
+        responseSize.value = new Blob([responseStr]).size;
         response.value = {
           status: err.response.status,
           statusText: err.response.statusText,
           headers: err.response.headers as Record<string, string>,
           data: err.response.data,
+          responseTime: responseTime.value,
+          size: responseSize.value,
         };
-
-        const responseStr = JSON.stringify(err.response.data);
-        responseSize.value = new Blob([responseStr]).size;
       } else if (err.request) {
-        // 请求已发出但没有收到响应
+        /**
+         * Request was sent but no response was received.
+         */
         error.value = t('postman.request.networkError');
       } else {
-        // 其他错误
+        /**
+         * Non-network errors raised during request setup.
+         */
         error.value = t('postman.request.requestError', { message: err.message });
       }
     } else {
@@ -320,11 +225,16 @@ const sendRequest = async () => {
   }
 };
 
-// 历史记录管理
-const addToHistory = (item: HistoryItem) => {
+/**
+ * Insert a history entry and cap list length.
+ * @param item - History record to insert.
+ */
+const addToHistory = (item: PostmanHistoryItem) => {
   requestHistory.value.unshift(item);
 
-  // 限制历史记录数量
+  /**
+   * Keep history bounded to reduce storage overhead.
+   */
   if (requestHistory.value.length > 50) {
     requestHistory.value = requestHistory.value.slice(0, 50);
   }
@@ -332,14 +242,18 @@ const addToHistory = (item: HistoryItem) => {
   saveToStorage();
 };
 
-const loadHistoryItem = (item: HistoryItem) => {
-  request.method = item.method as any;
+const loadHistoryItem = (item: PostmanHistoryItem) => {
+  request.method = item.method;
   request.url = item.url;
 
-  // 转换 headers 格式
+  /**
+   * Convert headers from object map into editable list entries.
+   */
   request.headers = Object.entries(item.headers).map(([key, value]) => ({ key, value }));
 
-  // 重置其他配置
+  /**
+   * Reset body and auth settings before loading stored payloads.
+   */
   request.body = { type: 'none' };
   request.auth = { type: 'none' };
 
@@ -364,7 +278,9 @@ const removeHistoryItem = (index: number) => {
   saveToStorage();
 };
 
-// 保存和加载请求
+/**
+ * Export the current request configuration to a JSON file.
+ */
 const saveRequest = () => {
   const requestData = {
     ...request,
@@ -383,6 +299,9 @@ const saveRequest = () => {
   URL.revokeObjectURL(url);
 };
 
+/**
+ * Import a request configuration from a JSON file.
+ */
 const loadRequest = () => {
   const input = document.createElement('input');
   input.type = 'file';
@@ -397,7 +316,9 @@ const loadRequest = () => {
       try {
         const requestData = JSON.parse(e.target?.result as string);
 
-        // 加载请求配置
+        /**
+         * Apply imported request configuration to the editor.
+         */
         Object.assign(request, requestData);
       } catch (error) {
         alert(t('postman.request.loadFailed'));
@@ -409,36 +330,38 @@ const loadRequest = () => {
   input.click();
 };
 
-// 本地存储
+/**
+ * Persist environment and history data to localStorage.
+ */
 const saveToStorage = () => {
-  const data = {
+  savePostmanStorage({
     environments: environments.value,
     currentEnvironment: currentEnvironment.value,
     requestHistory: requestHistory.value,
-  };
-  localStorage.setItem('postman-data', JSON.stringify(data));
+  });
 };
 
+/**
+ * Restore environment and history data from localStorage.
+ */
 const loadFromStorage = () => {
-  try {
-    const data = localStorage.getItem('postman-data');
-    if (data) {
-      const parsed = JSON.parse(data);
-      environments.value = parsed.environments || [];
-      currentEnvironment.value = parsed.currentEnvironment || '';
-      requestHistory.value = parsed.requestHistory || [];
-    }
-  } catch (error) {
-    console.error('加载本地数据失败:', error);
-  }
+  const data = loadPostmanStorage();
+  environments.value = data.environments;
+  currentEnvironment.value = data.currentEnvironment;
+  requestHistory.value = data.requestHistory;
 };
 
-// 处理请求更新
-const handleRequestUpdate = (newRequest: any) => {
+/**
+ * Apply request updates from child components.
+ * @param newRequest - Partial request data.
+ */
+const handleRequestUpdate = (newRequest: Partial<PostmanRequestConfig>) => {
   Object.assign(request, newRequest);
 };
 
-// 暴露给父组件的方法
+/**
+ * Expose request actions for parent components.
+ */
 defineExpose({
   sendRequest,
   saveRequest,
@@ -446,180 +369,4 @@ defineExpose({
 });
 </script>
 
-<style scoped>
-.postman-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.postman-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #f0f0f0;
-}
-
-.postman-header h1 {
-  margin: 0;
-  color: #333;
-  font-size: 28px;
-}
-
-.header-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.save-btn,
-.load-btn {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.save-btn:hover,
-.load-btn:hover {
-  background: #f8f9fa;
-  border-color: #007bff;
-}
-
-.request-section {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 30px;
-}
-
-.request-line {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.method-select {
-  padding: 10px 15px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  font-size: 14px;
-  font-weight: bold;
-  min-width: 100px;
-}
-
-.url-input {
-  flex: 1;
-  padding: 10px 15px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.url-input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-}
-
-.send-btn {
-  padding: 10px 20px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  min-width: 100px;
-  transition: background-color 0.2s;
-}
-
-.send-btn:hover:not(:disabled) {
-  background: #0056b3;
-}
-
-.send-btn:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-}
-
-.request-tabs {
-  display: flex;
-  border-bottom: 1px solid #ddd;
-  margin-bottom: 20px;
-}
-
-.tab-btn {
-  padding: 12px 20px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-  font-size: 14px;
-}
-
-.tab-btn:hover {
-  background: #f8f9fa;
-}
-
-.tab-btn.active {
-  border-bottom-color: #007bff;
-  color: #007bff;
-  font-weight: bold;
-}
-
-.request-tab-content {
-  min-height: 200px;
-}
-
-.auth-section {
-  padding: 20px 0;
-}
-
-.auth-type {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.auth-type label {
-  font-weight: bold;
-  color: #333;
-}
-
-.auth-select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-}
-
-.auth-config {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.auth-input {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.auth-input:focus {
-  outline: none;
-  border-color: #007bff;
-}
-</style>
+<style scoped src="./styles/postman-main.scoped.css"></style>

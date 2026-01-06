@@ -4,7 +4,9 @@
  * @LastEditTime 2025-09-08 09:44:48
  */
 
-// 导入所有组件
+/**
+ * Import and aggregate all shared components.
+ */
 import QRCode from './QRCode/index.vue';
 import JsonCtn from './JsonCtn/index.vue';
 import SvgEditor from './SvgEditor/index.vue';

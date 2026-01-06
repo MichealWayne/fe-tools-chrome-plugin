@@ -1,8 +1,3 @@
-<!--
- * @author Wayne
- * @Date 2022-03-01 16:49:14
- * @LastEditTime 2025-09-04 11:08:59
--->
 <template>
   <div>
     <!-- 简易PostMan -->

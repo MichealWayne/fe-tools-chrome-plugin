@@ -54,9 +54,6 @@
       </div>
     </div>
 
-    <p class="m-screenshot_back g-mt30 f-tc g-fs14" s-cr_blue @click="back">
-      {{ t('common.backHome') }}
-    </p>
   </section>
 </template>
 
@@ -102,19 +99,49 @@ const getActiveTab = () =>
     });
   });
 
-const sendMessageToTab = (tabId: number, message: any) =>
-  new Promise<any>((resolve, reject) => {
+type PageMetrics = {
+  totalWidth: number;
+  totalHeight: number;
+  viewportWidth: number;
+  viewportHeight: number;
+  devicePixelRatio: number;
+  scrollY: number;
+};
+
+type CaptureResponse = {
+  success: boolean;
+  dataUrl?: string;
+  error?: string;
+};
+
+type SelectionResponse = {
+  success: boolean;
+  error?: string;
+};
+
+type TabMessage =
+  | { action: 'getPageMetrics' }
+  | { action: 'scrollTo'; y: number; delay?: number }
+  | { action: 'startElementSelectAndCapture'; filename: string };
+
+type BackgroundMessage = {
+  action: 'captureVisibleTab';
+  windowId: number;
+};
+
+const sendMessageToTab = <T,>(tabId: number, message: TabMessage) =>
+  new Promise<T>((resolve, reject) => {
     chrome.tabs.sendMessage(tabId, message, response => {
       const err = chrome.runtime.lastError;
       if (err) {
         reject(new Error(err.message));
         return;
       }
-      resolve(response);
+      resolve(response as T);
     });
   });
 
-const executeScript = <T,>(tabId: number, func: (...args: any[]) => T, args: any[] = []) =>
+const executeScript = <T,>(tabId: number, func: (...args: unknown[]) => T, args: unknown[] = []) =>
   new Promise<T>((resolve, reject) => {
     chrome.scripting.executeScript(
       {
@@ -133,15 +160,33 @@ const executeScript = <T,>(tabId: number, func: (...args: any[]) => T, args: any
     );
   });
 
-const sendMessageToBackground = (message: any) =>
-  new Promise<any>((resolve, reject) => {
+const executeScriptFiles = (tabId: number, files: string[]) =>
+  new Promise<void>((resolve, reject) => {
+    chrome.scripting.executeScript(
+      {
+        target: { tabId },
+        files,
+      },
+      () => {
+        const err = chrome.runtime.lastError;
+        if (err) {
+          reject(new Error(err.message));
+          return;
+        }
+        resolve();
+      }
+    );
+  });
+
+const sendMessageToBackground = <T,>(message: BackgroundMessage) =>
+  new Promise<T>((resolve, reject) => {
     chrome.runtime.sendMessage(message, response => {
       const err = chrome.runtime.lastError;
       if (err) {
         reject(new Error(err.message));
         return;
       }
-      resolve(response);
+      resolve(response as T);
     });
   });
 
@@ -155,7 +200,7 @@ const loadImage = (src: string) =>
 
 const getPageMetrics = async (tabId: number) => {
   try {
-    return await sendMessageToTab(tabId, { action: 'getPageMetrics' });
+    return await sendMessageToTab<PageMetrics>(tabId, { action: 'getPageMetrics' });
   } catch {
     return executeScript(tabId, () => {
       const doc = document.documentElement;
@@ -174,7 +219,7 @@ const getPageMetrics = async (tabId: number) => {
 
 const scrollToPosition = async (tabId: number, y: number) => {
   try {
-    return await sendMessageToTab(tabId, { action: 'scrollTo', y, delay: 0 });
+    return await sendMessageToTab<{ scrollY: number }>(tabId, { action: 'scrollTo', y, delay: 0 });
   } catch {
     return executeScript(tabId, targetY => {
       window.scrollTo(0, targetY);
@@ -229,7 +274,7 @@ const captureFullPage = async (cropRect?: CropRect) => {
     for (const y of positions) {
       await scrollToPosition(tabId, y);
       await delay(200);
-      const captureResponse = await sendMessageToBackground({
+      const captureResponse = await sendMessageToBackground<CaptureResponse>({
         action: 'captureVisibleTab',
         windowId: tab.windowId,
       });
@@ -315,10 +360,23 @@ const startNodeSelect = async () => {
     const filename = `node-screenshot-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(
       now.getDate()
     )}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
-    const selection = await sendMessageToTab(tabId, {
-      action: 'startElementSelectAndCapture',
-      filename,
-    });
+    let selection: SelectionResponse | undefined;
+    try {
+      selection = await sendMessageToTab<SelectionResponse>(tabId, {
+        action: 'startElementSelectAndCapture',
+        filename,
+      });
+    } catch (error) {
+      const message = (error as Error)?.message || '';
+      if (!message.includes('Receiving end does not exist')) {
+        throw error;
+      }
+      await executeScriptFiles(tabId, ['scripts/content-script-v3.js']);
+      selection = await sendMessageToTab<SelectionResponse>(tabId, {
+        action: 'startElementSelectAndCapture',
+        filename,
+      });
+    }
 
     if (!selection?.success) {
       throw new Error(selection?.error || t('pageScreenshot.errorSelection'));
@@ -356,173 +414,4 @@ const saveScreenshot = () => {
 };
 </script>
 
-<style lang="less" scoped>
-.m-screenshot {
-  width: 780px;
-  max-height: 460px;
-  overflow: auto;
-  padding: 22px 26px 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
-  border: 1px solid #e2e9ff;
-  border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
-  display: flex;
-  flex-direction: column;
-}
-
-.m-screenshot_head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
-
-.m-screenshot_head h2 {
-  font-weight: 600;
-  color: #1f2a44;
-  letter-spacing: 0.2px;
-}
-
-.m-screenshot_error {
-  color: #c0392b;
-  margin-bottom: 12px;
-  background: #fff0f0;
-  border: 1px solid #ffd6d6;
-  border-radius: 8px;
-  padding: 8px 12px;
-}
-
-.m-screenshot_actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.m-screenshot_actions--primary {
-  margin: 18px 0 6px;
-}
-
-.m-screenshot_btn {
-  min-width: 150px;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 10px;
-  border: 1px solid #dbe3f9;
-  background: #fff;
-  color: #2b3a55;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease,
-    color 0.15s ease, border-color 0.15s ease;
-  box-shadow: 0 6px 14px rgba(28, 63, 124, 0.08);
-}
-
-.m-screenshot_btn:hover {
-  transform: translateY(-1px);
-  border-color: #b9c7ef;
-}
-
-.m-screenshot_btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-}
-
-.m-screenshot_btn[s-color='blue'] {
-  background: linear-gradient(135deg, #2969f7 0%, #4d7fff 100%);
-  border-color: #2c66f7;
-  color: #fff;
-  box-shadow: 0 10px 18px rgba(41, 105, 247, 0.25);
-}
-
-.m-screenshot_btn[s-color='blue']:hover {
-  box-shadow: 0 14px 24px rgba(41, 105, 247, 0.32);
-}
-
-.m-screenshot_tip {
-  margin-top: 12px;
-  text-align: center;
-  color: #6b7a99;
-}
-
-.m-screenshot_preview {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  width: 100%;
-}
-
-.m-preview_img {
-  max-height: 260px;
-  overflow: auto;
-  border: 1px solid #e4e9f7;
-  background: #f6f8ff;
-  padding: 12px;
-  border-radius: 12px;
-  width: 100%;
-}
-
-.m-preview_frame {
-  display: flex;
-  justify-content: center;
-}
-
-.m-preview_frame img {
-  max-width: 100%;
-  display: block;
-  margin: 0 auto;
-  border-radius: 6px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-}
-
-.m-preview_empty {
-  min-height: 180px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: #6b7a99;
-}
-
-.m-preview_icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  background: #fff;
-  border: 1px solid #dbe3f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 18px rgba(41, 105, 247, 0.12);
-  margin-bottom: 4px;
-  color: #6d86c3;
-}
-
-.m-preview_icon svg {
-  width: 36px;
-  height: 36px;
-}
-
-.m-preview_title {
-  font-weight: 600;
-  color: #1f2a44;
-}
-
-.m-preview_desc {
-  max-width: 320px;
-  color: #6b7a99;
-}
-
-.m-screenshot_back {
-  position: sticky;
-  bottom: 0;
-  background: linear-gradient(180deg, rgba(245, 248, 255, 0) 0%, #f5f8ff 60%);
-  padding: 12px 0 4px;
-}
-</style>
+<style lang="less" scoped src="./page-screenshot.less"></style>

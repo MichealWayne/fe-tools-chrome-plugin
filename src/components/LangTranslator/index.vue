@@ -30,9 +30,6 @@
       </p>
       <textarea v-model="resultTxt" class="u-textarea" @click.stop="textFocus"></textarea>
     </section>
-    <p v-if="inPopup" class="u-link g-mt10 f-tc g-fs14" s-cr_blue @click.stop="back">
-      {{ t('common.backHome') }}
-    </p>
   </div>
 </template>
 
@@ -56,16 +53,24 @@ export default defineComponent({
 
   data() {
     return {
-      // 原文
+      /**
+       * Source text to translate.
+       */
       originTxt: '',
 
-      // 译文
+      /**
+       * Translated result text.
+       */
       resultTxt: '',
 
-      // 在窗口内
+      /**
+       * Whether the translator runs inside the popup window.
+       */
       inPopup: getUrlParam('type') !== 'translate',
 
-      // 定时器
+      /**
+       * Debounce timer handle for translation requests.
+       */
       timer: -1 as unknown,
     };
   },
@@ -99,7 +104,7 @@ export default defineComponent({
     },
 
     /**
-     * 重置输入和结果
+     * Clear both the source and result text fields.
      */
     reset() {
       this.originTxt = '';
@@ -107,7 +112,8 @@ export default defineComponent({
     },
 
     /**
-     * 自动选中
+     * Select input content when focused for quick replacement.
+     * @param e - Focus event from the input.
      */
     textFocus(e: Event) {
       if (!e || !(e.target instanceof HTMLInputElement)) return;
@@ -115,7 +121,8 @@ export default defineComponent({
     },
 
     /**
-     * 翻译
+     * Translate the provided text via the translation service.
+     * @param txt - Source text to translate.
      */
     async handleTranslate(txt: string) {
       try {

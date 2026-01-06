@@ -40,9 +40,6 @@
         <p :class="'j-regOutput_' + index" class="j-fold f-tc g-mt10"></p>
       </li>
     </ul>
-    <p class="m-regex_back g-mt50 f-tc g-fs14" s-cr_blue @click="back">
-      {{ t('common.backHome') }}
-    </p>
   </section>
 </template>
 
@@ -52,11 +49,17 @@ import { langManager } from '@/utils/i18n';
 
 import { AnyFunc } from '@/types';
 import ajax from '@/api';
-// test: import RegexList from '@/datas/regex';
 
 type ComponentDataTypes = {
   filterTxt: string;
-  regexList: any[];
+  regexList: RegexItem[];
+};
+
+type RegexItem = {
+  name: string;
+  description?: string;
+  regexStr: string;
+  isOpened?: boolean;
 };
 export default defineComponent({
   name: 'RegexCtn',
@@ -76,8 +79,8 @@ export default defineComponent({
   },
 
   mounted() {
-    ajax.getRegex().then((data: any) => {
-      this.regexList = data.list;
+    ajax.getRegex().then((data: { list?: RegexItem[] }) => {
+      this.regexList = data.list || [];
     });
   },
   methods: {

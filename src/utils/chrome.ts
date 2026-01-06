@@ -8,9 +8,8 @@ import { AnyFunc, AnyObj } from '@/types';
 import { IS_DEV } from '@/constant';
 
 /**
- * @function function
- * @description 跳转页面
- * @param {string} url
+ * Open a URL in a new browser tab (Chrome extension context).
+ * @param url - Target URL to open.
  */
 export function jumpAction(url: string) {
   if (!url) {
@@ -28,9 +27,8 @@ export function jumpAction(url: string) {
 }
 
 /**
- * @function getLocalTabUrl
- * @description 获得当前窗口url
- * @param {function} cb
+ * Get the URL of the currently active tab.
+ * @param cb - Callback invoked with the active tab URL and tab object.
  */
 export function getLocalTabUrl(cb: (url: string, tab?: any) => any) {
   try {
@@ -45,9 +43,8 @@ export function getLocalTabUrl(cb: (url: string, tab?: any) => any) {
 }
 
 /**
- * @function getMarkTree
- * @description 获取书签
- * @param {function} cb
+ * Retrieve bookmarks and flatten them into a list.
+ * @param cb - Callback invoked with the flattened bookmark list.
  */
 export function getMarkTree(cb: AnyFunc) {
   const result: AnyObj[] = [];

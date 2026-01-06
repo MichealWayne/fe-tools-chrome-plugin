@@ -33,12 +33,9 @@
         <em v-if="item.label" class="u-icon_il icon-label" :class="getResultLabel(item.label)">{{
           item.label
         }}</em>
-        <span v-html="item.name"></span>
+        <span v-html="getResultName(item)"></span>
       </li>
     </ul>
-    <p class="u-link g-mt30 f-tc g-fs14" s-cr_blue @click.stop="back">
-      {{ t('common.backHome') }}
-    </p>
   </section>
 </template>
 
@@ -49,6 +46,40 @@ import { langManager } from '@/utils/i18n';
 import { AnyFunc } from '@/types';
 import { jumpAction } from '@/utils/chrome';
 import ajax from '@/api';
+import { sanitizeInlineMarkup } from '@/utils/sanitize';
+
+type MooSearchResult = {
+  label: string;
+  color: string;
+  name: string;
+  link: string;
+};
+
+type MooStyleItem = {
+  type: string;
+  name: string;
+  desc: string;
+  ver: string;
+};
+
+type MooColorItem = {
+  name: string;
+  desc: string;
+  show: string;
+};
+
+type MooFuncItem = {
+  name: string;
+  desc: string;
+  place: string;
+};
+
+type MooClassItem = {
+  type: string;
+  name: string;
+  desc: string;
+  val: string;
+};
 
 export default defineComponent({
   name: 'MooCtn',
@@ -63,41 +94,53 @@ export default defineComponent({
   data(): {
     keywords: string;
     logoFold: boolean;
-    resultList: any[];
-    styleList: any[];
-    mooColorList: any[];
-    mooFuncList: any[];
-    mooClassList: any[];
+    resultList: MooSearchResult[];
+    styleList: MooStyleItem[];
+    mooColorList: MooColorItem[];
+    mooFuncList: MooFuncItem[];
+    mooClassList: MooClassItem[];
   } {
     return {
       keywords: '',
       logoFold: false,
 
-      // 搜索结果列表
+      /**
+       * Search results rendered in the Moo CSS view.
+       */
       resultList: [],
 
-      // css属性列表
+      /**
+       * Normalized CSS property dictionary list.
+       */
       styleList: [],
 
-      // moo-css 颜色列表
+      /**
+       * MooCSS color dictionary list.
+       */
       mooColorList: [],
 
-      // moo-css 方法列表
+      /**
+       * MooCSS function dictionary list.
+       */
       mooFuncList: [],
 
-      // moo-css 样式列表
+      /**
+       * MooCSS class dictionary list.
+       */
       mooClassList: [],
     };
   },
 
   mounted() {
-    ajax.getMooCSS().then((data: any) => {
-      this.handleList(data.list);
+    ajax.getMooCSS().then((data: { list?: unknown }) => {
+      if (data?.list) {
+        this.handleList(data.list);
+      }
     });
   },
   methods: {
     /**
-     * 翻译方法
+     * Translate a key into the current language.
      */
     t(key: string) {
       return langManager.t(key);
@@ -128,21 +171,37 @@ export default defineComponent({
           css: 's-simple',
           moo: 's-red',
           'moo-f': 's-blue',
-        } as any
+        } as Record<string, string>
       )[type];
     },
-    // @todo
-    handleResultClick(item: any) {
+    /**
+     * Open selected MooCSS item link.
+     * @param item - Search result entry.
+     */
+    handleResultClick(item: MooSearchResult) {
       jumpAction(item.link);
     },
 
+    /**
+     * Sanitize search result markup before rendering.
+     * @param item - Search result entry.
+     */
+    getResultName(item: MooSearchResult) {
+      return sanitizeInlineMarkup(item?.name || '');
+    },
+
+    /**
+     * Build search results for CSS, colors, functions, and classes.
+     */
     // eslint-disable-next-line complexity
     setSearchResult() {
       const keywords = this.keywords.toLowerCase();
 
-      const resultList = [];
+      const resultList: MooSearchResult[] = [];
       if (keywords?.length > 1) {
-        // 属性
+        /**
+         * Match CSS properties from the Moo CSS dictionary.
+         */
         const styleList = this.styleList || [];
 
         for (let i = 0; i < styleList.length; i++) {
@@ -160,12 +219,14 @@ export default defineComponent({
                 `: <em s-ft_sub_>(${item.type})${item.desc}.</em>`,
               link: `https://developer.mozilla.org/zh-CN/docs/Web/CSS/${item.name
                 .toLowerCase()
-                .replace(/\s/g, '')}`, // not useful: `http://css.cuishifeng.cn/${item.name.toLowerCase().replace(/\s/g, '')}.html`
+                .replace(/\s/g, '')}`,
             });
           }
         }
 
-        // 颜色
+        /**
+         * Match color variables from Moo CSS dictionary.
+         */
         const mooColorList = this.mooColorList || [];
 
         for (let i = 0; i < mooColorList.length; i++) {
@@ -184,7 +245,9 @@ export default defineComponent({
           }
         }
 
-        // 方法
+        /**
+         * Match function helpers from Moo CSS dictionary.
+         */
         const mooFuncList = this.mooFuncList || [];
         for (let i = 0; i < mooFuncList.length; i++) {
           const item = mooFuncList[i];
@@ -196,12 +259,14 @@ export default defineComponent({
                 '(方法)' +
                 item.name.replace(keywords, `<strong>${keywords}</strong>`) +
                 `: <em s-ft_sub_>${item.place}, ${item.desc}</em>`,
-              link: 'httpa://blog.michealwayne.cn/Moo-CSS/docs/nameDictionary/#%E6%96%B9%E6%B3%95',
+              link: 'https://blog.michealwayne.cn/Moo-CSS/docs/nameDictionary/#%E6%96%B9%E6%B3%95',
             });
           }
         }
 
-        // 样式
+        /**
+         * Match style classes from Moo CSS dictionary.
+         */
         const mooClassList = this.mooClassList || [];
         for (let i = 0; i < mooClassList.length; i++) {
           const item = mooClassList[i];
@@ -216,7 +281,7 @@ export default defineComponent({
               name:
                 item.name.replace(keywords, `<strong>${keywords}</strong>`) +
                 `: <em s-ft_sub_>${item.desc}.(${item.val})</em>`,
-              link: 'http://blog.michealwayne.cn/Moo-CSS/docs/nameDictionary/#%E6%A0%B7%E5%BC%8F',
+              link: 'https://blog.michealwayne.cn/Moo-CSS/docs/nameDictionary/#%E6%A0%B7%E5%BC%8F',
             });
           }
         }
@@ -224,97 +289,128 @@ export default defineComponent({
       this.resultList = resultList;
     },
 
-    // @todo
-    handleStyleList(list: any[]) {
-      const arr: Array<{
-        type: string;
-        name: string;
-        desc: string;
-        ver: string;
-      }> = [];
+    /**
+     * Normalize the CSS property list from the raw MooCSS payload.
+     * @param list - Raw list from the API.
+     */
+    handleStyleList(list: Record<string, unknown>[]) {
+      const arr: MooStyleItem[] = [];
 
       Object.values(list).forEach(item => {
-        const { name, children } = item;
+        const record = item as Record<string, unknown>;
+        const name = String(record.name || '');
+        const children = Array.isArray(record.children) ? record.children : [];
 
-        children.forEach((subItem: any) => {
+        children.forEach(subItem => {
+          const child = subItem as Record<string, unknown>;
           arr.push({
             type: name,
-            name: subItem['属性'],
-            desc: subItem['说明'],
-            ver: subItem['CSS版本'],
+            name: String(child['属性'] || ''),
+            desc: String(child['说明'] || ''),
+            ver: String(child['CSS版本'] || ''),
           });
         });
       });
 
       return arr;
     },
-    // @todo
-    handleMooColorList(list: any[]) {
+    /**
+     * Normalize the MooCSS color dictionary payload.
+     * @param list - Raw color list.
+     */
+    handleMooColorList(list: Record<string, unknown>[]) {
       return list.map(item => ({
-        name: `${item['变量']} ${item['十六进制色值']}`,
-        desc: item['说明'],
-        show: item['效果'],
+        name: `${String(item['变量'] || '')} ${String(item['十六进制色值'] || '')}`.trim(),
+        desc: String(item['说明'] || ''),
+        show: String(item['效果'] || ''),
       }));
     },
-    // @todo
-    handleMooFuncList(list: any[]) {
+    /**
+     * Normalize the MooCSS function dictionary payload.
+     * @param list - Raw function list.
+     */
+    handleMooFuncList(list: Record<string, unknown>[]) {
       return list.map(item => ({
-        name: item['方法名'] + '(' + item['参数'] + ')',
-        desc: item['说明'],
-        place: item['平台'],
+        name: `${String(item['方法名'] || '')}(${String(item['参数'] || '')})`,
+        desc: String(item['说明'] || ''),
+        place: String(item['平台'] || ''),
       }));
     },
-    // @todo
-    handleMooClassList(list: any[]) {
-      const arr: Array<{
-        type: string;
-        name: string;
-        desc: string;
-        val: string;
-      }> = [];
+    /**
+     * Normalize the MooCSS class dictionary payload.
+     * @param list - Raw class list.
+     */
+    handleMooClassList(list: Record<string, unknown>[]) {
+      const arr: MooClassItem[] = [];
 
       Object.values(list).forEach(item => {
-        const { name, children } = item;
-        children.forEach((subItem: any) => {
-          if (!subItem['类/属性名'] || !subItem['属性']) return;
+        const record = item as Record<string, unknown>;
+        const name = String(record.name || '');
+        const children = Array.isArray(record.children) ? record.children : [];
+        children.forEach(subItem => {
+          const child = subItem as Record<string, unknown>;
+          if (!child['类/属性名'] || !child['属性']) return;
 
           arr.push({
             type: name,
-            name: subItem['类/属性名'],
-            desc: subItem['说明'],
-            val: subItem['属性'],
+            name: String(child['类/属性名'] || ''),
+            desc: String(child['说明'] || ''),
+            val: String(child['属性'] || ''),
           });
         });
       });
       return arr;
     },
 
-    // @todo
-    handleList(data: any) {
-      Object.values(data).forEach(item => {
-        const { name, children } = item;
+    /**
+     * Split the API payload into internal lists for search.
+     * @param data - Raw MooCSS payload.
+     */
+    handleList(data: unknown) {
+      if (!data || typeof data !== 'object') return;
+      Object.values(data as Record<string, unknown>).forEach(item => {
+        const record = item as Record<string, unknown>;
+        const name = String(record.name || '');
+        const children = Array.isArray(record.children) ? record.children : [];
         if (name === '样式模块词典') {
-          this.styleList = Object.freeze(this.handleStyleList(children)) as any[];
+          this.styleList = Object.freeze(this.handleStyleList(children as Record<string, unknown>[]));
           return;
         }
         if (name === 'moo-css-base词典') {
-          children.forEach((subItem: any) => {
-            switch (subItem.name) {
+          children.forEach(subItem => {
+            const subRecord = subItem as Record<string, unknown>;
+            const subName = String(subRecord.name || '');
+            switch (subName) {
               case '颜色':
                 this.mooColorList = Object.freeze(
-                  this.handleMooColorList(subItem.children)
-                ) as any[];
+                  this.handleMooColorList(
+                    Array.isArray(subRecord.children)
+                      ? (subRecord.children as Record<string, unknown>[])
+                      : []
+                  )
+                );
                 break;
               case '方法':
-                this.mooFuncList = Object.freeze(this.handleMooFuncList(subItem.children)) as any[];
+                this.mooFuncList = Object.freeze(
+                  this.handleMooFuncList(
+                    Array.isArray(subRecord.children)
+                      ? (subRecord.children as Record<string, unknown>[])
+                      : []
+                  )
+                );
                 break;
               case '样式':
                 this.mooClassList = Object.freeze(
-                  this.handleMooClassList(subItem.children)
-                ) as any[];
+                  this.handleMooClassList(
+                    Array.isArray(subRecord.children)
+                      ? (subRecord.children as Record<string, unknown>[])
+                      : []
+                  )
+                );
                 break;
               default:
-                console.log(`unsupport type name: ${subItem}`);
+                // Ignore unrecognized dictionary sections.
+                break;
             }
           });
         }

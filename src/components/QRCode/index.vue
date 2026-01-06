@@ -62,25 +62,29 @@ const handleStop = (e: Event) => {
 };
 
 /**
- * 手动更新
+ * Trigger a manual refresh of the QR code.
  */
 const handleUpdate = () => {
   handleQR();
 };
 
 /**
- * 生成二维码
+ * Generate a QR code from input or the current tab URL.
  */
 const handleQR = () => {
   const keywords = originWords.value;
   const useInputUrl = keywords?.includes('http');
 
   if (useInputUrl) {
-    // 输入链接
+    /**
+     * Use user-provided URL directly.
+     */
     qrdownloadUrl.value = keywords;
     QRUrl.value = handleQRCode(keywords)!.getImgUrl();
   } else {
-    // 当前tab的URL
+    /**
+     * Fall back to the current tab URL.
+     */
     getLocalTabUrl((url: string) => {
       originWords.value = url;
       qrdownloadUrl.value = url;

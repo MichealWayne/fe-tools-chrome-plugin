@@ -1,5 +1,5 @@
 <template>
-  <section s-bg_white @click.stop="stopPropagation">
+  <section class="color-pass" s-bg_white @click.stop="stopPropagation">
     <p :class="$style.title">{{ t('colorPass.title') }}</p>
     <!--颜色输入-->
     <section :class="$style.content">
@@ -158,36 +158,77 @@ const changeColor = (e: Event) => {
 
 <style lang="less" module>
 .title {
-  padding: 10px 0;
+  padding: 6px 0 12px;
   text-align: center;
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2a44;
 }
 .content {
-  padding: 10px 20px;
+  padding: 6px 20px 12px;
 }
 </style>
 
 <style lang="less">
-// 颜色输入条
+.color-pass {
+  padding: 18px 20px 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
+  border: 1px solid #e2e9ff;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
+}
+
+/**
+ * Color input slider section.
+ */
 .m-color-input {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background-color: #fff;
+  border: 1px solid #e4e9f7;
+  box-shadow: 0 6px 14px rgba(28, 63, 124, 0.06);
+
+  & > span {
+    min-width: 46px;
+    font-size: 13px;
+    color: #4a5a78;
+  }
 
   & > input {
-    width: 300px;
-    font-size: 18px;
-    border-bottom: 1px solid #888;
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    border: none;
+    background: transparent;
+    color: #1f2a44;
+    padding: 2px 0;
+
+    &:focus {
+      outline: none;
+    }
+
     &::placeholder {
-      font-size: 14px;
-      color: #999;
+      font-size: 12px;
+      color: #9aa6bf;
     }
   }
 }
 
-// 颜色介绍部分
+/**
+ * Color description and guidance section.
+ */
 .m-color-intro {
-  padding: 10px 20px;
+  padding: 12px 20px 4px;
+  color: #6b7a99;
+  background-color: #f6f8ff;
+  border-radius: 10px;
+  border: 1px solid #e2e9f7;
   & > p {
-    margin-bottom: 5px;
+    margin-bottom: 6px;
   }
 }
 </style>

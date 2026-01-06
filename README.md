@@ -1,8 +1,6 @@
 # FrontEnd Tools Chrome Plugin
 
-适用前端开发人员的 Chrome 插件工具。
-
-> 注意，由于 v1 时隔较久、**目前可运行源码及开发代码在`v2-dev`分支**
+适用前端开发人员的 Chrome 插件工具（Manifest V3）。
 
 ## 辅助前端开发的一个小插件。
 
