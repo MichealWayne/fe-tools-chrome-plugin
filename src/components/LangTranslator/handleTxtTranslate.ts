@@ -6,9 +6,9 @@
 import ajax from '@/api';
 
 /**
- * @function handleTxtTranslate
- * @param txt
- * @returns
+ * Call the translation API and return the translated text.
+ * @param txt - Source text to translate.
+ * @returns Promise resolving to the translated string.
  */
 export default function handleTxtTranslate(txt: string): Promise<string> {
   return new Promise(resolve => {

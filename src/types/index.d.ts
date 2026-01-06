@@ -4,18 +4,26 @@
  * @LastEditTime 2022-08-16 10:21:39
  */
 declare global {
-  // 扩展 Window 上的二维码库引用
+  /**
+   * QR code library exposed on window for legacy usage.
+   */
   interface Window {
     AraleQRCode: any;
   }
-  // Chrome 扩展 API 全局
+  /**
+   * Chrome extension global API reference.
+   */
   const chrome: any;
 }
 
-// 通用函数类型
+/**
+ * Generic function signature helper.
+ */
 export type AnyFunc = (...args: unknown[]) => any;
 
-// 通用对象字典
+/**
+ * Generic object map helper.
+ */
 export type AnyObj = {
   [key: string]: unknown;
 };

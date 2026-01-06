@@ -6,13 +6,12 @@
  */
 
 /**
- * @function getUrlParam
- * @description **getUrlParam(name, decode)**。获取url中search参数
- * @param {String} name 字段名
- * @param {String} decode decode方法（可选）
- * @return {String|Null} 返回结果
+ * Read a query parameter from the current location search string.
+ * @param name - Query string key to read.
+ * @param decode - Optional decode function for the raw value.
+ * @returns The decoded value or null when missing.
  * @example
- *   getUrlParam('fundCode'); // '000697'
+ * getUrlParam('fundCode'); // '000697'
  */
 export function getUrlParam(name: string, decode?: (s: string) => string) {
   const reg = new RegExp(`(^|&)${name}=([^&]*)(&|$)`);
@@ -28,10 +27,9 @@ export function getUrlParam(name: string, decode?: (s: string) => string) {
 }
 
 /**
- * @function handleQRCode
- * @description QR code handler
- * @param {string} url
- * @param {string} type
+ * Create helpers to render and download a QR code for a given URL.
+ * @param url - Content to encode.
+ * @param type - Render target for inline preview (canvas or svg).
  */
 export function handleQRCode(url: string, type = 'canvas') {
   const { AraleQRCode } = window;
@@ -79,17 +77,18 @@ export function handleQRCode(url: string, type = 'canvas') {
 }
 
 /**
- * @function getFileBase64
- * @description 图片压缩转换
- * @param {file object} imgfile
- * @param {function} cb
+ * Read a File into a Base64 data URL.
+ * @param file - File object selected by the user.
+ * @param cb - Callback invoked with the Base64 string.
  */
 export function getFileBase64(file: File, cb: (base64: string) => unknown) {
   if (!file) throw new Error('Error! no param "file"(getFileBase64()).');
 
   const reader = new FileReader();
   reader.onload = function (e) {
-    // 该文件的完整Base64
+    /**
+     * Base64 payload for the entire file.
+     */
     const base64 = e.target!.result;
 
     if (cb) cb(base64 as string);
@@ -101,10 +100,10 @@ export function getFileBase64(file: File, cb: (base64: string) => unknown) {
 }
 
 /**
- * @function compressImg
- * @description compress image
- * @param {image object} img
- * @param {number} rate
+ * Compress an image element into a JPEG data URL.
+ * @param img - Source image element.
+ * @param rate - Compression quality between 0 and 1.
+ * @returns Compressed image data URL.
  */
 export function compressImg(img: HTMLImageElement, rate = 0.9) {
   const canvas = document.createElement('canvas');

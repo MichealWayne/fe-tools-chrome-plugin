@@ -41,7 +41,7 @@
     <!-- 压缩比例调整 -->
     <div class="g-mt20 f-tc">
       <input
-        v-model="compressRate"
+        v-model.number="compressRate"
         class="u-input u-w200 u-p10 g-fs14"
         type="number"
         :placeholder="t('imageCompressor.compressRatio')"
@@ -49,6 +49,9 @@
         max="1"
         @blur="handleRateBlur"
       />
+      <button class="u-btn_il g-ml10" s-color="blue" @click="handleCompressConfirm">
+        {{ t('common.confirm') }}
+      </button>
     </div>
 
     <!-- base64压缩结果 -->
@@ -72,29 +75,40 @@ export default {
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { langManager } from '@/utils/i18n';
 
-const t = (key: string) => langManager.t(key);
-
+import { getFileBase64 } from '@/utils';
 import { getCompressedImageBase64, handleInputUploadImageFile } from '@/utils/image';
 
 import IconInbox from './IconInbox.vue';
 import IconReset from './IconReset.vue';
 
-// 图片压缩比例
+const t = (key: string) => langManager.t(key);
+
+/**
+ * Compression ratio selected by the user.
+ */
 const compressRate = ref<number>();
 
-// 页面展示的图片地址
+/**
+ * Preview image URL used by the UI.
+ */
 const imgUrl = ref('');
 
-// 图片压缩后的base64字符串
+/**
+ * Compressed image Base64 output.
+ */
 const base64result = ref('');
+const originalBase64 = ref('');
 
-// 上传图标元素
+/**
+ * Input element reference for file uploads.
+ */
 const uploadPicElem = ref<any>(null);
 
 const stopPropagation = () => false;
 
 /**
- * base64结果点击选中文案
+ * Select the Base64 output when the textarea is clicked.
+ * @param e - Click event from the textarea.
  */
 const textFocus = (e: Event) => {
   if (!e || !(e.target instanceof HTMLTextAreaElement)) return;
@@ -102,18 +116,26 @@ const textFocus = (e: Event) => {
 };
 
 /**
- * 重置状态
+ * Clear the current image state and outputs.
  */
 const reset = () => {
   imgUrl.value = '';
   base64result.value = '';
+  originalBase64.value = '';
 };
 
 /**
- * 比例调整输入框失焦时重新压缩
+ * Re-compress the image when compression input loses focus.
  */
-const handleRateBlur = () => {
-  getCompressedImageBase64(imgUrl.value, compressRate.value)
+const handleCompressConfirm = () => {
+  if (!imgUrl.value) return;
+  const rateNum = Number(compressRate.value);
+  if (!Number.isFinite(rateNum) || rateNum <= 0 || rateNum > 1) {
+    base64result.value = originalBase64.value;
+    return;
+  }
+
+  getCompressedImageBase64(imgUrl.value, rateNum)
     .then(base64 => {
       base64result.value = base64;
     })
@@ -123,10 +145,26 @@ const handleRateBlur = () => {
     });
 };
 
+const handleRateBlur = () => {
+  handleCompressConfirm();
+};
+
 /**
- * 图片文件上传
+ * Handle FileList uploads and compute preview/base64 outputs.
+ * @param fileList - FileList from input or drag-drop.
  */
 const handleFileList = (fileList?: FileList) => {
+  const file = fileList?.[0];
+  if (file) {
+    getFileBase64(file, (base64: string) => {
+      originalBase64.value = base64;
+      const rateNum = Number(compressRate.value);
+      if (!Number.isFinite(rateNum) || rateNum <= 0 || rateNum > 1) {
+        base64result.value = base64;
+      }
+    });
+  }
+
   handleInputUploadImageFile(fileList, compressRate.value)
     .then(({ imgUrl: newImgUrl, base64result: newBase64result }) => {
       imgUrl.value = newImgUrl;
@@ -136,7 +174,8 @@ const handleFileList = (fileList?: FileList) => {
 };
 
 /**
- * 实际调用的文件上传输入框处理
+ * Handle the actual file input change event.
+ * @param e - Change event from the file input.
  */
 const _handleInputChange = (e: Event) => {
   if (!e || !(e.target instanceof HTMLInputElement)) return;
@@ -145,15 +184,20 @@ const _handleInputChange = (e: Event) => {
 };
 
 /**
- * 拖拽上传文件
+ * Handle drag-and-drop uploads on the drop zone.
+ * @param e - Drag event with transfer data.
  */
 const handleBoxDrag = (e: Event) => {
   if (!e) return;
 
-  // 取消浏览器默认拖拽效果
+  /**
+   * Prevent browser default drag-drop behavior.
+   */
   e.preventDefault();
 
-  // 获取拖拽中的文件对象
+  /**
+   * Extract files from the drag event.
+   */
   const { files } = (e as DragEvent).dataTransfer!;
   handleFileList(files);
 };
@@ -164,7 +208,9 @@ const handleBoxClick = () => {
 const setEvents = () => {
   const box = document.querySelector('#dragbox');
 
-  // forbid default
+  /**
+   * Prevent the browser from opening dropped files.
+   */
   document.addEventListener('drop', e => {
     e.preventDefault();
   });

@@ -1,0 +1,455 @@
+// ===== 工具类 =====
+
+// 布局工具类
+.u-flex {
+  display: flex;
+}
+
+.u-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.u-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.u-flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.u-flex-wrap {
+  flex-wrap: wrap;
+}
+
+.u-flex-1 {
+  flex: 1;
+}
+
+// 文本对齐
+.u-text-left {
+  text-align: left;
+}
+
+.u-text-center {
+  text-align: center;
+}
+
+.u-text-right {
+  text-align: right;
+}
+
+// 文本样式
+.u-text-primary {
+  color: var(--color-text-primary);
+}
+
+.u-text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.u-text-tertiary {
+  color: var(--color-text-tertiary);
+}
+
+.u-text-disabled {
+  color: var(--color-text-disabled);
+}
+
+.u-text-success {
+  color: var(--color-success);
+}
+
+.u-text-warning {
+  color: var(--color-warning);
+}
+
+.u-text-error {
+  color: var(--color-error);
+}
+
+// 字体大小
+.u-text-xs {
+  font-size: var(--font-size-xs);
+}
+
+.u-text-sm {
+  font-size: var(--font-size-sm);
+}
+
+.u-text-md {
+  font-size: var(--font-size-md);
+}
+
+.u-text-lg {
+  font-size: var(--font-size-lg);
+}
+
+.u-text-xl {
+  font-size: var(--font-size-xl);
+}
+
+// 字重
+.u-font-light {
+  font-weight: var(--font-weight-light);
+}
+
+.u-font-normal {
+  font-weight: var(--font-weight-normal);
+}
+
+.u-font-medium {
+  font-weight: var(--font-weight-medium);
+}
+
+.u-font-semibold {
+  font-weight: var(--font-weight-semibold);
+}
+
+.u-font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+// 间距工具类
+.u-m-0 {
+  margin: 0;
+}
+
+.u-m-xs {
+  margin: var(--spacing-xs);
+}
+
+.u-m-sm {
+  margin: var(--spacing-sm);
+}
+
+.u-m-md {
+  margin: var(--spacing-md);
+}
+
+.u-m-lg {
+  margin: var(--spacing-lg);
+}
+
+.u-m-xl {
+  margin: var(--spacing-xl);
+}
+
+.u-mt-xs {
+  margin-top: var(--spacing-xs);
+}
+
+.u-mt-sm {
+  margin-top: var(--spacing-sm);
+}
+
+.u-mt-md {
+  margin-top: var(--spacing-md);
+}
+
+.u-mt-lg {
+  margin-top: var(--spacing-lg);
+}
+
+.u-mb-xs {
+  margin-bottom: var(--spacing-xs);
+}
+
+.u-mb-sm {
+  margin-bottom: var(--spacing-sm);
+}
+
+.u-mb-md {
+  margin-bottom: var(--spacing-md);
+}
+
+.u-mb-lg {
+  margin-bottom: var(--spacing-lg);
+}
+
+.u-ml-xs {
+  margin-left: var(--spacing-xs);
+}
+
+.u-ml-sm {
+  margin-left: var(--spacing-sm);
+}
+
+.u-ml-md {
+  margin-left: var(--spacing-md);
+}
+
+.u-mr-xs {
+  margin-right: var(--spacing-xs);
+}
+
+.u-mr-sm {
+  margin-right: var(--spacing-sm);
+}
+
+.u-mr-md {
+  margin-right: var(--spacing-md);
+}
+
+// 内边距
+.u-p-0 {
+  padding: 0;
+}
+
+.u-p-xs {
+  padding: var(--spacing-xs);
+}
+
+.u-p-sm {
+  padding: var(--spacing-sm);
+}
+
+.u-p-md {
+  padding: var(--spacing-md);
+}
+
+.u-p-lg {
+  padding: var(--spacing-lg);
+}
+
+.u-p-xl {
+  padding: var(--spacing-xl);
+}
+
+.u-pt-xs {
+  padding-top: var(--spacing-xs);
+}
+
+.u-pt-sm {
+  padding-top: var(--spacing-sm);
+}
+
+.u-pt-md {
+  padding-top: var(--spacing-md);
+}
+
+.u-pb-xs {
+  padding-bottom: var(--spacing-xs);
+}
+
+.u-pb-sm {
+  padding-bottom: var(--spacing-sm);
+}
+
+.u-pb-md {
+  padding-bottom: var(--spacing-md);
+}
+
+.u-pl-xs {
+  padding-left: var(--spacing-xs);
+}
+
+.u-pl-sm {
+  padding-left: var(--spacing-sm);
+}
+
+.u-pl-md {
+  padding-left: var(--spacing-md);
+}
+
+.u-pr-xs {
+  padding-right: var(--spacing-xs);
+}
+
+.u-pr-sm {
+  padding-right: var(--spacing-sm);
+}
+
+.u-pr-md {
+  padding-right: var(--spacing-md);
+}
+
+// 圆角
+.u-rounded-xs {
+  border-radius: var(--border-radius-xs);
+}
+
+.u-rounded-sm {
+  border-radius: var(--border-radius-sm);
+}
+
+.u-rounded-md {
+  border-radius: var(--border-radius-md);
+}
+
+.u-rounded-lg {
+  border-radius: var(--border-radius-lg);
+}
+
+.u-rounded-xl {
+  border-radius: var(--border-radius-xl);
+}
+
+.u-rounded-full {
+  border-radius: var(--border-radius-round);
+}
+
+// 阴影
+.u-shadow-xs {
+  box-shadow: var(--shadow-xs);
+}
+
+.u-shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.u-shadow-md {
+  box-shadow: var(--shadow-md);
+}
+
+.u-shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+.u-shadow-xl {
+  box-shadow: var(--shadow-xl);
+}
+
+// 边框
+.u-border {
+  border: 1px solid var(--color-border);
+}
+
+.u-border-light {
+  border: 1px solid var(--color-border-light);
+}
+
+.u-border-dark {
+  border: 1px solid var(--color-border-dark);
+}
+
+.u-border-none {
+  border: none;
+}
+
+// 背景色
+.u-bg-white {
+  background-color: var(--color-background-light);
+}
+
+.u-bg-gray {
+  background-color: var(--color-background);
+}
+
+.u-bg-primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+.u-bg-success {
+  background-color: var(--color-success);
+  color: var(--color-text-inverse);
+}
+
+.u-bg-warning {
+  background-color: var(--color-warning);
+  color: var(--color-text-inverse);
+}
+
+.u-bg-error {
+  background-color: var(--color-error);
+  color: var(--color-text-inverse);
+}
+
+// 显示/隐藏
+.u-hidden {
+  display: none;
+}
+
+.u-visible {
+  visibility: visible;
+}
+
+.u-invisible {
+  visibility: hidden;
+}
+
+// 光标
+.u-cursor-pointer {
+  cursor: pointer;
+}
+
+.u-cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+// 过渡动画
+.u-transition {
+  transition: all var(--transition-normal);
+}
+
+.u-transition-fast {
+  transition: all var(--transition-fast);
+}
+
+.u-transition-slow {
+  transition: all var(--transition-slow);
+}
+
+// 截断文本
+.u-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// 多行截断
+.u-line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.u-line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// 滚动条样式
+.u-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: var(--border-radius-pill);
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border-dark);
+  }
+}
+
+// 响应式断点
+@media (max-width: 768px) {
+  .u-hidden-mobile {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .u-hidden-desktop {
+    display: none;
+  }
+}

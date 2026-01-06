@@ -7,10 +7,6 @@
           {{ t('jsonCtn.description') }}
         </p>
       </div>
-      <a-button type="primary" size="small" class="json-converter__back-btn" @click="handleBack">
-        <i class="u-icon icon-home"></i>
-        {{ t('common.backHome') }}
-      </a-button>
     </div>
 
     <div class="json-converter__content">
@@ -119,7 +115,9 @@ defineOptions({
   name: 'JsonCtn',
 });
 
-// 接收返回主页的方法
+/**
+ * Optional callback to return to the home view.
+ */
 const props = defineProps<{
   back?: () => void;
 }>();
@@ -131,7 +129,9 @@ const successVisible = ref(false);
 const successMessage = ref('');
 const indentLevel = ref(2);
 
-// 监听输入变化，自动转换
+/**
+ * Debounced handler to avoid over-processing input changes.
+ */
 const debouncedWatch = (() => {
   let timeout: number | null = null;
   return (fn: Function) => {
@@ -155,14 +155,19 @@ watch(jsValue, val => {
   });
 });
 
-// 清空输入
+/**
+ * Reset input, output, and error state.
+ */
 const clearInput = () => {
   jsValue.value = '';
   jsonValue.value = '';
   error.value = '';
 };
 
-// JS对象转JSON
+/**
+ * Convert JS-like input into formatted JSON.
+ * @param noMsg - Skip success toast when true.
+ */
 const handleChange = (noMsg = false) => {
   let jsStr = jsValue.value;
   error.value = '';
@@ -173,21 +178,29 @@ const handleChange = (noMsg = false) => {
   }
 
   try {
-    // 清理输入，移除注释
+    /**
+     * Strip comments before parsing.
+     */
     jsStr = removeComments(jsStr);
 
-    // 提取对象部分
+    /**
+     * Extract the object portion for inputs that include extra text.
+     */
     if (jsStr.includes('{') && jsStr.includes('}')) {
       jsStr = jsStr.slice(jsStr.indexOf('{'), jsStr.lastIndexOf('}') + 1);
     }
 
-    // 安全地评估JS对象
+    /**
+     * Evaluate the object in a constrained function scope.
+     */
     const obj = safeEval(jsStr);
     if (!obj) {
       throw new Error(t('jsonCtn.messages.parseFailed'));
     }
 
-    // 格式化JSON
+    /**
+     * Apply indentation settings and serialize output.
+     */
     jsonValue.value = JSON.stringify(obj, null, indentLevel.value);
 
     if (!noMsg) {
@@ -200,7 +213,9 @@ const handleChange = (noMsg = false) => {
   }
 };
 
-// JSON转JS对象
+/**
+ * Convert JSON input back into a JS object literal string.
+ */
 const handleReverse = () => {
   error.value = '';
 
@@ -209,10 +224,14 @@ const handleReverse = () => {
   }
 
   try {
-    // 尝试解析JSON
+    /**
+     * Parse the JSON input to a JS object first.
+     */
     const obj = JSON.parse(jsonValue.value);
 
-    // 将JSON转为格式化的JS对象字符串
+    /**
+     * Serialize the object as a JS object literal string.
+     */
     jsValue.value = jsonToJsString(obj);
     showSuccess(t('jsonCtn.messages.reverseSuccess'));
   } catch (e) {
@@ -221,13 +240,20 @@ const handleReverse = () => {
   }
 };
 
-// 安全地评估JS代码
+/**
+ * Safely evaluate JS-like object input by sanitizing first.
+ * @param jsStr - Input text to evaluate.
+ */
 const safeEval = (jsStr: string) => {
-  // 清理输入
+  /**
+   * Sanitize input to reduce risky constructs.
+   */
   const sanitizedStr = DOMPurify.sanitize(jsStr);
 
   try {
-    // 使用Function构造函数而不是eval，稍微安全一些
+    /**
+     * Use Function constructor instead of eval to reduce scope exposure.
+     */
     return Function(`"use strict"; return (${sanitizedStr})`)();
   } catch (e) {
     console.error('Safe eval failed:', e);
@@ -235,14 +261,21 @@ const safeEval = (jsStr: string) => {
   }
 };
 
-// 移除JavaScript注释
+/**
+ * Remove JS comments from an input string.
+ * @param code - Raw code string.
+ */
 const removeComments = (code: string) => {
   return code
-    .replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1') // 移除注释
+    .replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1')
     .trim();
 };
 
-// JSON转JS字符串
+/**
+ * Convert a JSON object to a formatted JS object literal string.
+ * @param obj - Object to stringify.
+ * @param indent - Indentation size.
+ */
 const jsonToJsString = (obj: any, indent = 2) => {
   const formatValue = (val: any, level = 0): string => {
     const spaces = ' '.repeat(level * indent);
@@ -284,7 +317,9 @@ const jsonToJsString = (obj: any, indent = 2) => {
   return formatValue(obj);
 };
 
-// 复制到剪贴板
+/**
+ * Copy the formatted JSON output to the clipboard.
+ */
 const copyToClipboard = async () => {
   if (!jsonValue.value) return;
 
@@ -297,7 +332,10 @@ const copyToClipboard = async () => {
   }
 };
 
-// 格式化JSON
+/**
+ * Reformat JSON output with a new indentation width.
+ * @param spaces - Number of spaces to indent with.
+ */
 const formatJson = (spaces: number | null) => {
   if (!jsonValue.value) return;
 
@@ -311,7 +349,10 @@ const formatJson = (spaces: number | null) => {
   }
 };
 
-// 显示成功消息
+/**
+ * Display a temporary success message in the UI.
+ * @param message - Success copy to show.
+ */
 const showSuccess = (message: string) => {
   successMessage.value = message;
   successVisible.value = true;
@@ -320,7 +361,9 @@ const showSuccess = (message: string) => {
   }, 2000);
 };
 
-// 返回主页
+/**
+ * Invoke the parent callback to return to the home view.
+ */
 const handleBack = () => {
   if (props.back) {
     props.back();
@@ -328,220 +371,4 @@ const handleBack = () => {
 };
 </script>
 
-<style lang="less" scoped>
-.json-converter {
-  padding: 16px;
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-
-  &__header {
-    margin-bottom: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-
-    &-content {
-      flex: 1;
-    }
-
-    h3 {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 4px;
-      color: #1a1a1a;
-    }
-
-    p {
-      color: #666;
-      margin: 0;
-      font-size: 12px;
-      line-height: 1.4;
-    }
-  }
-
-  &__back-btn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-
-    i {
-      font-size: 14px;
-    }
-  }
-
-  &__content {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 16px;
-
-    @media (max-width: 768px) {
-      flex-direction: column;
-    }
-  }
-
-  &__panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background-color: #fff;
-    border-radius: 6px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
-    transition: box-shadow 0.3s ease;
-
-    &:hover {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-    }
-  }
-
-  &__panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    background-color: #f5f7fa;
-    border-bottom: 1px solid #eaedf3;
-
-    span {
-      font-weight: 600;
-      font-size: 13px;
-      color: #1a1a1a;
-    }
-
-    .clear-btn,
-    .copy-btn,
-    .format-btn {
-      color: #1890ff;
-      padding: 0 4px;
-      font-size: 12px;
-
-      &:hover {
-        color: #40a9ff;
-      }
-
-      &:disabled {
-        color: #bfbfbf;
-      }
-    }
-  }
-
-  &__panel-controls {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  &__textarea {
-    flex: 1;
-    min-height: 500px;
-    padding: 12px;
-    border: none;
-    font-family: 'Fira Code', 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.6;
-    color: #333;
-    resize: vertical;
-    background-color: #fafafa;
-    transition: background-color 0.2s ease;
-
-    &:focus {
-      outline: none;
-      background-color: #fff;
-    }
-
-    &:disabled {
-      background-color: #f5f5f5;
-      color: #666;
-      cursor: default;
-    }
-
-    &::placeholder {
-      color: #bbb;
-      font-size: 13px;
-    }
-  }
-
-  &__divider {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 20px;
-  }
-
-  &__action-icons {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-
-    @media (max-width: 768px) {
-      flex-direction: row;
-      gap: 5px;
-      margin: 2px 0;
-    }
-
-    .action-icon {
-      cursor: pointer;
-      font-size: 14px;
-      width: 20px;
-      height: 20px;
-      line-height: 20px;
-      text-align: center;
-      border-radius: 50%;
-      transition: all 0.2s ease;
-      color: rgba(0, 0, 0, 0.45);
-      user-select: none;
-
-      &:hover {
-        color: #1890ff;
-        background-color: rgba(24, 144, 255, 0.1);
-      }
-
-      &.to-json {
-        color: #1890ff;
-      }
-    }
-  }
-
-  &__error {
-    padding: 4px 10px;
-    background-color: #fff2f0;
-    border-top: 1px solid #ffccc7;
-    color: #f5222d;
-    font-size: 12px;
-  }
-
-  &__tips {
-    background-color: #f6f8fa;
-    padding: 10px 12px;
-    border-radius: 6px;
-    border-left: 3px solid #1890ff;
-    margin-top: 12px;
-    font-size: 12px;
-
-    h4 {
-      margin-top: 0;
-      margin-bottom: 6px;
-      color: #1a1a1a;
-      font-weight: 600;
-      font-size: 13px;
-    }
-
-    ul {
-      margin: 0;
-      padding-left: 14px;
-
-      li {
-        margin-bottom: 3px;
-        color: #666;
-        font-size: 12px;
-
-        &:last-child {
-          margin-bottom: 0;
-        }
-      }
-    }
-  }
-}
-</style>
+<style lang="less" scoped src="./json-ctn.less"></style>

@@ -33,22 +33,24 @@ const CONFIG_LIST = [
 
 // create QRcode
 chrome.runtime.onInstalled.addListener(() => {
-  // 使用 `chrome.contextMenus.create` 方法替代 `chrome.contextMenus.create`
-  CONFIG_LIST.forEach(item => {
+  chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
-      title: item.title,
-      contexts: item.contexts,
-      id: item.id,
-      parentId: MAIN_MENU_ID,
+      id: MAIN_MENU_ID,
+      title: 'fe tools',
+      contexts: ['all'],
+      documentUrlPatterns: ['http://*/*', 'https://*/*', 'file://*/*'],
+    });
+
+    // 使用 `chrome.contextMenus.create` 方法替代 `chrome.contextMenus.create`
+    CONFIG_LIST.forEach(item => {
+      chrome.contextMenus.create({
+        title: item.title,
+        contexts: item.contexts,
+        id: item.id,
+        parentId: MAIN_MENU_ID,
+      });
     });
   });
-});
-
-chrome.contextMenus.create({
-  id: MAIN_MENU_ID,
-  title: 'fe tools',
-  contexts: ['all'],
-  documentUrlPatterns: ['http://*/*', 'https://*/*', 'file://*/*']
 });
 
 /**

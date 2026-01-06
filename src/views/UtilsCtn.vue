@@ -24,7 +24,7 @@
         <em v-if="item.label" class="u-icon_il icon-label" :class="getResultLabel(item.label)">{{
           item.label
         }}</em>
-        <span v-html="item.name"></span>
+        <span v-html="getResultName(item)"></span>
       </li>
     </ul>
 
@@ -34,9 +34,6 @@
       </li>
     </ul>
 
-    <p class="u-link g-mt30 f-tc g-fs14" s-cr_blue @click.stop="back">
-      {{ t('common.backHome') }}
-    </p>
   </section>
 </template>
 
@@ -47,6 +44,7 @@ import { langManager } from '@/utils/i18n';
 import { AnyFunc, AnyObj } from '@/types';
 import { jumpAction } from '@/utils/chrome';
 import ajax from '@/api';
+import { sanitizeInlineMarkup } from '@/utils/sanitize';
 
 type ComponentDataTypes = {
   keywords: string;
@@ -77,12 +75,18 @@ export default defineComponent({
     if (ajax && ajax.getUtilFuncs) {
       ajax
         .getUtilFuncs()
-        .then((data: any) => {
+        .then((data: { success?: boolean; list?: unknown; data?: unknown } | unknown[]) => {
           if (data && (data.success || data.list || data.data || Array.isArray(data))) {
-            this.handleList(data.list || data.data || data);
+            const payload =
+              'list' in (data as Record<string, unknown>) ||
+              'data' in (data as Record<string, unknown>)
+                ? ((data as Record<string, unknown>).list ||
+                    (data as Record<string, unknown>).data)
+                : data;
+            this.handleList(payload);
           }
         })
-        .catch((error: any) => {
+        .catch((error: unknown) => {
           console.error('Failed to load util functions:', error);
         });
     }
@@ -93,7 +97,7 @@ export default defineComponent({
       return langManager.t(key);
     },
     /**
-     * 翻译方法
+     * Translate a key using the shared language manager.
      */
     t(key: string) {
       return langManager.t(key);
@@ -111,7 +115,7 @@ export default defineComponent({
       }
     },
 
-    handleList(list: any) {
+    handleList(list: unknown) {
       if (!list) return;
 
       const ModuleSet = new Set<string>();
@@ -165,6 +169,14 @@ export default defineComponent({
           } as Record<string, string>
         )[type] || ''
       );
+    },
+
+    /**
+     * Sanitize search result markup before rendering.
+     * @param item - Search result entry.
+     */
+    getResultName(item: AnyObj) {
+      return sanitizeInlineMarkup((item?.name as string) || '');
     },
 
     setSearchResult() {

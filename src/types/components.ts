@@ -4,10 +4,14 @@
  * @date 2024-04-15
  */
 
-// HTTP 方法类型
+/**
+ * Supported HTTP methods for request tooling.
+ */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
 
-// 二维码配置
+/**
+ * Configuration for QR code rendering.
+ */
 export interface QRCodeOptions {
   text: string;
   size?: number;
@@ -15,13 +19,17 @@ export interface QRCodeOptions {
   type?: 'canvas' | 'svg';
 }
 
-// 二维码生成结果：可导出或下载
+/**
+ * QR code render result with export helpers.
+ */
 export interface QRCodeResult {
   getDataURL(): string;
   download(filename?: string): void;
 }
 
-// 图片压缩配置
+/**
+ * Image compression settings.
+ */
 export interface ImageCompressOptions {
   quality?: number;
   maxWidth?: number;
@@ -29,7 +37,9 @@ export interface ImageCompressOptions {
   format?: 'jpeg' | 'png' | 'webp';
 }
 
-// 压缩结果：体积与比率
+/**
+ * Image compression result metrics.
+ */
 export interface CompressResult {
   originalSize: number;
   compressedSize: number;
@@ -37,8 +47,9 @@ export interface CompressResult {
   dataUrl: string;
 }
 
-// PostMan 相关类型
-// Postman 模拟请求配置
+/**
+ * Auth configuration for PostMan requests.
+ */
 export interface AuthConfig {
   type: 'none' | 'bearer' | 'basic' | 'api-key';
   token?: string;
@@ -58,7 +69,9 @@ export interface PostmanRequest {
   params?: Record<string, string>;
 }
 
-// Postman 响应模型
+/**
+ * PostMan response payload for display.
+ */
 export interface PostmanResponse {
   status: number;
   statusText: string;
@@ -74,15 +87,18 @@ export interface Environment {
   variables: Record<string, string>;
 }
 
-// JSON 工具相关
-// JSON 格式化配置
+/**
+ * JSON formatting options.
+ */
 export interface JsonFormatOptions {
   indent?: number | null;
   sortKeys?: boolean;
   removeComments?: boolean;
 }
 
-// JSON 校验结果
+/**
+ * JSON validation outcome details.
+ */
 export interface JsonValidationResult {
   isValid: boolean;
   error?: string;
@@ -90,8 +106,9 @@ export interface JsonValidationResult {
   columnNumber?: number;
 }
 
-// 颜色转换相关
-// 颜色值集合
+/**
+ * Color value bundle across multiple color spaces.
+ */
 export interface ColorValue {
   hex: string;
   rgb: { r: number; g: number; b: number };
@@ -105,14 +122,18 @@ export interface ColorConvertOptions {
   includeAlpha?: boolean;
 }
 
-// 日期转换相关
+/**
+ * Date formatting options.
+ */
 export interface DateConvertOptions {
   format?: string;
   timezone?: string;
   locale?: string;
 }
 
-// 日期转换结果
+/**
+ * Date conversion output payload.
+ */
 export interface DateResult {
   timestamp: number;
   iso: string;
@@ -121,7 +142,9 @@ export interface DateResult {
   formatted?: string;
 }
 
-// 单位换算相关
+/**
+ * Unit conversion input parameters.
+ */
 export interface UnitConvertOptions {
   fromUnit: string;
   toUnit: string;
@@ -129,14 +152,18 @@ export interface UnitConvertOptions {
   precision?: number;
 }
 
-// 单位换算结果
+/**
+ * Unit conversion output payload.
+ */
 export interface UnitResult {
   value: number;
   unit: string;
   formatted: string;
 }
 
-// SVG 编辑器相关
+/**
+ * SVG optimization settings.
+ */
 export interface SvgOptimizeOptions {
   removeComments?: boolean;
   removeMetadata?: boolean;
@@ -146,7 +173,9 @@ export interface SvgOptimizeOptions {
   convertStyleToAttrs?: boolean;
 }
 
-// SVG 压缩结果
+/**
+ * SVG optimization result metrics.
+ */
 export interface SvgOptimizeResult {
   optimizedSvg: string;
   originalSize: number;
@@ -154,14 +183,18 @@ export interface SvgOptimizeResult {
   compressionRatio: number;
 }
 
-// 语言翻译相关
+/**
+ * Translation request options.
+ */
 export interface TranslateOptions {
   from: string;
   to: string;
   text: string;
 }
 
-// 翻译结果
+/**
+ * Translation result payload.
+ */
 export interface TranslateResult {
   translatedText: string;
   sourceLanguage: string;
@@ -169,14 +202,18 @@ export interface TranslateResult {
   confidence?: number;
 }
 
-// 正则表达式相关
+/**
+ * Regex test input parameters.
+ */
 export interface RegexTestOptions {
   pattern: string;
   flags?: string;
   testString: string;
 }
 
-// 正则测试结果
+/**
+ * Regex test outcome metrics.
+ */
 export interface RegexTestResult {
   matches: RegExpMatchArray[];
   isMatch: boolean;
@@ -184,8 +221,9 @@ export interface RegexTestResult {
   executionTime: number;
 }
 
-// 通用组件 Props
-// 通用组件基础属性
+/**
+ * Base props shared by UI components.
+ */
 export interface BaseComponentProps {
   loading?: boolean;
   disabled?: boolean;
@@ -193,7 +231,9 @@ export interface BaseComponentProps {
   theme?: 'light' | 'dark';
 }
 
-// 表单相关
+/**
+ * Form field model used by form components.
+ */
 export interface FormField {
   name: string;
   label: string;
@@ -211,19 +251,24 @@ export interface FormField {
   };
 }
 
-// 表单数据字典
+/**
+ * Generic form data key-value map.
+ */
 export interface FormData {
   [key: string]: unknown;
 }
 
-// 表单校验结果
+/**
+ * Form validation result with field errors.
+ */
 export interface FormValidationResult {
   isValid: boolean;
   errors: Record<string, string>;
 }
 
-// 事件相关
-// 组件事件基类
+/**
+ * Base component event payload.
+ */
 export interface ComponentEvent<T = unknown> {
   type: string;
   data?: T;

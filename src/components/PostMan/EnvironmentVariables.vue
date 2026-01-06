@@ -138,28 +138,18 @@ export default {
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
+import type { PostmanEnvironment } from './types';
 
 const t = (key: string, params?: Record<string, string | number>) =>
   langManager.t(key, params);
 
-interface Variable {
-  key: string;
-  value: string;
-  description?: string;
-}
-
-interface Environment {
-  name: string;
-  variables: Variable[];
-}
-
 const props = defineProps<{
-  environments: Environment[];
+  environments: PostmanEnvironment[];
   currentEnvironment?: string;
 }>();
 
 const emit = defineEmits<{
-  'update:environments': [environments: Environment[]];
+  'update:environments': [environments: PostmanEnvironment[]];
   'update:currentEnvironment': [envName: string];
   'variable-replaced': [text: string];
 }>();
@@ -214,7 +204,7 @@ const updateVariables = () => {
 const createEnvironment = () => {
   if (!newEnvName.value.trim()) return;
 
-  const newEnv: Environment = {
+  const newEnv: PostmanEnvironment = {
     name: newEnvName.value.trim(),
     variables: [],
   };
@@ -291,7 +281,9 @@ const importEnvironment = () => {
   }
 };
 
-// 提供给父组件使用的方法
+/**
+ * Expose helper methods for parent components.
+ */
 const replaceVariables = (text: string): string => {
   if (!currentEnv.value) return text;
 
@@ -314,295 +306,4 @@ defineExpose({
 });
 </script>
 
-<style scoped>
-.environment-variables {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.env-header {
-  background: #f8f9fa;
-  padding: 15px;
-  border-bottom: 1px solid #ddd;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.env-header h3 {
-  margin: 0;
-  color: #333;
-}
-
-.env-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.env-select {
-  padding: 5px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-}
-
-.add-env-btn,
-.toggle-btn {
-  padding: 5px 10px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.add-env-btn:hover,
-.toggle-btn:hover {
-  background: #f8f9fa;
-}
-
-.env-content {
-  padding: 20px;
-}
-
-.no-env-selected {
-  text-align: center;
-  color: #6c757d;
-  padding: 40px;
-}
-
-.no-env-selected i {
-  font-size: 48px;
-  margin-bottom: 15px;
-  opacity: 0.5;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.section-header h4 {
-  margin: 0;
-  color: #333;
-}
-
-.add-var-btn {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.add-var-btn:hover {
-  background: #0056b3;
-}
-
-.variables-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.variable-item {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.var-input {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.var-input:not(.description) {
-  flex: 1;
-}
-
-.var-input.description {
-  flex: 1.5;
-}
-
-.var-input:focus {
-  outline: none;
-  border-color: #007bff;
-}
-
-.remove-btn {
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.remove-btn:hover {
-  background: #c82333;
-}
-
-.env-actions-bottom {
-  display: flex;
-  gap: 10px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-}
-
-.export-btn,
-.import-btn {
-  background: #28a745;
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.import-btn {
-  background: #17a2b8;
-}
-
-.delete-env-btn {
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  margin-left: auto;
-}
-
-.export-btn:hover {
-  background: #218838;
-}
-
-.import-btn:hover {
-  background: #138496;
-}
-
-.delete-env-btn:hover {
-  background: #c82333;
-}
-
-/* 模态框样式 */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh;
-  overflow: hidden;
-}
-
-.modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #ddd;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  color: #6c757d;
-}
-
-.close-btn:hover {
-  color: #333;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.env-name-input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.import-textarea {
-  width: 100%;
-  min-height: 200px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  resize: vertical;
-}
-
-.modal-footer {
-  padding: 20px;
-  border-top: 1px solid #ddd;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.cancel-btn,
-.confirm-btn {
-  padding: 8px 20px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.cancel-btn {
-  background: white;
-  color: #6c757d;
-}
-
-.confirm-btn {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
-}
-
-.cancel-btn:hover {
-  background: #f8f9fa;
-}
-
-.confirm-btn:hover {
-  background: #0056b3;
-}
-</style>
+<style scoped src="./styles/environment-variables.scoped.css"></style>

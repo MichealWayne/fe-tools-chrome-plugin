@@ -127,16 +127,21 @@ export default {
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue';
 import { langManager } from '@/utils/i18n';
-import type { PostmanRequest } from '@/types/components';
+import type { PostmanRequestConfig } from './types';
 import RequestHeaders from './RequestHeaders.vue';
 import RequestBody from './RequestBody.vue';
-// import AuthConfig from './AuthConfig.vue';
+/**
+ * Optional AuthConfig import placeholder for future expansion.
+ * import AuthConfig from './AuthConfig.vue';
+ */
 
 const t = (key: string) => langManager.t(key);
 
-// Props
+/**
+ * Props for the request editor panel.
+ */
 interface Props {
-  request: PostmanRequest;
+  request: PostmanRequestConfig;
   loading?: boolean;
 }
 
@@ -144,14 +149,18 @@ const props = withDefaults(defineProps<Props>(), {
   loading: false,
 });
 
-// Emits
+/**
+ * Emits for request updates and send action.
+ */
 const emit = defineEmits<{
-  'update:request': [request: PostmanRequest];
+  'update:request': [request: PostmanRequestConfig];
   'send-request': [];
 }>();
 
-// 本地请求数据
-const localRequest = reactive<PostmanRequest>({
+/**
+ * Local draft copy of the request configuration.
+ */
+const localRequest = reactive<PostmanRequestConfig>({
   method: 'GET',
   url: '',
   headers: [],
@@ -160,17 +169,23 @@ const localRequest = reactive<PostmanRequest>({
   ...props.request,
 });
 
-// 当前活跃的标签页
+/**
+ * Active request tab (headers/body/auth).
+ */
 const activeTab = ref('headers');
 
-// 标签页配置
+/**
+ * Tab metadata for the request editor.
+ */
 const requestTabs = computed(() => [
   { key: 'headers', label: t('postman.requestTabs.headers') },
   { key: 'body', label: t('postman.requestTabs.body') },
   { key: 'auth', label: t('postman.requestTabs.auth') },
 ]);
 
-// 监听props变化
+/**
+ * Keep local state in sync with incoming props.
+ */
 watch(
   () => props.request,
   newRequest => {
@@ -179,7 +194,9 @@ watch(
   { deep: true }
 );
 
-// 更新请求数据
+/**
+ * Emit the updated request to the parent.
+ */
 const updateRequest = () => {
   emit('update:request', { ...localRequest });
 };

@@ -38,23 +38,19 @@ export default {
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
+import type { HeaderEntry } from './types';
 
 const t = (key: string) => langManager.t(key);
 
-interface Header {
-  key: string;
-  value: string;
-}
-
 const props = defineProps<{
-  modelValue: Header[];
+  modelValue: HeaderEntry[];
 }>();
 
 const emit = defineEmits<{
-  'update:modelValue': [headers: Header[]];
+  'update:modelValue': [headers: HeaderEntry[]];
 }>();
 
-const headers = ref<Header[]>([...props.modelValue]);
+const headers = ref<HeaderEntry[]>([...props.modelValue]);
 
 watch(
   () => props.modelValue,

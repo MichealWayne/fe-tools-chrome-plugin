@@ -1,0 +1,224 @@
+.json-converter {
+  padding: 18px 20px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
+  border: 1px solid #e2e9ff;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
+  height: calc(100vh - 40px);
+  overflow-y: auto;
+  box-sizing: border-box;
+
+  &__header {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    &-content {
+      flex: 1;
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #1f2a44;
+    }
+
+    p {
+      color: #6b7a99;
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+  }
+
+  &__back-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+
+    i {
+      font-size: 14px;
+    }
+  }
+
+  &__content {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+    }
+  }
+
+  &__panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    border-radius: 12px;
+    border: 1px solid #e4e9f7;
+    box-shadow: 0 6px 14px rgba(28, 63, 124, 0.06);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 10px 20px rgba(28, 63, 124, 0.12);
+    }
+  }
+
+  &__panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #f6f8ff;
+    border-bottom: 1px solid #e2e9ff;
+
+    span {
+      font-weight: 600;
+      font-size: 13px;
+      color: #1f2a44;
+    }
+
+    .clear-btn,
+    .copy-btn,
+    .format-btn {
+      color: #2969f7;
+      padding: 0 4px;
+      font-size: 12px;
+
+      &:hover {
+        color: #1f55d1;
+      }
+
+      &:disabled {
+        color: #c7cfdd;
+      }
+    }
+  }
+
+  &__panel-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__textarea {
+    flex: 1;
+    min-height: 500px;
+    padding: 12px;
+    border: none;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #2b3a55;
+    resize: vertical;
+    background-color: #fff;
+    transition: background-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      background-color: #f6f8ff;
+    }
+
+    &:disabled {
+      background-color: #f5f7fb;
+      color: #6b7a99;
+      cursor: default;
+    }
+
+    &::placeholder {
+      color: #a8b2c6;
+      font-size: 13px;
+    }
+  }
+
+  &__divider {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+  }
+
+  &__action-icons {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    @media (max-width: 768px) {
+      flex-direction: row;
+      gap: 5px;
+      margin: 2px 0;
+    }
+
+    .action-icon {
+      cursor: pointer;
+      font-size: 14px;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      text-align: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      color: #6b7a99;
+      user-select: none;
+
+      &:hover {
+        color: #2969f7;
+        background-color: rgba(41, 105, 247, 0.12);
+      }
+
+      &.to-json {
+        color: #2969f7;
+      }
+    }
+  }
+
+  &__error {
+    padding: 4px 10px;
+    background-color: #fff2f0;
+    border-top: 1px solid #ffccc7;
+    color: #f5222d;
+    font-size: 12px;
+  }
+
+  &__tips {
+    background-color: #f6f8ff;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e9f7;
+    border-left: 3px solid #2969f7;
+    margin-top: 12px;
+    font-size: 12px;
+
+    h4 {
+      margin-top: 0;
+      margin-bottom: 6px;
+      color: #1f2a44;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 14px;
+
+      li {
+        margin-bottom: 3px;
+        color: #6b7a99;
+        font-size: 12px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+}

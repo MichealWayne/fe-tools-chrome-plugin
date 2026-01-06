@@ -51,26 +51,17 @@ export default {
 <script setup lang="ts">
 import { ref } from 'vue';
 import { langManager } from '@/utils/i18n';
+import type { PostmanHistoryItem } from './types';
 
 const t = (key: string, params?: Record<string, string | number>) =>
   langManager.t(key, params);
 
-interface HistoryItem {
-  method: string;
-  url: string;
-  headers: Record<string, string>;
-  body?: any;
-  timestamp: number;
-  status?: number;
-  responseTime?: number;
-}
-
 const props = defineProps<{
-  history: HistoryItem[];
+  history: PostmanHistoryItem[];
 }>();
 
 const emit = defineEmits<{
-  'select-item': [item: HistoryItem];
+  'select-item': [item: PostmanHistoryItem];
   'clear-history': [];
   'remove-item': [index: number];
 }>();
@@ -81,7 +72,7 @@ const toggleHistory = () => {
   isExpanded.value = !isExpanded.value;
 };
 
-const selectHistoryItem = (item: HistoryItem) => {
+const selectHistoryItem = (item: PostmanHistoryItem) => {
   emit('select-item', item);
 };
 
@@ -101,13 +92,19 @@ const formatTime = (timestamp: number) => {
   const diff = now.getTime() - date.getTime();
 
   if (diff < 60000) {
-    // 1分钟内
+    /**
+     * Within the last minute.
+     */
     return t('postman.history.justNow');
   } else if (diff < 3600000) {
-    // 1小时内
+    /**
+     * Within the last hour.
+     */
     return t('postman.history.minutesAgo', { minutes: Math.floor(diff / 60000) });
   } else if (diff < 86400000) {
-    // 1天内
+    /**
+     * Within the last day.
+     */
     return t('postman.history.hoursAgo', { hours: Math.floor(diff / 3600000) });
   } else {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();

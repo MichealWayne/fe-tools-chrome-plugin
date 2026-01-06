@@ -1,5 +1,5 @@
 <!--
-    主页面
+  主页面
 -->
 <template>
   <section class="m-ctn u-pt20 f-ovhidden">
@@ -51,90 +51,15 @@
         </section>
         <section class="g-mt30 g-center">
           <ul class="m-others m-others--grid g-fs14 u-pt10">
-            <li class="f-tc" :title="t('descriptions.qrCode')" @click="showCompName = 'QRCode'">
-              <em class="u-icon iconfont icon-erweima g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.qrCode') }}</span>
-            </li>
             <li
+              v-for="tool in toolCards"
+              :key="tool.key"
               class="f-tc"
-              :title="t('descriptions.imageCompressor')"
-              @click="showCompName = 'ImageCompressor'"
+              :title="t(tool.descriptionKey)"
+              @click="handleToolClick(tool)"
             >
-              <em class="u-icon iconfont icon-compress-file g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.imageCompressor') }}</span>
-            </li>
-            <li
-              class="f-tc"
-              :title="t('descriptions.colorPass')"
-              @click="showCompName = 'ColorPass'"
-            >
-              <em class="u-icon iconfont icon-chanyexietong g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.colorPass') }}</span>
-            </li>
-            <li class="f-tc" :title="t('descriptions.postMan')" @click="toPostMan">
-              <em class="u-icon icon-postman g-center g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.postMan') }}</span>
-            </li>
-            <li
-              class="f-tc"
-              :title="t('descriptions.unitCalculator')"
-              @click="showCompName = 'UnitCalculator'"
-            >
-              <em class="u-icon iconfont icon-calc g-center g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.unitCalculator') }}</span>
-            </li>
-            <li class="f-tc" :title="t('descriptions.mooCtn')" @click="showCompName = 'MooCtn'">
-              <em class="u-icon iconfont icon-moo g-center g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.mooCtn') }}</span>
-            </li>
-            <!-- @todo 有道翻译API暂时关闭 <li class="f-tc" title="快速中英文翻译" @click="showCompName = 'LangTranslator'"> -->
-            <li class="f-tc" :title="t('descriptions.langTranslator')" @click="toYoudao">
-              <em class="u-icon iconfont icon-fanyi g-center g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.langTranslator') }}</span>
-            </li>
-            <li class="f-tc" :title="t('descriptions.regexCtn')" @click="showCompName = 'RegexCtn'">
-              <em class="u-icon iconfont icon-regex g-center g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.regexCtn') }}</span>
-            </li>
-            <li class="f-tc" :title="t('descriptions.utilsCtn')" @click="showCompName = 'UtilsCtn'">
-              <em class="u-icon icon-utils g-center g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.utilsCtn') }}</span>
-            </li>
-            <li class="f-tc" :title="t('descriptions.jsonCtn')" @click="showCompName = 'JsonCtn'">
-              <em class="u-icon iconfont icon-utils g-center g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.jsonCtn') }}</span>
-            </li>
-            <li
-              class="f-tc"
-              :title="t('descriptions.svgEditor')"
-              @click="showCompName = 'SvgEditor'"
-            >
-              <em class="u-icon iconfont icon-compress-file g-center g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.svgEditor') }}</span>
-            </li>
-            <li
-              class="f-tc"
-              :title="t('descriptions.dateConverter')"
-              @click="showCompName = 'DateConverter'"
-            >
-              <em class="u-icon iconfont icon-calc g-center g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.dateConverter') }}</span>
-            </li>
-            <li
-              class="f-tc"
-              :title="t('descriptions.linuxCommand')"
-              @click="showCompName = 'LinuxCommand'"
-            >
-              <em class="u-icon icon-utils g-center g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.linuxCommand') }}</span>
-            </li>
-            <li
-              class="f-tc"
-              :title="t('descriptions.pageScreenshot')"
-              @click="showCompName = 'PageScreenshot'"
-            >
-              <em class="u-icon icon-utils g-center g-fs36"></em>
-              <span class="g-fs12">{{ t('tools.pageScreenshot') }}</span>
+              <em :class="tool.iconClass"></em>
+              <span class="g-fs12">{{ t(tool.nameKey) }}</span>
             </li>
           </ul>
         </section>
@@ -154,6 +79,16 @@
         :back="() => (showCompName = '')"
       />
     </div>
+    <button
+      v-if="showCompName"
+      class="m-back-entry"
+      type="button"
+      :title="t('common.backHome')"
+      @click.stop="handleBackHome"
+    >
+      <i class="u-icon icon-home"></i>
+      <span class="m-back-entry__label">{{ t('common.back') }}</span>
+    </button>
   </section>
 </template>
 
@@ -164,6 +99,10 @@ import { getUrlParam } from '@/utils';
 import { getMarkTree, jumpAction } from '@/utils/chrome';
 import ajax from '@/api';
 import { langManager } from '@/utils/i18n';
+import { TOOL_CARDS, type ToolCard } from './main/tool-cards';
+import type { BookmarkItem, ComponentDataTypes } from './main/types';
+import { sanitizeInlineMarkup } from '@/utils/sanitize';
+import { buildSearchResults, normalizeFeToolsList } from './main/search-utils';
 
 import MooCtn from './MooCtn.vue';
 import RegexCtn from './RegexCtn.vue';
@@ -172,27 +111,6 @@ import UtilsCtn from './UtilsCtn.vue';
 import { DEFAULT_SEARCH_LIST } from '@/constant';
 
 import CompMap from '@/components/';
-console.log('CompMap', CompMap);
-
-type ComponentDataTypes = {
-  keywords: string;
-  markList: Array<{ title?: string; [key: string]: unknown }>;
-  logoFold: string | boolean;
-
-  showCompName: string;
-
-  resultList: Array<{
-    link: string;
-    name: string;
-    label?: 'tools' | 'mark';
-    type?: string;
-    color?: string;
-    children?: any;
-  }>;
-  feToolsList: Array<{ name: string; link: string; desc: string; target: any; children?: any }>;
-  currentLang: string;
-  languageChangeHandler?: (lang: string) => void;
-};
 
 const QR_CODE_TYPE = 'qr';
 
@@ -208,22 +126,42 @@ export default defineComponent({
 
   data(): ComponentDataTypes {
     return {
-      // 搜索关键词
+      /**
+       * Search input keyword bound to the main query field.
+       */
       keywords: '',
-      // 本地书签信息
+      /**
+       * Bookmark tree pulled from the browser for local search.
+       */
       markList: [],
-      // logo折叠
+      /**
+       * Toggle flag controlling the folded logo state.
+       */
       logoFold: '',
 
-      // 当前展示的组件
+      /**
+       * Current component name rendered in the main view.
+       */
       showCompName: getUrlParam('search') ? 'QRCode' : '',
-      // 搜索结果
+      /**
+       * Aggregated search result list for tools and bookmarks.
+       */
       resultList: [],
-      // 远程工具信息列表
+      /**
+       * Remote tool metadata fetched from the API.
+       */
       feToolsList: [],
-      // 当前语言
+      /**
+       * Quick-launch cards displayed on the home view.
+       */
+      toolCards: TOOL_CARDS,
+      /**
+       * Active language code for UI localization.
+       */
       currentLang: langManager.getCurrentLanguage(),
-      // 语言变化处理器
+      /**
+       * Listener reference used to remove language subscription on cleanup.
+       */
       languageChangeHandler: undefined,
     };
   },
@@ -234,20 +172,21 @@ export default defineComponent({
       this.keywords = _msg;
       this.setSearchResult();
     }
-    getMarkTree((list: any) => {
+    getMarkTree((list: BookmarkItem[]) => {
       this.markList = list;
     });
     ajax
       .getFeTools()
-      .then((data: any) => {
-        const list = this.handleFEToolsList(data.list);
-        this.feToolsList = list;
+      .then((data: { list?: unknown }) => {
+        this.feToolsList = normalizeFeToolsList(data.list);
       })
       .catch((e: Error) => {
-        alert(e?.message || t('errors.fetchLinksFailed'));
+        alert(e?.message || this.t('errors.fetchLinksFailed'));
       });
 
-    // 监听语言变化
+    /**
+     * Track language changes to keep select input in sync.
+     */
     this.languageChangeHandler = (newLang: string) => {
       this.currentLang = newLang;
     };
@@ -255,7 +194,9 @@ export default defineComponent({
   },
 
   beforeUnmount() {
-    // 清理语言监听器
+    /**
+     * Clean up language change listener on teardown.
+     */
     if (this.languageChangeHandler) {
       langManager.removeListener(this.languageChangeHandler);
     }
@@ -263,42 +204,42 @@ export default defineComponent({
 
   methods: {
     /**
-     * 获取翻译文本
+     * Resolve a localized string by key with optional params.
      */
     t(key: string, params?: Record<string, string | number>): string {
       return langManager.t(key, params);
     },
 
     /**
-     * 处理语言切换
+     * Apply the selected language to the language manager.
      */
     handleLanguageChange() {
       langManager.setLanguage(this.currentLang);
     },
 
     /**
-     * 前往简易postman
-     */
-    toPostMan() {
-      jumpAction('index.html?type=postman');
-    },
-
-    /**
-     * 去fe-tools主页
+     * Navigate to the FeTools project homepage.
      */
     toHome() {
       jumpAction('https://github.com/MichealWayne/fe-tools');
     },
 
     /**
-     * 去有道翻译
+     * Handle clicks on quick tool cards.
+     * @param tool - Tool card metadata.
      */
-    toYoudao() {
-      jumpAction('https://fanyi.youdao.com/indexLLM.html#/');
+    handleToolClick(tool: ToolCard) {
+      if (tool.componentName) {
+        this.showCompName = tool.componentName;
+        return;
+      }
+      if (tool.url) {
+        jumpAction(tool.url);
+      }
     },
 
     /**
-     * 输入框聚焦时，logo隐藏
+     * Fold the logo when the search input gains focus.
      */
     handleInputFocus() {
       if (this.keywords) {
@@ -307,7 +248,7 @@ export default defineComponent({
     },
 
     /**
-     * 输入框失去焦点时，如无输入内容则logo展示
+     * Restore the logo and clear results when input loses focus with no query.
      */
     handleInputBlur() {
       if (!this.keywords) {
@@ -317,7 +258,7 @@ export default defineComponent({
     },
 
     /**
-     * 输入搜索内容时
+     * Update results as the user types into the search box.
      */
     handleInputInput() {
       if (this.keywords) {
@@ -327,11 +268,14 @@ export default defineComponent({
     },
 
     /**
-     * 检索结果的点击
+     * Open the selected result based on its type.
+     * @param item - Result entry from the aggregated list.
      */
-    handleResultClick(item: any) {
+    handleResultClick(item: SearchResultItem) {
       if (item.type === QR_CODE_TYPE) {
-        // qr code
+        /**
+         * Switch to the QR code view for URL rendering.
+         */
         this.showCompName = 'QRCode';
       } else {
         jumpAction(item.link);
@@ -339,14 +283,16 @@ export default defineComponent({
     },
 
     /**
-     * 结果的展示文案
+     * Return display-friendly text for a result entry.
+     * @param item - Result entry object.
      */
-    getResultText(item: any) {
-      return item.name || '--';
+    getResultText(item: SearchResultItem) {
+      return sanitizeInlineMarkup(item?.name || '--');
     },
 
     /**
-     * 结果的展示标签
+     * Map result type to a CSS label style.
+     * @param type - Result category.
      */
     getResultLabel(type?: 'tools' | 'mark') {
       if (!type) return '';
@@ -357,7 +303,7 @@ export default defineComponent({
     },
 
     /**
-     * 清除搜索结果
+     * Clear the search input and reset results.
      */
     handleSearchClear() {
       this.keywords = '';
@@ -365,146 +311,34 @@ export default defineComponent({
     },
 
     /**
-     * 处理结果
+     * Build the search result list for the current keyword.
      */
-    handleFEToolsList(list: any): Array<{
-      name: string;
-      link: string;
-      desc: string;
-      target: any;
-      children?: any;
-    }> {
-      const handleList = (
-        data: any
-      ): Array<{
-        name: string;
-        link: string;
-        desc: string;
-        target: any;
-        children?: any;
-      }> => {
-        const result = [];
-        if (Array.isArray(data)) {
-          data.forEach(item => {
-            if (item.link && item.name) {
-              result.push({
-                name: item.name,
-                link: item.link,
-                desc: item.desc,
-                target: item.target,
-              });
-            }
-
-            if (item.children?.length) {
-              result.push(...handleList(item.children));
-            }
-          });
-        }
-        if (data.link && data.name) {
-          result.push({
-            name: data.name,
-            link: data.link,
-            desc: data.desc,
-            target: data.target,
-          });
-        }
-        return result;
-      };
-
-      return handleList(list);
-    },
-
     // eslint-disable-next-line complexity
     setSearchResult() {
-      const keywords = this.keywords.toLowerCase();
-
-      if (keywords.startsWith('http')) {
-        // link
-        this.resultList = [
-          {
-            type: QR_CODE_TYPE,
-            link: '',
-            name: t('search.qrCodeResult'),
-          },
-        ];
-        return;
-      }
-
-      const resultList: Array<{
-        link: string;
-        name: string;
-        label?: 'tools' | 'mark';
-        type?: string;
-        color?: string;
-        children?: any;
-      }> = [];
-      if (keywords?.length > 2) {
-        const FEToolsData = this.feToolsList || [];
-
-        // fe-tools链接匹配
-        FEToolsData.forEach(item => {
-          const IS_SUPPORT_KEYWORDS =
-            item.name.includes(keywords) ||
-            item.desc?.includes(keywords) ||
-            (item.target && item.target.join(' | ').includes(keywords));
-
-          if (IS_SUPPORT_KEYWORDS) {
-            if (!item.link) {
-              if (item.children?.length) {
-                item.children.forEach((child: any) => {
-                  resultList.push({
-                    label: 'tools',
-                    color: 'orange',
-                    link: child.link,
-                    name: `${child.name.replace(keywords, `<strong>${keywords}</strong>`)} <em>(${
-                      child.desc
-                    })</em>`,
-                  });
-                });
-              }
-            } else {
-              resultList.push({
-                label: 'tools',
-                color: 'orange',
-                link: item.link,
-                name: `${item.name.replace(
-                  keywords,
-                  `<strong>${keywords}</strong>`
-                )} <em s-ft_sub_>(${item.desc})</em>`,
-              });
-            }
-          }
-        });
-      }
-
-      // 收藏夹匹配
-      const MarkList = this.markList || [];
-      MarkList?.forEach(item => {
-        if (item.title?.toLowerCase().includes(keywords)) {
-          resultList.push({
-            link: item.url as string,
-            name: item.title.replace(keywords, `<strong>${keywords}</strong>`) as string,
-            color: 'red',
-            label: 'mark',
-          });
-        }
+      this.resultList = buildSearchResults({
+        keywords: this.keywords,
+        feToolsList: this.feToolsList,
+        markList: this.markList,
+        defaultSearchList: DEFAULT_SEARCH_LIST,
+        translate: this.t,
+        qrCodeType: QR_CODE_TYPE,
       });
-
-      // 默认检索匹配
-      DEFAULT_SEARCH_LIST.forEach(item => {
-        resultList.push({
-          link: item.link + keywords,
-          name: t('search.searchIn', { site: item.name, keywords }),
-        });
-      });
-      this.resultList = resultList;
     },
 
-    // 隐藏弹窗模块（除了完整页面，Ctn为标志）
+    /**
+     * Close floating panels for non-CTN components.
+     */
     hideFixCtn() {
       if (this.showCompName.includes('Ctn')) {
         return;
       }
+      this.showCompName = '';
+    },
+
+    /**
+     * Return to the home view from any module.
+     */
+    handleBackHome() {
       this.showCompName = '';
     },
   },

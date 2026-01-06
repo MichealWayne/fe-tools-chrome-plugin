@@ -73,25 +73,33 @@ import type { AuthConfig } from '@/types/components';
 
 const t = (key: string) => langManager.t(key);
 
-// Props
+/**
+ * Props for AuthConfig editor.
+ */
 interface Props {
   modelValue: AuthConfig;
 }
 
 const props = defineProps<Props>();
 
-// Emits
+/**
+ * Emits for two-way binding of auth configuration.
+ */
 const emit = defineEmits<{
   'update:modelValue': [auth: AuthConfig];
 }>();
 
-// 本地认证配置
+/**
+ * Local auth draft state mirrored from props.
+ */
 const localAuth = reactive<AuthConfig>({
   type: 'none',
   ...props.modelValue,
 });
 
-// 监听props变化
+/**
+ * Sync incoming modelValue updates into local state.
+ */
 watch(
   () => props.modelValue,
   newAuth => {
@@ -100,7 +108,9 @@ watch(
   { deep: true }
 );
 
-// 更新认证配置
+/**
+ * Emit the updated auth configuration to the parent.
+ */
 const updateAuth = () => {
   emit('update:modelValue', { ...localAuth });
 };

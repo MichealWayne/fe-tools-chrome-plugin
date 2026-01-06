@@ -4,7 +4,9 @@
  * @date 2024-04-15
  */
 
-// 错误类型枚举
+/**
+ * Error categories returned by API helpers.
+ */
 export enum ErrorType {
   NETWORK_ERROR = 'NETWORK_ERROR',
   TIMEOUT_ERROR = 'TIMEOUT_ERROR',
@@ -12,10 +14,14 @@ export enum ErrorType {
   CLIENT_ERROR = 'CLIENT_ERROR',
 }
 
-// HTTP 方法类型
+/**
+ * Supported HTTP methods for API requests.
+ */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
 
-// 请求配置接口
+/**
+ * Shared request configuration options for ApiClient.
+ */
 export interface RequestConfig {
   timeout?: number;
   headers?: Record<string, string>;
@@ -25,7 +31,9 @@ export interface RequestConfig {
   retryDelay?: number;
 }
 
-// API 响应接口（对象放 data，数组放 list）
+/**
+ * Normalized API response envelope.
+ */
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
@@ -35,7 +43,9 @@ export interface ApiResponse<T = unknown> {
   list?: T[];
 }
 
-// API 错误接口
+/**
+ * Normalized API error payload.
+ */
 export interface ApiError {
   success: false;
   statusCode: number;
@@ -44,8 +54,9 @@ export interface ApiError {
   url: string;
 }
 
-// 具体业务接口类型
-// 工具列表条目
+/**
+ * Tool list item returned by the tools endpoint.
+ */
 export interface ToolsData {
   id: string;
   name: string;
@@ -54,21 +65,27 @@ export interface ToolsData {
   icon?: string;
 }
 
-// 翻译请求
+/**
+ * Translation request payload.
+ */
 export interface TranslateRequest {
   text: string;
   from: string;
   to: string;
 }
 
-// 翻译响应
+/**
+ * Translation response payload.
+ */
 export interface TranslateResponse {
   translatedText: string;
   sourceLanguage: string;
   targetLanguage: string;
 }
 
-// MooCSS 结构
+/**
+ * MooCSS data entry returned by the API.
+ */
 export interface MooCSSData {
   module: string;
   className: string;
@@ -76,7 +93,9 @@ export interface MooCSSData {
   example?: string;
 }
 
-// 正则表达式条目
+/**
+ * Regex catalog entry for the regex tool.
+ */
 export interface RegexData {
   id: string;
   name: string;
@@ -86,7 +105,9 @@ export interface RegexData {
   flags?: string;
 }
 
-// Linux 命令文档结构
+/**
+ * Linux command example description.
+ */
 export interface LinuxCommandExample {
   command: string;
   description: string;
@@ -97,6 +118,9 @@ export interface LinuxCommandOption {
   description: string;
 }
 
+/**
+ * Linux command reference entry.
+ */
 export interface LinuxCommand {
   name: string;
   description: string;
@@ -106,7 +130,9 @@ export interface LinuxCommand {
   tag?: string[];
 }
 
-// 工具函数元信息
+/**
+ * Metadata describing a utility function.
+ */
 export interface UtilFunction {
   name: string;
   module: string;
@@ -121,8 +147,9 @@ export interface UtilFunction {
   example?: string;
 }
 
-// API 接口映射类型
-// API 服务类公开方法签名
+/**
+ * API service method signatures for typed clients.
+ */
 export interface ApiEndpoints {
   getFeTools: () => Promise<ApiResponse<ToolsData[]>>;
   handleTranslate: (data: TranslateRequest) => Promise<ApiResponse<TranslateResponse>>;

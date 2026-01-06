@@ -347,19 +347,21 @@
             width: rect.width,
             height: rect.height,
           };
-          chrome.runtime.sendMessage(
-            {
-              action: 'captureVisibleTab',
-            },
-            captureResp => {
-              if (chrome.runtime.lastError || !captureResp?.success || !captureResp.dataUrl) {
-                sendOnce({
-                  success: false,
-                  error: chrome.runtime.lastError?.message || captureResp?.error || 'capture failed',
-                });
-                cleanup();
-                return;
-              }
+          cleanup();
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              chrome.runtime.sendMessage(
+                {
+                  action: 'captureVisibleTab',
+                },
+                captureResp => {
+                  if (chrome.runtime.lastError || !captureResp?.success || !captureResp.dataUrl) {
+                    sendOnce({
+                      success: false,
+                      error: chrome.runtime.lastError?.message || captureResp?.error || 'capture failed',
+                    });
+                    return;
+                  }
               const img = new Image();
               img.onload = () => {
                 const scale = img.width / window.innerWidth;
@@ -372,7 +374,6 @@
                     success: false,
                     error: 'selection failed',
                   });
-                  cleanup();
                   return;
                 }
                 const canvas = document.createElement('canvas');
@@ -384,7 +385,6 @@
                     success: false,
                     error: 'capture failed',
                   });
-                  cleanup();
                   return;
                 }
                 ctx.drawImage(
@@ -417,20 +417,20 @@
                         success: true,
                       });
                     }
-                    cleanup();
                   }
                 );
               };
-              img.onerror = () => {
-                sendOnce({
-                  success: false,
-                  error: 'capture failed',
-                });
-                cleanup();
-              };
-              img.src = captureResp.dataUrl;
-            }
-          );
+                img.onerror = () => {
+                  sendOnce({
+                    success: false,
+                    error: 'capture failed',
+                  });
+                };
+                img.src = captureResp.dataUrl;
+                }
+              );
+            });
+          });
           return;
         };
         const handleKey = event => {

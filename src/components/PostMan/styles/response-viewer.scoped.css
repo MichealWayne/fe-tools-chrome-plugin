@@ -1,0 +1,271 @@
+.response-viewer {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.response-viewer.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  border-radius: 0;
+  border: none;
+  width: 100vw;
+  height: 100vh;
+}
+
+.response-viewer.fullscreen .response-content {
+  max-height: calc(100vh - 120px);
+}
+
+.response-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.status-info {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.status {
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.status.success {
+  background: #d4edda;
+  color: #155724;
+}
+.status.redirect {
+  background: #fff3cd;
+  color: #856404;
+}
+.status.client-error {
+  background: #f8d7da;
+  color: #721c24;
+}
+.status.server-error {
+  background: #f5c6cb;
+  color: #721c24;
+}
+
+.time,
+.size {
+  font-size: 14px;
+  color: #666;
+}
+
+.copy-btn {
+  padding: 6px 12px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.copy-btn:hover {
+  background: #0056b3;
+}
+
+.fullscreen-btn {
+  padding: 6px 8px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullscreen-btn:hover {
+  background: #5a6268;
+}
+
+.response-tabs {
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab-btn {
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-btn:hover {
+  background: #e9ecef;
+}
+
+.tab-btn.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background: white;
+}
+
+.count {
+  font-size: 12px;
+  color: #999;
+}
+
+.response-content {
+  max-height: 500px;
+  overflow: auto;
+}
+
+.response-body {
+  padding: 16px;
+}
+
+.json-viewer {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+#formattingMsg {
+  padding: 10px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.x-loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.callback-name {
+  font-weight: bold;
+  color: #007bff;
+  margin: 5px 0;
+}
+
+#jfContent_pre {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.html-viewer {
+  max-height: 400px;
+  overflow: auto;
+}
+
+.html-preview {
+  padding: 16px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  background: white;
+}
+
+.text-viewer pre {
+  margin: 0;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.response-headers,
+.response-cookies {
+  padding: 16px;
+}
+
+.header-item,
+.cookie-item {
+  display: flex;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.header-key,
+.cookie-name {
+  font-weight: 600;
+  min-width: 200px;
+  color: #333;
+}
+
+.header-value,
+.cookie-value {
+  color: #666;
+  word-break: break-all;
+}
+
+.no-cookies,
+.no-response {
+  padding: 32px;
+  text-align: center;
+  color: #999;
+}
+
+/* JSON 语法高亮 */
+:deep(.json-string) {
+  color: #d14;
+}
+:deep(.json-number) {
+  color: #099;
+}
+:deep(.json-boolean) {
+  color: #0086b3;
+}
+:deep(.json-null) {
+  color: #999;
+}
+:deep(.json-key) {
+  color: #900;
+  font-weight: 600;
+}
+:deep(.json-bracket) {
+  color: #333;
+  font-weight: 600;
+}
+:deep(.json-error) {
+  color: #d14;
+  background: #fff5f5;
+}

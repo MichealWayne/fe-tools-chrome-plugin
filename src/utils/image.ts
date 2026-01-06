@@ -6,10 +6,10 @@
 import { compressImg, getFileBase64 } from './index';
 
 /**
- * @function getCompressedImageBase64
- * @param imgUrl
- * @param rate
- * @returns
+ * Load an image URL and return a compressed Base64 string.
+ * @param imgUrl - Source image URL or data URL.
+ * @param rate - Compression ratio between 0 and 1.
+ * @returns Promise resolving to the compressed Base64 data.
  */
 export function getCompressedImageBase64(imgUrl: string, rate = 1): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -28,10 +28,10 @@ export function getCompressedImageBase64(imgUrl: string, rate = 1): Promise<stri
 }
 
 /**
- * @function handleInputUploadImageFile
- * @param {FileList} fileList
- * @param {number | string} compressRate
- * @returns
+ * Handle file input selection and return a preview URL + Base64 payload.
+ * @param fileList - FileList from an input element.
+ * @param compressRate - Optional compression ratio.
+ * @returns Promise resolving to image URL and Base64 content.
  */
 export function handleInputUploadImageFile(
   fileList?: FileList,

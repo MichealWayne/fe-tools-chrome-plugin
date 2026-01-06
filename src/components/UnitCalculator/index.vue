@@ -1,8 +1,8 @@
 <template>
-  <section s-bg_white @click.stop="stopPropagation">
+  <section class="unit-calculator" s-bg_white @click.stop="stopPropagation">
     <div class="u-w500">
-      <h4>{{ t('unitCalculator.title') }}</h4>
-      <section class="u-p20">
+      <h4 class="unit-calculator__title">{{ t('unitCalculator.title') }}</h4>
+      <section class="unit-calculator__content u-p20">
         <div class="m-color-input">
           <span class="g-fs14">px：</span>
           <input
@@ -65,6 +65,27 @@ export default {
 };
 </script>
 
+<style lang="less">
+.unit-calculator {
+  padding: 18px 20px 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
+  border: 1px solid #e2e9ff;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
+
+  &__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2a44;
+  }
+
+  &__content {
+    padding-top: 12px;
+  }
+}
+</style>
+
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { langManager } from '@/utils/i18n';
@@ -74,9 +95,13 @@ const t = (key: string) => langManager.t(key);
 const DEFAULT_REM_RATE = 75;
 const DEFAULT_FIXED_NUMBER = 6;
 
-// 默认rem转换比例
+/**
+ * Default rem conversion ratio from localStorage or fallback.
+ */
 const defaultRate = ref(parseFloat(localStorage.getItem('feTools_rate') || '') || DEFAULT_REM_RATE);
-// 默认保留位数
+/**
+ * Default decimal precision for conversion outputs.
+ */
 const defaultKeep = ref(
   parseInt(localStorage.getItem('feTools_keep') || '', 10) || DEFAULT_FIXED_NUMBER
 );

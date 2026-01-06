@@ -7,7 +7,9 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ApiResponse, ApiError, RequestConfig, ErrorType } from '@/types/api';
 
-// API 配置
+/**
+ * Default API configuration for timeouts and retries.
+ */
 const API_CONFIG = {
   timeout: {
     get: 8000,
@@ -18,24 +20,43 @@ const API_CONFIG = {
   retryDelay: 1000,
 };
 
-// 延迟函数
+/**
+ * Delay helper used to back off between retries.
+ * @param ms - Delay duration in milliseconds.
+ */
 const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
-// 判断是否应该重试
+/**
+ * Determine whether a request should be retried based on the error.
+ * @param error - Axios error object.
+ * @returns Whether the request is retryable.
+ */
 function shouldRetry(error: any): boolean {
   const { response } = error;
-  if (!response) return true; // 网络错误重试
+  /**
+   * Retry on network failures when no response is available.
+   */
+  if (!response) return true;
 
   const { status } = response;
-  return status >= 500 || status === 408; // 服务器错误或超时重试
+  /**
+   * Retry on server errors or gateway timeouts.
+   */
+  return status >= 500 || status === 408;
 }
 
-// 创建重试请求
+/**
+ * Create a retryable request wrapper with exponential-ish backoff.
+ * @param requestFn - Function that performs the request.
+ * @param maxRetries - Remaining retry attempts.
+ */
 function createRetryableRequest<T>(
   requestFn: () => Promise<T>,
   maxRetries: number = API_CONFIG.retryTimes
 ): Promise<T> {
-  // 递归重试，直到耗尽次数
+  /**
+   * Retry recursively until all attempts are exhausted.
+   */
   return requestFn().catch(async error => {
     if (maxRetries > 0 && shouldRetry(error)) {
       await delay(API_CONFIG.retryDelay);
@@ -60,8 +81,9 @@ export class ApiClient {
   }
 
   private setupInterceptors(): void {
-    // 统一注入请求/响应处理逻辑
-    // 请求拦截器
+    /**
+     * Inject common request/response handling across all requests.
+     */
     this.instance.interceptors.request.use(
       config => {
         const modifiedConfig = this.handleRequest(config);
@@ -70,10 +92,14 @@ export class ApiClient {
       error => Promise.reject(this.handleError(error, ''))
     );
 
-    // 响应拦截器
+    /**
+     * Normalize Axios responses and errors for the caller.
+     */
     this.instance.interceptors.response.use(
       response => {
-        // 直接返回响应，让axios处理
+        /**
+         * Return raw Axios response for downstream processing.
+         */
         return response;
       },
       error => Promise.reject(this.handleError(error, error.config?.url || ''))
@@ -81,14 +107,17 @@ export class ApiClient {
   }
 
   private handleRequest(config: AxiosRequestConfig): AxiosRequestConfig {
-    // 处理通用请求头与缓存参数
-    // 添加通用请求头
+    /**
+     * Attach common headers and cache-busting params.
+     */
     config.headers = {
       'Content-Type': 'application/json',
       ...config.headers,
     };
 
-    // 添加时间戳防止缓存
+    /**
+     * Add a timestamp query param to avoid cached GET responses.
+     */
     if (config.method === 'get') {
       config.params = {
         _t: Date.now(),
@@ -100,7 +129,9 @@ export class ApiClient {
   }
 
   private handleSuccess<T>(response: AxiosResponse<T>): ApiResponse<T> {
-    // 规范化响应结构，统一 data/list 字段
+    /**
+     * Normalize response payloads into ApiResponse shape.
+     */
     const { data, status, statusText, config } = response;
 
     let result: ApiResponse<T>;
@@ -135,7 +166,9 @@ export class ApiClient {
   }
 
   private handleError(error: any, url: string): ApiError {
-    // 统一错误分类与描述
+    /**
+     * Map Axios errors into the shared ApiError structure.
+     */
     const { response, code, message, config } = error;
 
     let errorType: ErrorType;
@@ -174,7 +207,12 @@ export class ApiClient {
     };
   }
 
-  // GET 请求：默认包含重试逻辑
+  /**
+   * Perform a GET request with retry logic enabled by default.
+   * @param url - Endpoint URL.
+   * @param params - Query parameters.
+   * @param config - Optional request overrides.
+   */
   async get<T = unknown>(
     url: string,
     params?: Record<string, unknown>,
@@ -197,7 +235,12 @@ export class ApiClient {
     return this.handleSuccess(response);
   }
 
-  // POST 请求：默认包含重试逻辑
+  /**
+   * Perform a POST request with retry logic enabled by default.
+   * @param url - Endpoint URL.
+   * @param data - Request payload.
+   * @param config - Optional request overrides.
+   */
   async post<T = unknown>(
     url: string,
     data?: unknown,
@@ -258,5 +301,7 @@ export class ApiClient {
   }
 }
 
-// 创建默认实例
+/**
+ * Default API client instance used by shared services.
+ */
 export const apiClient = new ApiClient();
