@@ -35,9 +35,24 @@
         <div v-else class="m-preview_empty">
           <div class="m-preview_icon" aria-hidden="true">
             <svg viewBox="0 0 64 64" role="presentation">
-              <rect x="12" y="18" width="40" height="30" rx="6" fill="none" stroke="currentColor" stroke-width="3" />
+              <rect
+                x="12"
+                y="18"
+                width="40"
+                height="30"
+                rx="6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+              />
               <circle cx="32" cy="33" r="8" fill="none" stroke="currentColor" stroke-width="3" />
-              <path d="M22 18l4-6h12l4 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+              <path
+                d="M22 18l4-6h12l4 6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
             </svg>
           </div>
           <p class="g-fs12 m-preview_title">{{ t('pageScreenshot.previewEmptyTitle') }}</p>
@@ -53,7 +68,6 @@
         </button>
       </div>
     </div>
-
   </section>
 </template>
 
@@ -69,7 +83,7 @@ import { langManager } from '@/utils/i18n';
 
 const t = (key: string) => langManager.t(key);
 
-const { back } = defineProps({
+defineProps({
   back: {
     type: Function,
     default: () => undefined,
@@ -221,13 +235,17 @@ const scrollToPosition = async (tabId: number, y: number) => {
   try {
     return await sendMessageToTab<{ scrollY: number }>(tabId, { action: 'scrollTo', y, delay: 0 });
   } catch {
-    return executeScript(tabId, targetY => {
-      window.scrollTo(0, targetY);
-      const doc = document.documentElement;
-      return {
-        scrollY: window.scrollY || window.pageYOffset || doc.scrollTop || 0,
-      };
-    }, [y]);
+    return executeScript(
+      tabId,
+      (targetY: unknown) => {
+        window.scrollTo(0, targetY as number);
+        const doc = document.documentElement;
+        return {
+          scrollY: window.scrollY || window.pageYOffset || doc.scrollTop || 0,
+        };
+      },
+      [y]
+    );
   }
 };
 
@@ -252,12 +270,7 @@ const captureFullPage = async (cropRect?: CropRect) => {
       throw new Error(t('pageScreenshot.errorUnavailable'));
     }
 
-    const {
-      totalHeight,
-      viewportHeight,
-      viewportWidth,
-      scrollY,
-    } = metrics;
+    const { totalHeight, viewportHeight, viewportWidth, scrollY } = metrics;
 
     const maxScroll = Math.max(0, totalHeight - viewportHeight);
     const positions: number[] = [];

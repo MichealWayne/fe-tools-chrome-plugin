@@ -21,14 +21,13 @@ describe('search-utils', () => {
       },
     ];
     const result = normalizeFeToolsList(input);
-    expect(result).toEqual([
-      {
-        name: 'Child',
-        link: 'https://child',
-        desc: 'child',
-        target: undefined,
-      },
-    ]);
+    expect(result[0]).toMatchObject({
+      name: 'Child',
+      link: 'https://child',
+      desc: 'child',
+      target: undefined,
+    });
+    expect(result[0].pinyinSearchIndex).toContain('child');
   });
 
   it('returns QR code result for URL keywords', () => {
@@ -77,5 +76,93 @@ describe('search-utils', () => {
     expect(results[0].label).toBe('tools');
     expect(results[1].label).toBe('mark');
     expect(results[2].name).toBe('Search Google for json');
+  });
+
+  it('matches Chinese tools by full pinyin, compact pinyin, and initials', () => {
+    const feToolsList = normalizeFeToolsList([
+      {
+        name: '颜色变量',
+        link: 'https://tools/color',
+        desc: '颜色格式转换',
+        target: ['样式'],
+      },
+    ]);
+
+    const createResults = (keywords: string) =>
+      buildSearchResults({
+        keywords,
+        feToolsList,
+        markList: [],
+        defaultSearchList: [],
+        translate,
+        qrCodeType: 'qr',
+        enablePinyinSearch: true,
+      });
+
+    expect(createResults('yan se')[0].link).toBe('https://tools/color');
+    expect(createResults('yanse')[0].link).toBe('https://tools/color');
+    expect(createResults('ys')[0].link).toBe('https://tools/color');
+  });
+
+  it('matches Chinese bookmarks by pinyin when enabled', () => {
+    const results = buildSearchResults({
+      keywords: 'yanse',
+      feToolsList: [],
+      markList: [{ title: '颜色文档', url: 'https://docs/color' }],
+      defaultSearchList: [],
+      translate,
+      qrCodeType: 'qr',
+      enablePinyinSearch: true,
+    });
+
+    expect(results[0]).toMatchObject({
+      link: 'https://docs/color',
+      label: 'mark',
+    });
+  });
+
+  it('excludes pinyin-only matches when pinyin search is disabled', () => {
+    const feToolsList = normalizeFeToolsList([
+      {
+        name: '颜色变量',
+        link: 'https://tools/color',
+        desc: '颜色格式转换',
+      },
+    ]);
+
+    const results = buildSearchResults({
+      keywords: 'yanse',
+      feToolsList,
+      markList: [{ title: '颜色文档', url: 'https://docs/color' }],
+      defaultSearchList: [],
+      translate,
+      qrCodeType: 'qr',
+      enablePinyinSearch: false,
+    });
+
+    expect(results).toEqual([]);
+  });
+
+  it('keeps literal search active when pinyin search is disabled', () => {
+    const feToolsList: FeToolListItem[] = [
+      {
+        name: '颜色变量',
+        link: 'https://tools/color',
+        desc: '颜色格式转换',
+      },
+    ];
+
+    const results = buildSearchResults({
+      keywords: '颜色',
+      feToolsList,
+      markList: [{ title: '颜色文档', url: 'https://docs/color' }],
+      defaultSearchList: [],
+      translate,
+      qrCodeType: 'qr',
+      enablePinyinSearch: false,
+    });
+
+    expect(results[0].label).toBe('tools');
+    expect(results[1].label).toBe('mark');
   });
 });

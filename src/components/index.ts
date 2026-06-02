@@ -17,6 +17,7 @@ import LangTranslator from './LangTranslator/index.vue';
 import UnitCalculator from './UnitCalculator/index.vue';
 import LinuxCommand from './LinuxCommand/index.vue';
 import PageScreenshot from './PageScreenshot/index.vue';
+import TechStackDetection from './TechStackDetection/index.vue';
 
 const CompMap: {
   [componentName: string]: any;
@@ -31,6 +32,7 @@ const CompMap: {
   UnitCalculator,
   LinuxCommand,
   PageScreenshot,
+  TechStackDetection,
 };
 
 export default CompMap;

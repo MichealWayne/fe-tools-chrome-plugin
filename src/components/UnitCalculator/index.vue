@@ -65,27 +65,6 @@ export default {
 };
 </script>
 
-<style lang="less">
-.unit-calculator {
-  padding: 18px 20px 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
-  border: 1px solid #e2e9ff;
-  border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
-
-  &__title {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #1f2a44;
-  }
-
-  &__content {
-    padding-top: 12px;
-  }
-}
-</style>
-
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { langManager } from '@/utils/i18n';
@@ -143,3 +122,24 @@ const changeValue = (e: Event) => {
   }
 };
 </script>
+
+<style lang="less">
+.unit-calculator {
+  padding: 18px 20px 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
+  border: 1px solid #e2e9ff;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
+
+  &__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2a44;
+  }
+
+  &__content {
+    padding-top: 12px;
+  }
+}
+</style>

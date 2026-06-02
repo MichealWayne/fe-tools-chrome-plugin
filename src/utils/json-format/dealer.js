@@ -1,4 +1,4 @@
-export const createJsonFormatDealer = (onMessage) => {
+export const createJsonFormatDealer = onMessage => {
   'use strict';
 
   // Constants
@@ -383,10 +383,7 @@ export const createJsonFormatDealer = (onMessage) => {
         // Check that what's after the last parenthesis is just whitespace, comments, and possibly a semicolon (exit if anything else)
         let lastBit = removeComments(text.substring(indexOfLastParen + 1)).trim();
         if (lastBit !== '' && lastBit !== ';') {
-        onMessage([
-          'NOT JSON',
-          'last closing paren followed by invalid characters',
-        ]);
+          onMessage(['NOT JSON', 'last closing paren followed by invalid characters']);
           return;
         }
 

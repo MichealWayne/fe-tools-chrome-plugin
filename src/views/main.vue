@@ -3,12 +3,53 @@
 -->
 <template>
   <section class="m-ctn u-pt20 f-ovhidden">
-    <!-- 语言切换器 -->
-    <div class="language-switcher-header">
-      <select v-model="currentLang" @change="handleLanguageChange" class="lang-select">
-        <option value="zh">{{ t('languageOptions.zh') }}</option>
-        <option value="en">{{ t('languageOptions.en') }}</option>
-      </select>
+    <div class="settings-header">
+      <button
+        class="settings-entry"
+        type="button"
+        :title="t('settings.entryTitle')"
+        @click="openSettings"
+      >
+        <i class="u-icon icon-settings" aria-hidden="true"></i>
+        <span class="settings-entry__label">{{ t('settings.entryLabel') }}</span>
+      </button>
+    </div>
+
+    <div v-if="showSettings" class="settings-window" role="dialog" aria-modal="true">
+      <div class="settings-window__panel">
+        <header class="settings-window__header">
+          <strong>{{ t('settings.title') }}</strong>
+          <button
+            class="settings-window__close"
+            type="button"
+            :title="t('settings.close')"
+            @click="closeSettings"
+          >
+            <i class="u-icon icon-close" aria-hidden="true"></i>
+          </button>
+        </header>
+        <div class="settings-window__body">
+          <label class="settings-field">
+            <span class="settings-field__label">{{ t('settings.language') }}</span>
+            <select v-model="currentLang" class="settings-select" @change="handleLanguageChange">
+              <option value="zh">{{ t('languageOptions.zh') }}</option>
+              <option value="en">{{ t('languageOptions.en') }}</option>
+            </select>
+          </label>
+          <label class="settings-field settings-field--inline">
+            <span>
+              <span class="settings-field__label">{{ t('settings.pinyinSearch') }}</span>
+              <span class="settings-field__help">{{ t('settings.pinyinSearchHelp') }}</span>
+            </span>
+            <input
+              v-model="enablePinyinSearch"
+              class="settings-checkbox"
+              type="checkbox"
+              @change="handlePinyinSearchToggle"
+            />
+          </label>
+        </div>
+      </div>
     </div>
 
     <div v-show="!showCompName.includes('Ctn')" class="m-main_ctn">
@@ -100,9 +141,10 @@ import { getMarkTree, jumpAction } from '@/utils/chrome';
 import ajax from '@/api';
 import { langManager } from '@/utils/i18n';
 import { TOOL_CARDS, type ToolCard } from './main/tool-cards';
-import type { BookmarkItem, ComponentDataTypes } from './main/types';
+import type { BookmarkItem, ComponentDataTypes, SearchResultItem } from './main/types';
 import { sanitizeInlineMarkup } from '@/utils/sanitize';
 import { buildSearchResults, normalizeFeToolsList } from './main/search-utils';
+import { getPinyinSearchPreference, setPinyinSearchPreference } from './main/preferences';
 
 import MooCtn from './MooCtn.vue';
 import RegexCtn from './RegexCtn.vue';
@@ -138,6 +180,10 @@ export default defineComponent({
        * Toggle flag controlling the folded logo state.
        */
       logoFold: '',
+      /**
+       * Whether the settings window is visible.
+       */
+      showSettings: false,
 
       /**
        * Current component name rendered in the main view.
@@ -159,6 +205,10 @@ export default defineComponent({
        * Active language code for UI localization.
        */
       currentLang: langManager.getCurrentLanguage(),
+      /**
+       * Whether pinyin-derived matches are included in main search.
+       */
+      enablePinyinSearch: getPinyinSearchPreference(),
       /**
        * Listener reference used to remove language subscription on cleanup.
        */
@@ -215,6 +265,20 @@ export default defineComponent({
      */
     handleLanguageChange() {
       langManager.setLanguage(this.currentLang);
+    },
+
+    /**
+     * Open the settings window from the top-right entry.
+     */
+    openSettings() {
+      this.showSettings = true;
+    },
+
+    /**
+     * Close the settings window without changing main view state.
+     */
+    closeSettings() {
+      this.showSettings = false;
     },
 
     /**
@@ -311,6 +375,16 @@ export default defineComponent({
     },
 
     /**
+     * Persist pinyin search preference and refresh visible results.
+     */
+    handlePinyinSearchToggle() {
+      setPinyinSearchPreference(this.enablePinyinSearch);
+      if (this.keywords) {
+        this.setSearchResult();
+      }
+    },
+
+    /**
      * Build the search result list for the current keyword.
      */
     // eslint-disable-next-line complexity
@@ -322,6 +396,7 @@ export default defineComponent({
         defaultSearchList: DEFAULT_SEARCH_LIST,
         translate: this.t,
         qrCodeType: QR_CODE_TYPE,
+        enablePinyinSearch: this.enablePinyinSearch,
       });
     },
 

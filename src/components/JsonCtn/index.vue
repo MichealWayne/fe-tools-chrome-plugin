@@ -13,7 +13,7 @@
       <div class="json-converter__panel">
         <div class="json-converter__panel-header">
           <span>{{ t('jsonCtn.jsObject') }}</span>
-          <a-button type="link" size="small" @click="clearInput" v-if="jsValue" class="clear-btn">
+          <a-button v-if="jsValue" type="link" size="small" class="clear-btn" @click="clearInput">
             <span>{{ t('common.clear') }}</span>
           </a-button>
         </div>
@@ -22,7 +22,7 @@
           class="json-converter__textarea"
           :placeholder="t('jsonCtn.inputPlaceholder')"
         />
-        <div class="json-converter__error" v-if="error">
+        <div v-if="error" class="json-converter__error">
           {{ error }}
         </div>
       </div>
@@ -46,9 +46,9 @@
               <a-button
                 type="link"
                 size="small"
-                @click="copyToClipboard"
                 :disabled="!jsonValue"
                 class="copy-btn"
+                @click="copyToClipboard"
               >
                 {{ t('jsonCtn.actions.copy') }}
               </a-button>
@@ -62,7 +62,9 @@
                   <a-menu-item @click="formatJson(null)">{{
                     t('jsonCtn.actions.formatDefault')
                   }}</a-menu-item>
-                  <a-menu-item @click="formatJson(0)">{{ t('jsonCtn.actions.formatMinify') }}</a-menu-item>
+                  <a-menu-item @click="formatJson(0)">{{
+                    t('jsonCtn.actions.formatMinify')
+                  }}</a-menu-item>
                   <a-menu-item @click="formatJson(2)">{{
                     t('jsonCtn.actions.formatIndent2')
                   }}</a-menu-item>
@@ -107,18 +109,14 @@
 import { ref, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
 
-const t = (key: string, params?: Record<string, string | number>) =>
-  langManager.t(key, params);
+const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 import DOMPurify from 'dompurify';
 
 defineOptions({
   name: 'JsonCtn',
 });
 
-/**
- * Optional callback to return to the home view.
- */
-const props = defineProps<{
+defineProps<{
   back?: () => void;
 }>();
 
@@ -266,9 +264,7 @@ const safeEval = (jsStr: string) => {
  * @param code - Raw code string.
  */
 const removeComments = (code: string) => {
-  return code
-    .replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1')
-    .trim();
+  return code.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1').trim();
 };
 
 /**
@@ -359,15 +355,6 @@ const showSuccess = (message: string) => {
   setTimeout(() => {
     successVisible.value = false;
   }, 2000);
-};
-
-/**
- * Invoke the parent callback to return to the home view.
- */
-const handleBack = () => {
-  if (props.back) {
-    props.back();
-  }
 };
 </script>
 
