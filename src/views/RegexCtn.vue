@@ -48,6 +48,7 @@ import { defineComponent } from 'vue';
 import { langManager } from '@/utils/i18n';
 
 import { AnyFunc } from '@/types';
+import type { ApiResponse } from '@/types/api';
 import ajax from '@/api';
 
 type ComponentDataTypes = {
@@ -79,8 +80,8 @@ export default defineComponent({
   },
 
   mounted() {
-    ajax.getRegex().then((data: { list?: RegexItem[] }) => {
-      this.regexList = data.list || [];
+    ajax.getRegex().then((data: ApiResponse<unknown>) => {
+      this.regexList = (data.list as RegexItem[]) || [];
     });
   },
   methods: {

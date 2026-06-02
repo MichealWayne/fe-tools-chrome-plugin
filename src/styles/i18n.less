@@ -1,40 +1,165 @@
-// 国际化样式
-.language-switcher-header {
+// 设置窗口样式
+.settings-header {
   position: fixed;
   top: 20px;
   right: 20px;
   z-index: 1000;
+}
 
-  .lang-select {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background: white;
-    font-size: 14px;
-    cursor: pointer;
-    outline: none;
-    transition: all 0.3s ease;
+.settings-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #d8e0ea;
+  border-radius: 4px;
+  background: #fff;
+  color: #34495e;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 
-    &:hover {
-      border-color: #007bff;
-    }
+  &:hover {
+    border-color: #007bff;
+  }
 
-    &:focus {
-      border-color: #007bff;
-      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-    }
+  &:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.18);
   }
 }
 
-// 响应式设计
+.icon-settings {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  box-sizing: border-box;
+
+  &::before {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    content: '';
+  }
+}
+
+.settings-window {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 58px 20px 0;
+  background: rgba(20, 30, 45, 0.18);
+  box-sizing: border-box;
+}
+
+.settings-window__panel {
+  width: 260px;
+  border: 1px solid #d8e0ea;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(20, 30, 45, 0.18);
+}
+
+.settings-window__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid #eef2f7;
+  color: #25364a;
+  font-size: 15px;
+}
+
+.settings-window__close {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.settings-window__close .icon-close::before,
+.settings-window__close .icon-close::after {
+  top: 6px;
+  left: 13px;
+}
+
+.settings-window__body {
+  padding: 12px 14px 14px;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+  color: #34495e;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.settings-field--inline {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.settings-field__label {
+  display: block;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.settings-field__help {
+  display: block;
+  margin-top: 3px;
+  color: #7a8a9d;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.settings-select {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #d8e0ea;
+  border-radius: 4px;
+  background: #fff;
+  color: #25364a;
+  outline: none;
+}
+
+.settings-checkbox {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  margin: 0;
+}
+
 @media (max-width: 768px) {
-  .language-switcher-header {
+  .settings-header {
     top: 10px;
     right: 10px;
+  }
 
-    .lang-select {
-      padding: 6px 10px;
-      font-size: 12px;
-    }
+  .settings-window {
+    padding: 48px 10px 0;
   }
 }

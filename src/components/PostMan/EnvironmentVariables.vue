@@ -3,16 +3,16 @@
     <div class="env-header">
       <h3>{{ t('postman.environments.title') }}</h3>
       <div class="env-actions">
-        <select v-model="currentEnv" @change="switchEnvironment" class="env-select">
+        <select v-model="currentEnv" class="env-select" @change="switchEnvironment">
           <option value="">{{ t('postman.environments.selectEnv') }}</option>
           <option v-for="env in environments" :key="env.name" :value="env.name">
             {{ env.name }}
           </option>
         </select>
-        <button @click="showAddEnvModal = true" class="add-env-btn">
+        <button class="add-env-btn" @click="showAddEnvModal = true">
           <i class="fas fa-plus"></i> {{ t('postman.environments.addEnv') }}
         </button>
-        <button @click="toggleVariables" class="toggle-btn">
+        <button class="toggle-btn" @click="toggleVariables">
           <i :class="['fas', isExpanded ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
         </button>
       </div>
@@ -27,7 +27,7 @@
       <div v-else class="variables-section">
         <div class="section-header">
           <h4>{{ t('postman.environments.envTitle', { env: currentEnv }) }}</h4>
-          <button @click="addVariable" class="add-var-btn">
+          <button class="add-var-btn" @click="addVariable">
             <i class="fas fa-plus"></i> {{ t('postman.environments.addVariable') }}
           </button>
         </div>
@@ -52,20 +52,20 @@
               class="var-input description"
               @input="updateVariables"
             />
-            <button @click="removeVariable(index)" class="remove-btn">
+            <button class="remove-btn" @click="removeVariable(index)">
               <i class="fas fa-trash"></i>
             </button>
           </div>
         </div>
 
         <div class="env-actions-bottom">
-          <button @click="exportEnvironment" class="export-btn">
+          <button class="export-btn" @click="exportEnvironment">
             <i class="fas fa-download"></i> {{ t('postman.environments.export') }}
           </button>
-          <button @click="showImportModal = true" class="import-btn">
+          <button class="import-btn" @click="showImportModal = true">
             <i class="fas fa-upload"></i> {{ t('postman.environments.import') }}
           </button>
-          <button @click="deleteEnvironment" class="delete-env-btn">
+          <button class="delete-env-btn" @click="deleteEnvironment">
             <i class="fas fa-trash"></i> {{ t('postman.environments.deleteEnv') }}
           </button>
         </div>
@@ -77,7 +77,7 @@
       <div class="modal" @click.stop>
         <div class="modal-header">
           <h3>{{ t('postman.environments.newEnvTitle') }}</h3>
-          <button @click="showAddEnvModal = false" class="close-btn">
+          <button class="close-btn" @click="showAddEnvModal = false">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -90,10 +90,10 @@
           />
         </div>
         <div class="modal-footer">
-          <button @click="showAddEnvModal = false" class="cancel-btn">
+          <button class="cancel-btn" @click="showAddEnvModal = false">
             {{ t('postman.environments.cancel') }}
           </button>
-          <button @click="createEnvironment" class="confirm-btn">
+          <button class="confirm-btn" @click="createEnvironment">
             {{ t('postman.environments.confirm') }}
           </button>
         </div>
@@ -105,7 +105,7 @@
       <div class="modal" @click.stop>
         <div class="modal-header">
           <h3>{{ t('postman.environments.importTitle') }}</h3>
-          <button @click="showImportModal = false" class="close-btn">
+          <button class="close-btn" @click="showImportModal = false">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -117,10 +117,10 @@
           ></textarea>
         </div>
         <div class="modal-footer">
-          <button @click="showImportModal = false" class="cancel-btn">
+          <button class="cancel-btn" @click="showImportModal = false">
             {{ t('postman.environments.cancel') }}
           </button>
-          <button @click="importEnvironment" class="confirm-btn">
+          <button class="confirm-btn" @click="importEnvironment">
             {{ t('postman.environments.importConfirm') }}
           </button>
         </div>
@@ -140,8 +140,7 @@ import { ref, computed, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
 import type { PostmanEnvironment } from './types';
 
-const t = (key: string, params?: Record<string, string | number>) =>
-  langManager.t(key, params);
+const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 
 const props = defineProps<{
   environments: PostmanEnvironment[];

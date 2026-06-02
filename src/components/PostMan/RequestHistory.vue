@@ -3,10 +3,10 @@
     <div class="history-header">
       <h3>{{ t('postman.history.title') }}</h3>
       <div class="history-actions">
-        <button @click="clearHistory" class="clear-btn">
+        <button class="clear-btn" @click="clearHistory">
           <i class="fas fa-trash"></i> {{ t('postman.actions.clear') }}
         </button>
-        <button @click="toggleHistory" class="toggle-btn">
+        <button class="toggle-btn" @click="toggleHistory">
           <i :class="['fas', isExpanded ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
         </button>
       </div>
@@ -33,7 +33,7 @@
           <div class="history-status" :class="getStatusClass(item.status)">
             {{ item.status }}
           </div>
-          <button @click.stop="removeHistoryItem(index)" class="remove-btn">
+          <button class="remove-btn" @click.stop="removeHistoryItem(index)">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -53,10 +53,9 @@ import { ref } from 'vue';
 import { langManager } from '@/utils/i18n';
 import type { PostmanHistoryItem } from './types';
 
-const t = (key: string, params?: Record<string, string | number>) =>
-  langManager.t(key, params);
+const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 
-const props = defineProps<{
+defineProps<{
   history: PostmanHistoryItem[];
 }>();
 

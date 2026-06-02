@@ -1,7 +1,7 @@
 /*
  * @author Wayne
  * @Date 2022-11-27 17:45:33
- * @LastEditTime 2024-03-04 19:16:45
+ * @LastEditTime 2025-09-03 10:28:15
  */
 module.exports = {
   parser: 'vue-eslint-parser',
@@ -20,6 +20,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'prettier',
     'plugin:prettier/recommended',
+    // 'sonarjs',
   ],
 
   rules: {
@@ -54,6 +55,6 @@ module.exports = {
       },
     ],
     'space-before-function-paren': 'off',
-    quotes: ['error', 'single'],
+    quotes: ['error', 'single', { avoidEscape: true }],
   },
 };

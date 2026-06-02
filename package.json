@@ -1,12 +1,15 @@
 {
   "name": "fe-tools-chrome-plugin",
   "private": true,
-  "version": "1.4.0",
+  "version": "1.5.0",
   "scripts": {
     "start": "npm run dev",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "lint:check": "eslint --ext .js,.ts,.vue --ignore-path .gitignore src",
+    "lint:fix": "eslint --ext .js,.ts,.vue --ignore-path .gitignore --fix src",
     "eslint:comment": "使用 ESLint 检查并自动修复 src 目录下所有扩展名为 .js 和 .vue 的文件",
     "eslint": "eslint --ext .js,.vue --ignore-path .gitignore --fix src",
     "prettier:comment": "自动格式化当前目录下的所有文件",
@@ -36,6 +39,7 @@
     "eslint-config-sonarjs": "^1.2.0",
     "moo-css-base": "0.9.6",
     "pinia": "^2.1.7",
+    "pinyin-pro": "^3.28.1",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },

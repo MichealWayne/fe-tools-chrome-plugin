@@ -80,7 +80,6 @@
         </div>
       </li>
     </ul>
-
   </section>
 </template>
 
@@ -91,10 +90,9 @@ export default {
 </script>
 
 <script lang="ts" setup>
-import { defineProps, ref, toRefs, onMounted, computed } from 'vue';
+import { defineProps, ref, toRefs, onMounted } from 'vue';
 import { langManager } from '@/utils/i18n';
 import ajax from '@/api';
-import { AJAX_INTERFACE } from '@/constant';
 
 const t = (key: string) => langManager.t(key);
 
@@ -205,20 +203,7 @@ const isCommandVisible = (item: any) => {
   const name = (item.name || '').toLowerCase();
   const description = (item.description || '').toLowerCase();
   const syntax = (item.syntax || '').toLowerCase();
-  return (
-    name.includes(keyword) || description.includes(keyword) || syntax.includes(keyword)
-  );
-};
-
-/**
- * Navigate back to the previous view or home.
- */
-const back = () => {
-  if (typeof props.back === 'function') {
-    props.back();
-    return;
-  }
-  window.history.back();
+  return name.includes(keyword) || description.includes(keyword) || syntax.includes(keyword);
 };
 
 onMounted(() => {
@@ -285,7 +270,9 @@ onMounted(() => {
   font-size: 14px;
   color: #2b3a55;
   background: #fff;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .u-input:focus {
@@ -309,8 +296,12 @@ onMounted(() => {
   color: #2b3a55;
   cursor: pointer;
   box-shadow: 0 6px 14px rgba(28, 63, 124, 0.08);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease,
-    color 0.15s ease, border-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .u-btn_quick:hover {
@@ -327,7 +318,9 @@ onMounted(() => {
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 8px 18px rgba(28, 63, 124, 0.08);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .m-command_item:hover {

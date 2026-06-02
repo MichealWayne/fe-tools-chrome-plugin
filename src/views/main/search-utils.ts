@@ -1,3 +1,5 @@
+import { pinyin } from 'pinyin-pro';
+
 import type { BookmarkItem, FeToolListItem, SearchResultItem } from './types';
 
 type DefaultSearchItem = {
@@ -14,6 +16,68 @@ type BuildSearchResultsParams = {
   defaultSearchList: DefaultSearchItem[];
   translate: Translate;
   qrCodeType: string;
+  enablePinyinSearch?: boolean;
+};
+
+const PINYIN_MATCH_MIN_LENGTH = 2;
+
+/**
+ * Normalize user input and searchable text for main search matching.
+ * @param value - Raw value to normalize.
+ */
+export const normalizeSearchText = (value: string): string =>
+  value.toLowerCase().trim().replace(/\s+/g, ' ');
+
+const getPinyinInitials = (value: string): string =>
+  pinyin(value, { type: 'all' })
+    .map(item => item.first || item.origin)
+    .join('');
+
+/**
+ * Build a pinyin-aware index for fields that can be searched.
+ * @param values - Searchable source text values.
+ */
+export const buildPinyinSearchIndex = (values: Array<string | undefined>): string => {
+  const source = values.filter(Boolean).join(' ');
+  const normalizedSource = normalizeSearchText(source);
+  const spacedPinyin = normalizeSearchText(pinyin(source, { toneSandhi: false, toneType: 'none' }));
+  const compactPinyin = spacedPinyin.replace(/\s+/g, '');
+  const initials = normalizeSearchText(getPinyinInitials(source));
+
+  return [normalizedSource, spacedPinyin, compactPinyin, initials].filter(Boolean).join(' ');
+};
+
+const isLiteralMatch = (keywords: string, values: Array<string | undefined>): boolean =>
+  values.some(value => normalizeSearchText(value || '').includes(keywords));
+
+const isPinyinMatch = (keywords: string, searchIndex?: string): boolean => {
+  if (keywords.length < PINYIN_MATCH_MIN_LENGTH) return false;
+  return normalizeSearchText(searchIndex || '').includes(keywords.replace(/\s+/g, ' '));
+};
+
+const highlightLiteralMatch = (value: string, keywords: string): string => {
+  const normalizedValue = normalizeSearchText(value);
+  const matchIndex = normalizedValue.indexOf(keywords);
+  if (matchIndex < 0) return value;
+
+  return `${value.slice(0, matchIndex)}<strong>${value.slice(
+    matchIndex,
+    matchIndex + keywords.length
+  )}</strong>${value.slice(matchIndex + keywords.length)}`;
+};
+
+const createToolItem = (item: Record<string, unknown>): FeToolListItem => {
+  const target = Array.isArray(item.target) ? item.target.map(target => String(target)) : undefined;
+  const desc = String(item.desc || '');
+  const name = String(item.name);
+
+  return {
+    name,
+    link: String(item.link),
+    desc,
+    target,
+    pinyinSearchIndex: buildPinyinSearchIndex([name, desc, target?.join(' ')]),
+  };
 };
 
 /**
@@ -26,14 +90,7 @@ export const normalizeFeToolsList = (list: unknown): FeToolListItem[] => {
     if (Array.isArray(data)) {
       data.forEach((item: Record<string, unknown>) => {
         if (item.link && item.name) {
-          result.push({
-            name: String(item.name),
-            link: String(item.link),
-            desc: String(item.desc || ''),
-            target: Array.isArray(item.target)
-              ? item.target.map(target => String(target))
-              : undefined,
-          });
+          result.push(createToolItem(item));
         }
 
         const children = item.children;
@@ -45,14 +102,7 @@ export const normalizeFeToolsList = (list: unknown): FeToolListItem[] => {
     if (data && typeof data === 'object') {
       const record = data as Record<string, unknown>;
       if (record.link && record.name) {
-        result.push({
-          name: String(record.name),
-          link: String(record.link),
-          desc: String(record.desc || ''),
-          target: Array.isArray(record.target)
-            ? record.target.map(target => String(target))
-            : undefined,
-        });
+        result.push(createToolItem(record));
       }
     }
     return result;
@@ -72,8 +122,9 @@ export const buildSearchResults = ({
   defaultSearchList,
   translate,
   qrCodeType,
+  enablePinyinSearch = true,
 }: BuildSearchResultsParams): SearchResultItem[] => {
-  const normalizedKeywords = keywords.toLowerCase();
+  const normalizedKeywords = normalizeSearchText(keywords);
 
   if (normalizedKeywords.startsWith('http')) {
     return [
@@ -87,14 +138,13 @@ export const buildSearchResults = ({
 
   const resultList: SearchResultItem[] = [];
 
-  if (normalizedKeywords?.length > 2) {
+  if (normalizedKeywords?.length >= PINYIN_MATCH_MIN_LENGTH) {
     const toolsData = feToolsList || [];
 
     toolsData.forEach(item => {
       const isSupportKeywords =
-        item.name.includes(normalizedKeywords) ||
-        item.desc?.includes(normalizedKeywords) ||
-        (item.target && item.target.join(' | ').includes(normalizedKeywords));
+        isLiteralMatch(normalizedKeywords, [item.name, item.desc, item.target?.join(' ')]) ||
+        (enablePinyinSearch && isPinyinMatch(normalizedKeywords, item.pinyinSearchIndex));
 
       if (isSupportKeywords) {
         if (!item.link) {
@@ -104,10 +154,9 @@ export const buildSearchResults = ({
                 label: 'tools',
                 color: 'orange',
                 link: child.link,
-                name: `${child.name.replace(
-                  normalizedKeywords,
-                  `<strong>${normalizedKeywords}</strong>`
-                )} <em>(${child.desc})</em>`,
+                name: `${highlightLiteralMatch(child.name, normalizedKeywords)} <em>(${
+                  child.desc
+                })</em>`,
               });
             });
           }
@@ -116,10 +165,9 @@ export const buildSearchResults = ({
             label: 'tools',
             color: 'orange',
             link: item.link,
-            name: `${item.name.replace(
-              normalizedKeywords,
-              `<strong>${normalizedKeywords}</strong>`
-            )} <em s-ft_sub_>(${item.desc})</em>`,
+            name: `${highlightLiteralMatch(item.name, normalizedKeywords)} <em s-ft_sub_>(${
+              item.desc
+            })</em>`,
           });
         }
       }
@@ -128,13 +176,15 @@ export const buildSearchResults = ({
 
   const bookmarks = markList || [];
   bookmarks.forEach(item => {
-    if (item.title?.toLowerCase().includes(normalizedKeywords) && item.url) {
+    const title = item.title || '';
+    const isBookmarkMatch =
+      isLiteralMatch(normalizedKeywords, [title]) ||
+      (enablePinyinSearch && isPinyinMatch(normalizedKeywords, buildPinyinSearchIndex([title])));
+
+    if (isBookmarkMatch && item.url) {
       resultList.push({
         link: item.url,
-        name: item.title.replace(
-          normalizedKeywords,
-          `<strong>${normalizedKeywords}</strong>`
-        ),
+        name: highlightLiteralMatch(title, normalizedKeywords),
         color: 'red',
         label: 'mark',
       });

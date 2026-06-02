@@ -3,10 +3,10 @@
     <div class="postman-header">
       <h1>{{ t('postman.title') }}</h1>
       <div class="header-actions">
-        <button @click="saveRequest" class="save-btn">
+        <button class="save-btn" @click="saveRequest">
           <i class="fas fa-save"></i> {{ t('postman.saveRequest') }}
         </button>
-        <button @click="loadRequest" class="load-btn">
+        <button class="load-btn" @click="loadRequest">
           <i class="fas fa-folder-open"></i> {{ t('postman.loadRequest') }}
         </button>
       </div>
@@ -70,8 +70,7 @@ import type {
   PostmanEnvironment,
 } from './types';
 
-const t = (key: string, params?: Record<string, string | number>) =>
-  langManager.t(key, params);
+const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 
 type EnvRef = {
   replaceVariables: (value: string) => string;
@@ -85,7 +84,6 @@ const error = ref('');
 const response = ref<PostmanResponseData | null>(null);
 const responseTime = ref(0);
 const responseSize = ref(0);
-const activeRequestTab = ref('headers');
 const envRef = ref<EnvRef | null>(null);
 
 /**
@@ -138,10 +136,11 @@ const sendRequest = async () => {
 
   try {
     const resolveValue = (value: string) => envRef.value?.replaceVariables(value) || value;
-    const { url: finalUrl, headers, data: requestData } = buildRequestPayload(
-      request,
-      resolveValue
-    );
+    const {
+      url: finalUrl,
+      headers,
+      data: requestData,
+    } = buildRequestPayload(request, resolveValue);
 
     /**
      * Dispatch the request via Axios and capture response metadata.

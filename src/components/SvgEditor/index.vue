@@ -24,8 +24,8 @@
                 <input
                   type="file"
                   accept=".svg"
-                  @change="handleFileUpload"
                   class="svg-editor__upload-input"
+                  @change="handleFileUpload"
                 />
               </label>
             </div>
@@ -35,7 +35,7 @@
             class="svg-editor__textarea"
             :placeholder="t('svgEditor.placeholder')"
           />
-          <div class="svg-editor__error" v-if="error">
+          <div v-if="error" class="svg-editor__error">
             {{ error }}
           </div>
         </div>
@@ -54,42 +54,42 @@
                   ></i>
                 </span>
               </div>
-              <div class="svg-editor__options-panel" v-show="optionsExpanded">
+              <div v-show="optionsExpanded" class="svg-editor__options-panel">
                 <div class="svg-editor__option-group">
                   <label class="svg-editor__checkbox">
-                    <input type="checkbox" v-model="options.removeComments" />
+                    <input v-model="options.removeComments" type="checkbox" />
                     <span>{{ t('svgEditor.options.removeComments') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
-                    <input type="checkbox" v-model="options.removeEmptyAttrs" />
+                    <input v-model="options.removeEmptyAttrs" type="checkbox" />
                     <span>{{ t('svgEditor.options.removeEmptyAttrs') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
-                    <input type="checkbox" v-model="options.removeEmptyText" />
+                    <input v-model="options.removeEmptyText" type="checkbox" />
                     <span>{{ t('svgEditor.options.removeEmptyText') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
-                    <input type="checkbox" v-model="options.removeHiddenElems" />
+                    <input v-model="options.removeHiddenElems" type="checkbox" />
                     <span>{{ t('svgEditor.options.removeHiddenElems') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
-                    <input type="checkbox" v-model="options.removeMetadata" />
+                    <input v-model="options.removeMetadata" type="checkbox" />
                     <span>{{ t('svgEditor.options.removeMetadata') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
-                    <input type="checkbox" v-model="options.removeUnusedNS" />
+                    <input v-model="options.removeUnusedNS" type="checkbox" />
                     <span>{{ t('svgEditor.options.removeUnusedNS') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
-                    <input type="checkbox" v-model="options.cleanupIDs" />
+                    <input v-model="options.cleanupIDs" type="checkbox" />
                     <span>{{ t('svgEditor.options.cleanupIDs') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
-                    <input type="checkbox" v-model="options.convertColors" />
+                    <input v-model="options.convertColors" type="checkbox" />
                     <span>{{ t('svgEditor.options.convertColors') }}</span>
                   </label>
                   <label class="svg-editor__checkbox">
-                    <input type="checkbox" v-model="options.removeViewBox" />
+                    <input v-model="options.removeViewBox" type="checkbox" />
                     <span>{{ t('svgEditor.options.removeViewBox') }}</span>
                   </label>
                 </div>
@@ -98,15 +98,15 @@
                 <button
                   class="u-btn_il svg-editor__action-btn"
                   s-color="blue"
-                  @click="optimizeSvg"
                   :disabled="!svgInput"
+                  @click="optimizeSvg"
                 >
                   {{ t('svgEditor.actions.optimizeSvg') }}
                 </button>
                 <button
                   class="u-btn_il svg-editor__action-btn"
-                  @click="previewSvg"
                   :disabled="!svgInput"
+                  @click="previewSvg"
                 >
                   {{ t('svgEditor.actions.preview') }}
                 </button>
@@ -123,15 +123,15 @@
             <div class="svg-editor__panel-controls">
               <span
                 class="svg-editor__btn-link"
-                @click="copyToClipboard"
                 :class="{ 'svg-editor__btn-link--disabled': !optimizedSvg }"
+                @click="copyToClipboard"
               >
                 {{ t('svgEditor.actions.copy') }}
               </span>
               <span
                 class="svg-editor__btn-link"
-                @click="downloadSvg"
                 :class="{ 'svg-editor__btn-link--disabled': !optimizedSvg }"
+                @click="downloadSvg"
               >
                 {{ t('svgEditor.actions.download') }}
               </span>
@@ -143,7 +143,7 @@
             :placeholder="t('svgEditor.outputPlaceholder')"
             :disabled="!optimizedSvg"
           />
-          <div class="svg-editor__stats" v-if="stats.show">
+          <div v-if="stats.show" class="svg-editor__stats">
             <p>
               {{ t('svgEditor.stats.originalSize') }}: {{ stats.originalSize }} |
               {{ t('svgEditor.stats.optimizedSize') }}: {{ stats.optimizedSize }} |
@@ -154,7 +154,7 @@
       </div>
     </div>
 
-    <div class="svg-editor__preview" v-if="showPreview">
+    <div v-if="showPreview" class="svg-editor__preview">
       <div class="svg-editor__preview-header">
         <h4>{{ t('svgEditor.previewTitle') }}</h4>
         <span class="svg-editor__btn-link" @click="showPreview = false">{{
@@ -175,7 +175,7 @@
       </ul>
     </div>
 
-    <div class="svg-editor__success-modal" v-if="successVisible">
+    <div v-if="successVisible" class="svg-editor__success-modal">
       <div class="svg-editor__success-modal-content">
         <p>{{ successMessage }}</p>
         <button
@@ -207,17 +207,13 @@ import {
   removeUnusedNamespaces,
 } from './svg-optimizer';
 
-const t = (key: string, params?: Record<string, string | number>) =>
-  langManager.t(key, params);
+const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 
 defineOptions({
   name: 'SvgEditor',
 });
 
-/**
- * Optional callback to return to the home view.
- */
-const props = defineProps<{
+defineProps<{
   back?: () => void;
 }>();
 
@@ -468,15 +464,5 @@ const showSuccess = (message: string) => {
     successVisible.value = false;
   }, 2000);
 };
-
-/**
- * Invoke the parent callback to return to the home view.
- */
-const handleBack = () => {
-  if (props.back) {
-    props.back();
-  }
-};
-
 </script>
 <style lang="less" scoped src="./svg-editor.less"></style>

@@ -22,19 +22,19 @@
         <div class="date-converter__input-group">
           <div class="date-converter__radio-group">
             <label class="date-converter__radio">
-              <input type="radio" v-model="inputType" value="timestamp" />
+              <input v-model="inputType" type="radio" value="timestamp" />
               <span>{{ t('dateConverter.inputTypes.timestamp') }}</span>
             </label>
             <label class="date-converter__radio">
-              <input type="radio" v-model="inputType" value="iso" />
+              <input v-model="inputType" type="radio" value="iso" />
               <span>{{ t('dateConverter.inputTypes.iso') }}</span>
             </label>
             <label class="date-converter__radio">
-              <input type="radio" v-model="inputType" value="local" />
+              <input v-model="inputType" type="radio" value="local" />
               <span>{{ t('dateConverter.inputTypes.local') }}</span>
             </label>
             <label class="date-converter__radio">
-              <input type="radio" v-model="inputType" value="custom" />
+              <input v-model="inputType" type="radio" value="custom" />
               <span>{{ t('dateConverter.inputTypes.custom') }}</span>
             </label>
           </div>
@@ -42,8 +42,8 @@
           <div class="date-converter__input-container">
             <template v-if="inputType === 'timestamp'">
               <input
-                type="number"
                 v-model.number="inputTimestamp"
+                type="number"
                 class="date-converter__input"
                 :placeholder="t('dateConverter.placeholders.timestampSeconds')"
                 @input="convertFromTimestamp"
@@ -51,8 +51,8 @@
               <div class="date-converter__unit-selector">
                 <label class="date-converter__radio">
                   <input
-                    type="radio"
                     v-model="timestampUnit"
+                    type="radio"
                     value="seconds"
                     @change="convertFromTimestamp"
                   />
@@ -60,8 +60,8 @@
                 </label>
                 <label class="date-converter__radio">
                   <input
-                    type="radio"
                     v-model="timestampUnit"
+                    type="radio"
                     value="milliseconds"
                     @change="convertFromTimestamp"
                   />
@@ -72,8 +72,8 @@
 
             <template v-else-if="inputType === 'iso'">
               <input
-                type="text"
                 v-model="inputIso"
+                type="text"
                 class="date-converter__input"
                 :placeholder="t('dateConverter.placeholders.iso')"
                 @input="convertFromIso"
@@ -82,8 +82,8 @@
 
             <template v-else-if="inputType === 'local'">
               <input
-                type="datetime-local"
                 v-model="inputLocalString"
+                type="datetime-local"
                 class="date-converter__input"
                 @input="convertFromLocalString"
               />
@@ -92,15 +92,15 @@
             <template v-else-if="inputType === 'custom'">
               <div class="date-converter__custom-container">
                 <input
-                  type="text"
                   v-model="inputCustom"
+                  type="text"
                   class="date-converter__input"
                   :placeholder="t('dateConverter.placeholders.customInput')"
                   @input="convertFromCustom"
                 />
                 <input
-                  type="text"
                   v-model="customFormat"
+                  type="text"
                   class="date-converter__format-input"
                   :placeholder="t('dateConverter.placeholders.customFormat')"
                   @input="convertFromCustom"
@@ -110,7 +110,7 @@
           </div>
         </div>
 
-        <div class="date-converter__error" v-if="error">
+        <div v-if="error" class="date-converter__error">
           {{ error }}
         </div>
       </div>
@@ -138,8 +138,8 @@
           <div class="date-converter__panel-controls">
             <span
               class="date-converter__btn-link"
-              @click="copyToClipboard"
               :class="{ 'date-converter__btn-disabled': !hasValidDate }"
+              @click="copyToClipboard"
             >
               {{ t('common.copy') }}
             </span>
@@ -162,17 +162,23 @@
           </div>
 
           <div class="date-converter__result-item">
-            <div class="date-converter__result-label">{{ t('dateConverter.resultLabels.iso') }}</div>
+            <div class="date-converter__result-label">
+              {{ t('dateConverter.resultLabels.iso') }}
+            </div>
             <div class="date-converter__result-value">{{ outputIso }}</div>
           </div>
 
           <div class="date-converter__result-item">
-            <div class="date-converter__result-label">{{ t('dateConverter.resultLabels.local') }}</div>
+            <div class="date-converter__result-label">
+              {{ t('dateConverter.resultLabels.local') }}
+            </div>
             <div class="date-converter__result-value">{{ outputLocal }}</div>
           </div>
 
           <div class="date-converter__result-item">
-            <div class="date-converter__result-label">{{ t('dateConverter.resultLabels.utc') }}</div>
+            <div class="date-converter__result-label">
+              {{ t('dateConverter.resultLabels.utc') }}
+            </div>
             <div class="date-converter__result-value">{{ outputUtc }}</div>
           </div>
 
@@ -198,8 +204,8 @@
             {{ t('dateConverter.calculator.label') }}
           </span>
           <input
-            type="number"
             v-model.number="calculationValue"
+            type="number"
             class="date-converter__calculator-input"
           />
           <select v-model="calculationUnit" class="date-converter__calculator-unit">
@@ -219,7 +225,7 @@
           </button>
         </div>
 
-        <div class="date-converter__calculator-result" v-if="calculationResult">
+        <div v-if="calculationResult" class="date-converter__calculator-result">
           <div class="date-converter__result-label">
             {{ t('dateConverter.resultLabels.calculationResult') }}
           </div>
@@ -254,14 +260,13 @@
 import { langManager } from '@/utils/i18n';
 import { useDateConverter } from './useDateConverter';
 
-const t = (key: string, params?: Record<string, string | number>) =>
-  langManager.t(key, params);
+const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 
 defineOptions({
   name: 'DateConverter',
 });
 
-const props = defineProps<{
+defineProps<{
   back?: () => void;
 }>();
 
@@ -300,12 +305,6 @@ const {
 
 const stopPropagation = (e: Event) => {
   e.stopPropagation();
-};
-
-const handleBack = () => {
-  if (props.back) {
-    props.back();
-  }
 };
 </script>
 

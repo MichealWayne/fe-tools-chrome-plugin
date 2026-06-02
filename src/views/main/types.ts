@@ -12,6 +12,7 @@ export type FeToolListItem = {
   desc: string;
   target?: string[];
   children?: FeToolListItem[];
+  pinyinSearchIndex?: string;
 };
 
 export type SearchResultItem = {
@@ -26,10 +27,12 @@ export type ComponentDataTypes = {
   keywords: string;
   markList: BookmarkItem[];
   logoFold: string | boolean;
+  showSettings: boolean;
   showCompName: string;
   resultList: SearchResultItem[];
   feToolsList: FeToolListItem[];
   toolCards: ToolCard[];
   currentLang: string;
+  enablePinyinSearch: boolean;
   languageChangeHandler?: (lang: string) => void;
 };

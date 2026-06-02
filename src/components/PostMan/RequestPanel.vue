@@ -21,9 +21,9 @@
       />
 
       <button
-        @click="$emit('send-request')"
         :disabled="loading || !localRequest.url"
         class="send-btn"
+        @click="$emit('send-request')"
       >
         <i v-if="loading" class="fas fa-spinner fa-spin"></i>
         <i v-else class="fas fa-paper-plane"></i>
@@ -36,8 +36,8 @@
       <button
         v-for="tab in requestTabs"
         :key="tab.key"
-        @click="activeTab = tab.key"
         :class="['tab-btn', { active: activeTab === tab.key }]"
+        @click="activeTab = tab.key"
       >
         {{ tab.label }}
       </button>
@@ -59,7 +59,7 @@
       />
 
       <!-- 认证 -->
-        <div v-if="activeTab === 'auth'" class="auth-section">
+      <div v-if="activeTab === 'auth'" class="auth-section">
         <div class="auth-type">
           <label>{{ t('postman.auth.typeLabel') }}</label>
           <select v-model="localRequest.auth.type" class="auth-select" @change="updateRequest">

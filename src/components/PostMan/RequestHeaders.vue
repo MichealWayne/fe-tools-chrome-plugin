@@ -2,7 +2,7 @@
   <div class="request-headers">
     <div class="section-header">
       <h3>{{ t('postman.headers.title') }}</h3>
-      <button @click="addHeader" class="add-btn">
+      <button class="add-btn" @click="addHeader">
         <i class="fas fa-plus"></i> {{ t('postman.headers.add') }}
       </button>
     </div>
@@ -21,7 +21,11 @@
           class="header-input"
           @input="updateHeaders"
         />
-        <button @click="removeHeader(index)" class="remove-btn" :title="t('postman.actions.remove')">
+        <button
+          class="remove-btn"
+          :title="t('postman.actions.remove')"
+          @click="removeHeader(index)"
+        >
           ×
         </button>
       </div>

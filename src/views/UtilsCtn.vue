@@ -33,7 +33,6 @@
         {{ item.name }}
       </li>
     </ul>
-
   </section>
 </template>
 
@@ -42,6 +41,7 @@ import { defineComponent } from 'vue';
 import { langManager } from '@/utils/i18n';
 
 import { AnyFunc, AnyObj } from '@/types';
+import type { ApiResponse } from '@/types/api';
 import { jumpAction } from '@/utils/chrome';
 import ajax from '@/api';
 import { sanitizeInlineMarkup } from '@/utils/sanitize';
@@ -75,16 +75,9 @@ export default defineComponent({
     if (ajax && ajax.getUtilFuncs) {
       ajax
         .getUtilFuncs()
-        .then((data: { success?: boolean; list?: unknown; data?: unknown } | unknown[]) => {
-          if (data && (data.success || data.list || data.data || Array.isArray(data))) {
-            const payload =
-              'list' in (data as Record<string, unknown>) ||
-              'data' in (data as Record<string, unknown>)
-                ? ((data as Record<string, unknown>).list ||
-                    (data as Record<string, unknown>).data)
-                : data;
-            this.handleList(payload);
-          }
+        .then((data: ApiResponse<unknown>) => {
+          const payload = data.list || data.data;
+          this.handleList(payload);
         })
         .catch((error: unknown) => {
           console.error('Failed to load util functions:', error);
@@ -107,8 +100,8 @@ export default defineComponent({
       jumpAction('https://blog.michealwayne.cn/fe-tools/stable/');
     },
 
-    toUtilFuncDoc(search: string) {
-      if (!search) {
+    toUtilFuncDoc(search: unknown) {
+      if (typeof search !== 'string' || !search) {
         this.toUtilFuncsHome();
       } else {
         jumpAction(`https://blog.michealwayne.cn/fe-tools/stable/?page=${search}`);
@@ -159,7 +152,8 @@ export default defineComponent({
       }
     },
 
-    getResultLabel(type: string) {
+    getResultLabel(type: unknown) {
+      if (typeof type !== 'string') return '';
       return (
         (
           {

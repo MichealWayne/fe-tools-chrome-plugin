@@ -373,7 +373,9 @@ export default defineComponent({
         const name = String(record.name || '');
         const children = Array.isArray(record.children) ? record.children : [];
         if (name === '样式模块词典') {
-          this.styleList = Object.freeze(this.handleStyleList(children as Record<string, unknown>[]));
+          this.styleList = Object.freeze(
+            this.handleStyleList(children as Record<string, unknown>[])
+          );
           return;
         }
         if (name === 'moo-css-base词典') {

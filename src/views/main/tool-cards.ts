@@ -75,7 +75,7 @@ export const TOOL_CARDS: ToolCard[] = [
     key: 'json-ctn',
     nameKey: 'tools.jsonCtn',
     descriptionKey: 'descriptions.jsonCtn',
-    iconClass: 'u-icon iconfont icon-utils g-center g-fs36',
+    iconClass: 'u-icon icon-json-tool g-center g-fs36',
     componentName: 'JsonCtn',
   },
   {
@@ -96,14 +96,21 @@ export const TOOL_CARDS: ToolCard[] = [
     key: 'linux-command',
     nameKey: 'tools.linuxCommand',
     descriptionKey: 'descriptions.linuxCommand',
-    iconClass: 'u-icon icon-utils g-center g-fs36',
+    iconClass: 'u-icon icon-linux-command g-center g-fs36',
     componentName: 'LinuxCommand',
   },
   {
     key: 'page-screenshot',
     nameKey: 'tools.pageScreenshot',
     descriptionKey: 'descriptions.pageScreenshot',
-    iconClass: 'u-icon icon-utils g-center g-fs36',
+    iconClass: 'u-icon icon-page-screenshot g-center g-fs36',
     componentName: 'PageScreenshot',
+  },
+  {
+    key: 'tech-stack-detection',
+    nameKey: 'tools.techStack',
+    descriptionKey: 'descriptions.techStack',
+    iconClass: 'u-icon icon-tech-stack g-center g-fs36',
+    componentName: 'TechStackDetection',
   },
 ];

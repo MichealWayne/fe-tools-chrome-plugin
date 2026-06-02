@@ -1,5 +1,5 @@
 <template>
-  <div class="response-viewer" :class="{ fullscreen: isFullscreen }" v-if="response">
+  <div v-if="response" class="response-viewer" :class="{ fullscreen: isFullscreen }">
     <div class="response-header">
       <div class="status-info">
         <span class="status" :class="getStatusClass(response.status)">
@@ -8,13 +8,15 @@
         <span class="time">{{ response.responseTime }}ms</span>
         <span class="size">{{ formatSize(response.size) }}</span>
       </div>
-      <button @click="copyResponse" class="copy-btn">{{ t('postman.actions.copyResponse') }}</button>
+      <button class="copy-btn" @click="copyResponse">
+        {{ t('postman.actions.copyResponse') }}
+      </button>
       <button
-        @click="toggleFullscreen"
         class="fullscreen-btn"
         :title="
           isFullscreen ? t('postman.actions.exitFullscreen') : t('postman.actions.fullscreen')
         "
+        @click="toggleFullscreen"
       >
         <svg
           v-if="!isFullscreen"
@@ -49,9 +51,9 @@
       <button
         v-for="tab in tabs"
         :key="tab.key"
-        @click="activeTab = tab.key"
         :class="{ active: activeTab === tab.key }"
         class="tab-btn"
+        @click="activeTab = tab.key"
       >
         {{ tab.label }}
         <span v-if="tab.count !== undefined" class="count">({{ tab.count }})</span>
@@ -62,7 +64,7 @@
       <!-- 响应体 -->
       <div :class="{ 'z-hide': activeTab !== 'body' }" class="response-body">
         <div v-if="isJsonResponse" class="json-viewer">
-          <div id="formattingMsg" v-show="isFormatting">
+          <div v-show="isFormatting" id="formattingMsg">
             <span class="x-loading"></span>{{ t('postman.response.formatting') }}
           </div>
           <div id="jfCallbackNameStart" class="callback-name" v-html="safeCallbackNameStart"></div>
