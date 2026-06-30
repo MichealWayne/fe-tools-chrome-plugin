@@ -1,145 +1,97 @@
 <template>
-  <section class="unit-calculator" s-bg_white @click.stop="stopPropagation">
-    <div class="u-w500">
-      <h4 class="unit-calculator__title">{{ t('unitCalculator.title') }}</h4>
-      <section class="unit-calculator__content u-p20">
-        <div class="m-color-input">
-          <span class="g-fs14">px：</span>
-          <input
-            v-model="px"
-            maxlength="4"
-            data-type="px"
-            :placeholder="t('unitCalculator.pxPlaceholder')"
-            @keyup="changeValue"
-          />
-        </div>
-
-        <div class="m-color-input">
-          <span class="g-fs14">vw：</span>
-          <input
-            v-model="vw"
-            maxlength="4"
-            data-type="vw"
-            :placeholder="t('unitCalculator.vwPlaceholder')"
-            @keyup="changeValue"
-          />
-        </div>
-
-        <div class="m-color-input">
-          <span class="g-fs14">rem：</span>
-          <input
-            v-model="rem"
-            maxlength="4"
-            data-type="rem"
-            :placeholder="t('unitCalculator.remPlaceholder')"
-            @keyup="changeValue"
-          />
-        </div>
-
-        <div class="m-color-input u-l-middle">
-          <span class="g-fs14">{{ t('unitCalculator.remRatio') }}：</span>
-          <input
-            v-model="defaultRate"
-            maxlength="4"
-            data-type="rgb"
-            :placeholder="t('unitCalculator.remRatioPlaceholder')"
-            @keyup="changeValue"
-          />
-          <span class="g-fs14">{{ t('unitCalculator.keepDigits') }}：</span>
-          <input
-            v-model="defaultKeep"
-            maxlength="4"
-            data-type="rgb"
-            :placeholder="t('unitCalculator.keepDigitsPlaceholder')"
-            @keyup="changeValue"
-          />
-        </div>
-      </section>
+  <section class="converter-tool unit-calculator">
+    <div v-for="unit in units" :key="unit" class="converter-field">
+      <label :for="`unit-${unit}`">{{ unit }}</label>
+      <input
+        :id="`unit-${unit}`"
+        v-model="values[unit]"
+        type="number"
+        :aria-invalid="activeSource === unit && Boolean(error)"
+        aria-describedby="unit-feedback"
+        @input="convert(unit)"
+      />
     </div>
+    <div class="converter-field">
+      <label for="unit-rate">{{ t('unitCalculator.remRatio') }}</label>
+      <input id="unit-rate" v-model="rate" type="number" min="0.01" @input="settingsChanged" />
+    </div>
+    <div class="converter-field">
+      <label for="unit-precision">{{ t('unitCalculator.keepDigits') }}</label>
+      <input
+        id="unit-precision"
+        v-model="precision"
+        type="number"
+        min="0"
+        max="10"
+        @input="settingsChanged"
+      />
+    </div>
+    <button type="button" @click="reset">{{ t('common.clear') }}</button>
+    <inline-feedback
+      :feedback="error ? { id: 'unit-feedback', message: error, tone: 'validation' } : null"
+    />
   </section>
 </template>
 
-<script lang="ts">
-export default {
-  name: 'UnitCalculator',
-};
-</script>
-
-<script lang="ts" setup>
-import { ref } from 'vue';
+<script setup lang="ts">
+import { reactive, ref } from 'vue';
 import { langManager } from '@/utils/i18n';
+import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 
+defineOptions({ name: 'UnitCalculator' });
+
+type Unit = 'px' | 'vw' | 'rem';
+const DEFAULT_RATE = 75;
+const DEFAULT_PRECISION = 6;
 const t = (key: string) => langManager.t(key);
+const units: Unit[] = ['px', 'vw', 'rem'];
+const values = reactive<Record<Unit, string>>({ px: '', vw: '', rem: '' });
+const rate = ref(localStorage.getItem('feTools_rate') || String(DEFAULT_RATE));
+const precision = ref(localStorage.getItem('feTools_keep') || String(DEFAULT_PRECISION));
+const activeSource = ref<Unit>('px');
+const error = ref('');
 
-const DEFAULT_REM_RATE = 75;
-const DEFAULT_FIXED_NUMBER = 6;
+const validSettings = () => {
+  const ratio = Number(rate.value);
+  const digits = Number(precision.value);
+  if (!Number.isFinite(ratio) || ratio <= 0)
+    throw new Error(t('unitCalculator.messages.invalidRate'));
+  if (!Number.isInteger(digits) || digits < 0 || digits > 10)
+    throw new Error(t('unitCalculator.messages.invalidPrecision'));
+  return { ratio, digits };
+};
 
-/**
- * Default rem conversion ratio from localStorage or fallback.
- */
-const defaultRate = ref(parseFloat(localStorage.getItem('feTools_rate') || '') || DEFAULT_REM_RATE);
-/**
- * Default decimal precision for conversion outputs.
- */
-const defaultKeep = ref(
-  parseInt(localStorage.getItem('feTools_keep') || '', 10) || DEFAULT_FIXED_NUMBER
-);
-
-const px = ref('');
-const vw = ref('');
-const rem = ref('');
-
-const stopPropagation = () => false;
-
-/**
- * 监听单位值改变
- */
-const changeValue = (e: Event) => {
-  if (!e || !(e.target instanceof HTMLElement)) return;
-
-  const { type } = e.target!.dataset;
-  const rate = defaultRate.value;
-  const keep = defaultKeep.value;
-
-  if (!rate || Number.isNaN(rate) || Number.isNaN(keep)) return;
-
-  const SizeUnit = 10;
-  switch (type) {
-    case 'px':
-      rem.value = (parseFloat(px.value) / rate).toFixed(keep);
-      vw.value = (parseFloat(rem.value) * SizeUnit).toFixed(keep);
-      break;
-    case 'vw':
-      rem.value = (parseFloat(vw.value) / SizeUnit).toFixed(keep);
-      px.value = (parseFloat(rem.value) * rate).toFixed(keep);
-      break;
-    case 'rem':
-      px.value = (parseFloat(rem.value) * rate).toFixed(keep);
-      vw.value = (parseFloat(rem.value) * SizeUnit).toFixed(keep);
-      break;
-    default:
-      console.error(`[Warning]illegal type:${type}(UnitCalculator)`);
+const convert = (source: Unit) => {
+  activeSource.value = source;
+  error.value = '';
+  if (values[source] === '') return;
+  try {
+    const input = Number(values[source]);
+    if (!Number.isFinite(input)) throw new Error(t('unitCalculator.messages.invalidValue'));
+    const { ratio, digits } = validSettings();
+    const rem = source === 'rem' ? input : source === 'px' ? input / ratio : input / 10;
+    if (source !== 'rem') values.rem = rem.toFixed(digits);
+    if (source !== 'px') values.px = (rem * ratio).toFixed(digits);
+    if (source !== 'vw') values.vw = (rem * 10).toFixed(digits);
+  } catch (cause) {
+    error.value = (cause as Error).message;
   }
 };
+
+const settingsChanged = () => {
+  error.value = '';
+  try {
+    validSettings();
+    localStorage.setItem('feTools_rate', rate.value);
+    localStorage.setItem('feTools_keep', precision.value);
+    if (values[activeSource.value]) convert(activeSource.value);
+  } catch (cause) {
+    error.value = (cause as Error).message;
+  }
+};
+
+const reset = () => {
+  Object.assign(values, { px: '', vw: '', rem: '' });
+  error.value = '';
+};
 </script>
-
-<style lang="less">
-.unit-calculator {
-  padding: 18px 20px 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
-  border: 1px solid #e2e9ff;
-  border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
-
-  &__title {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #1f2a44;
-  }
-
-  &__content {
-    padding-top: 12px;
-  }
-}
-</style>

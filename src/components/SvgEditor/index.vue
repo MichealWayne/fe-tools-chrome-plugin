@@ -13,12 +13,17 @@
           <div class="svg-editor__panel-header">
             <span>{{ t('svgEditor.svgInput') }}</span>
             <div class="svg-editor__panel-controls">
-              <span v-if="svgInput" class="svg-editor__btn-link" @click="clearInput">
+              <button
+                v-if="svgInput"
+                type="button"
+                class="svg-editor__btn-link"
+                @click="requestClear"
+              >
                 {{ t('svgEditor.clearInput') }}
-              </span>
-              <span class="svg-editor__btn-link" @click="loadExample">
+              </button>
+              <button type="button" class="svg-editor__btn-link" @click="loadExample">
                 {{ t('svgEditor.loadExample') }}
-              </span>
+              </button>
               <label class="svg-editor__upload-btn">
                 {{ t('svgEditor.uploadSvg') }}
                 <input
@@ -35,9 +40,14 @@
             class="svg-editor__textarea"
             :placeholder="t('svgEditor.placeholder')"
           />
-          <div v-if="error" class="svg-editor__error">
-            {{ error }}
+          <div v-if="confirmClear" class="svg-editor__confirm" role="alertdialog">
+            <span>{{ t('svgEditor.messages.clearConfirm') }}</span>
+            <button type="button" @click="clearInput">{{ t('experience.confirm') }}</button>
+            <button type="button" @click="confirmClear = false">
+              {{ t('experience.cancel') }}
+            </button>
           </div>
+          <inline-feedback :feedback="error ? { message: error, tone: 'validation' } : null" />
         </div>
       </div>
 
@@ -45,7 +55,12 @@
         <div class="svg-editor__controls-section">
           <div class="svg-editor__controls">
             <div class="svg-editor__options">
-              <div class="svg-editor__options-header" @click="toggleOptionsPanel">
+              <button
+                type="button"
+                class="svg-editor__options-header"
+                :aria-expanded="optionsExpanded"
+                @click="toggleOptionsPanel"
+              >
                 <h4>{{ t('svgEditor.optionsTitle') }}</h4>
                 <span class="svg-editor__options-toggle">
                   <i
@@ -53,7 +68,7 @@
                     :class="optionsExpanded ? 'icon-chevron-up' : 'icon-chevron-down'"
                   ></i>
                 </span>
-              </div>
+              </button>
               <div v-show="optionsExpanded" class="svg-editor__options-panel">
                 <div class="svg-editor__option-group">
                   <label class="svg-editor__checkbox">
@@ -121,20 +136,24 @@
           <div class="svg-editor__panel-header">
             <span>{{ t('svgEditor.outputTitle') }}</span>
             <div class="svg-editor__panel-controls">
-              <span
+              <button
+                type="button"
                 class="svg-editor__btn-link"
                 :class="{ 'svg-editor__btn-link--disabled': !optimizedSvg }"
+                :disabled="!optimizedSvg"
                 @click="copyToClipboard"
               >
                 {{ t('svgEditor.actions.copy') }}
-              </span>
-              <span
+              </button>
+              <button
+                type="button"
                 class="svg-editor__btn-link"
                 :class="{ 'svg-editor__btn-link--disabled': !optimizedSvg }"
+                :disabled="!optimizedSvg"
                 @click="downloadSvg"
               >
                 {{ t('svgEditor.actions.download') }}
-              </span>
+              </button>
             </div>
           </div>
           <textarea
@@ -157,9 +176,9 @@
     <div v-if="showPreview" class="svg-editor__preview">
       <div class="svg-editor__preview-header">
         <h4>{{ t('svgEditor.previewTitle') }}</h4>
-        <span class="svg-editor__btn-link" @click="showPreview = false">{{
-          t('svgEditor.actions.close')
-        }}</span>
+        <button type="button" class="svg-editor__btn-link" @click="showPreview = false">
+          {{ t('svgEditor.actions.close') }}
+        </button>
       </div>
       <div class="svg-editor__preview-content" v-html="sanitizedPreviewSvg"></div>
     </div>
@@ -175,25 +194,17 @@
       </ul>
     </div>
 
-    <div v-if="successVisible" class="svg-editor__success-modal">
-      <div class="svg-editor__success-modal-content">
-        <p>{{ successMessage }}</p>
-        <button
-          class="u-btn_il svg-editor__success-btn"
-          s-color="blue"
-          @click="successVisible = false"
-        >
-          {{ t('common.ok') }}
-        </button>
-      </div>
-    </div>
+    <inline-feedback
+      :feedback="successVisible ? { message: successMessage, tone: 'success' } : null"
+    />
   </section>
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, defineOptions, defineProps } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { langManager } from '@/utils/i18n';
 import { sanitizeSvgMarkup } from '@/utils/sanitize';
+import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 import {
   cleanupIDs,
   convertColors,
@@ -223,6 +234,7 @@ const error = ref('');
 const successVisible = ref(false);
 const successMessage = ref('');
 const showPreview = ref(false);
+const confirmClear = ref(false);
 /**
  * Toggle state for the options panel accordion.
  */
@@ -275,6 +287,11 @@ const clearInput = () => {
   optimizedSvg.value = '';
   error.value = '';
   stats.show = false;
+  confirmClear.value = false;
+};
+
+const requestClear = () => {
+  confirmClear.value = true;
 };
 
 /**

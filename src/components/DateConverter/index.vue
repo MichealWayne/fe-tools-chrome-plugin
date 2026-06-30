@@ -14,9 +14,9 @@
       <div class="date-converter__panel">
         <div class="date-converter__panel-header">
           <span>{{ t('dateConverter.inputTime') }}</span>
-          <span class="date-converter__btn-link" @click="useCurrentTime">{{
-            t('dateConverter.useCurrentTime')
-          }}</span>
+          <button type="button" class="date-converter__btn-link" @click="useCurrentTime">
+            {{ t('dateConverter.useCurrentTime') }}
+          </button>
         </div>
 
         <div class="date-converter__input-group">
@@ -45,6 +45,7 @@
                 v-model.number="inputTimestamp"
                 type="number"
                 class="date-converter__input"
+                :aria-label="t('dateConverter.inputTypes.timestamp')"
                 :placeholder="t('dateConverter.placeholders.timestampSeconds')"
                 @input="convertFromTimestamp"
               />
@@ -75,6 +76,7 @@
                 v-model="inputIso"
                 type="text"
                 class="date-converter__input"
+                :aria-label="t('dateConverter.inputTypes.iso')"
                 :placeholder="t('dateConverter.placeholders.iso')"
                 @input="convertFromIso"
               />
@@ -85,6 +87,7 @@
                 v-model="inputLocalString"
                 type="datetime-local"
                 class="date-converter__input"
+                :aria-label="t('dateConverter.inputTypes.local')"
                 @input="convertFromLocalString"
               />
             </template>
@@ -95,6 +98,7 @@
                   v-model="inputCustom"
                   type="text"
                   class="date-converter__input"
+                  :aria-label="t('dateConverter.inputTypes.custom')"
                   :placeholder="t('dateConverter.placeholders.customInput')"
                   @input="convertFromCustom"
                 />
@@ -102,6 +106,7 @@
                   v-model="customFormat"
                   type="text"
                   class="date-converter__format-input"
+                  :aria-label="t('dateConverter.placeholders.customFormat')"
                   :placeholder="t('dateConverter.placeholders.customFormat')"
                   @input="convertFromCustom"
                 />
@@ -110,9 +115,7 @@
           </div>
         </div>
 
-        <div v-if="error" class="date-converter__error">
-          {{ error }}
-        </div>
+        <inline-feedback :feedback="error ? { message: error, tone: 'validation' } : null" />
       </div>
 
       <!-- 时区选择 -->
@@ -123,6 +126,7 @@
         <select
           v-model="selectedTimezone"
           class="date-converter__timezone-select"
+          :aria-label="t('dateConverter.timezoneTitle')"
           @change="updateAllOutputs"
         >
           <option v-for="tz in timezones" :key="tz.value" :value="tz.value">
@@ -136,13 +140,15 @@
         <div class="date-converter__panel-header">
           <span>{{ t('dateConverter.outputTitle') }}</span>
           <div class="date-converter__panel-controls">
-            <span
+            <button
+              type="button"
               class="date-converter__btn-link"
               :class="{ 'date-converter__btn-disabled': !hasValidDate }"
+              :disabled="!hasValidDate"
               @click="copyToClipboard"
             >
               {{ t('common.copy') }}
-            </span>
+            </button>
           </div>
         </div>
 
@@ -207,6 +213,7 @@
             v-model.number="calculationValue"
             type="number"
             class="date-converter__calculator-input"
+            :aria-label="t('dateConverter.calculator.label')"
           />
           <select v-model="calculationUnit" class="date-converter__calculator-unit">
             <option value="seconds">{{ t('dateConverter.units.seconds') }}</option>
@@ -244,21 +251,16 @@
       </ul>
     </div>
 
-    <div v-if="successVisible" class="date-converter__success-modal">
-      <div class="date-converter__modal-content">
-        <h4>{{ t('dateConverter.modal.successTitle') }}</h4>
-        <p>{{ successMessage }}</p>
-        <button class="u-btn_il" s-color="blue" @click="successVisible = false">
-          {{ t('common.ok') }}
-        </button>
-      </div>
-    </div>
+    <inline-feedback
+      :feedback="successVisible ? { message: successMessage, tone: 'success' } : null"
+    />
   </section>
 </template>
 
 <script lang="ts" setup>
 import { langManager } from '@/utils/i18n';
 import { useDateConverter } from './useDateConverter';
+import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 
 const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 

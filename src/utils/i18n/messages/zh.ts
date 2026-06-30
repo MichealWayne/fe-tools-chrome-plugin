@@ -6,6 +6,29 @@ export default {
   search: {
     qrCodeResult: '生成二维码',
     searchIn: '在{site}中搜索: <strong>{keywords}</strong>',
+    resultsLabel: '搜索结果',
+  },
+  experience: {
+    loading: '加载中…',
+    empty: '暂无内容',
+    noResults: '没有找到匹配结果',
+    retry: '重试',
+    copied: '已复制',
+    saved: '已保存',
+    downloaded: '已下载',
+    required: '请填写此项',
+    invalid: '请输入有效内容',
+    confirm: '确认',
+    cancel: '取消',
+    external: '外部网站',
+    standalone: '独立页面',
+    resultCount: '共 {count} 项',
+    categories: {
+      transform: '转换与生成',
+      inspect: '页面与媒体',
+      reference: '查询与参考',
+      network: '网络与接口',
+    },
   },
   settings: {
     entryLabel: '设置',
@@ -13,6 +36,7 @@ export default {
     title: '设置',
     close: '关闭设置',
     language: '语言',
+    languageHelp: '切换后当前页面文案会立即更新',
     pinyinSearch: '拼音搜索',
     pinyinSearchHelp: '开启后可使用拼音或首字母搜索中文内容',
   },
@@ -23,6 +47,7 @@ export default {
   title: 'FE工具箱',
   language: '语言',
   searchPlaceholder: '请输入关键词或二维码生成地址',
+  toolsLabel: '工具分类',
 
   // 工具模块
   tools: {
@@ -72,6 +97,14 @@ export default {
     clear: '清空',
     rightClickTip: '右键可保存二维码图片',
     saveImageTip: '*右键选中图片可保存二维码PNG图片',
+    sourceLabel: '二维码内容',
+    previewAlt: '生成的二维码预览',
+    emptyPreview: '输入内容后生成二维码预览',
+    messages: {
+      required: '请输入二维码内容',
+      generated: '二维码已生成',
+      generateFailed: '二维码生成失败',
+    },
   },
 
   // 图片压缩
@@ -80,9 +113,18 @@ export default {
     formatTip: '(*.jpg/*.png/*.gif格式)',
     resetTip: '点击重置图片',
     compressRatio: '图片压缩比例(0~1, 默认1)',
+    ratioLabel: '压缩比例',
+    compress: '压缩',
+    download: '下载图片',
+    processing: '图片处理中…',
+    previewAlt: '压缩图片预览',
+    base64Label: '压缩后的 Base64 结果',
     backHome: '返回主页',
     messages: {
       convertFailed: '转换失败，请重试',
+      invalidRate: '压缩比例必须大于 0 且不超过 1',
+      invalidFile: '请选择有效的图片文件',
+      ready: '图片处理完成',
     },
   },
 
@@ -102,6 +144,7 @@ export default {
     errorCapture: '截图失败，请重试',
     errorUnavailable: '当前页面无法截图',
     errorSelection: '未能选择元素',
+    saveSuccess: '截图已提交保存',
   },
 
   // 技术栈判断
@@ -218,6 +261,7 @@ export default {
     },
     messages: {
       inputRequired: '请输入 SVG 代码',
+      clearConfirm: '确认清空当前 SVG 输入和优化结果？',
       parseError: 'SVG 解析错误: {message}',
       optimizeSuccess: 'SVG 优化成功！',
       optimizeFailed: '优化失败：{message}',
@@ -316,24 +360,35 @@ export default {
     remRatioPlaceholder: 'rem转换比例,默认1rem=75px',
     keepDigits: '保留位数',
     keepDigitsPlaceholder: '保留小数位数,默认2位',
+    messages: {
+      invalidValue: '请输入有效数字',
+      invalidRate: 'rem 比例必须大于 0',
+      invalidPrecision: '保留位数必须是 0 到 10 的整数',
+    },
   },
 
   // 正则工具
   regex: {
+    filterLabel: '筛选正则表达式',
     filter: '筛选',
     test: '测试',
     inputTest: '请输入测试字符串',
     result: '结果',
+    loadFailed: '正则列表加载失败',
   },
 
   // Moo CSS
   mooCss: {
+    searchLabel: '搜索 CSS 与 Moo CSS 词典',
     searchPlaceholder: '请输入模块或样式属性',
+    loadFailed: 'Moo CSS 词典加载失败',
   },
 
   // 工具函数
   utils: {
+    searchLabel: '搜索工具函数',
     searchPlaceholder: '请输入方法名或模块名',
+    loadFailed: '工具函数列表加载失败',
   },
 
   // 颜色转换
@@ -347,7 +402,14 @@ export default {
     },
     hexPlaceholder: 'HEX颜色值',
     rgbPlaceholder: 'RGB颜色值',
+    hsbPlaceholder: 'HSB颜色值，如 0,100%,100%',
     hslPlaceholder: 'HSL颜色值',
+    messages: {
+      invalidHex: 'HEX 必须是 6 位十六进制颜色值',
+      invalidRgb: 'RGB 必须是 0 到 255 的三个整数',
+      invalidHsb: 'HSB 必须是有效的色相、饱和度和亮度',
+      invalidHsl: 'HSL 必须是有效的色相、饱和度和亮度',
+    },
     backHome: '返回主页',
     remarks: {
       title: '注：',
@@ -362,6 +424,8 @@ export default {
   linuxCommand: {
     title: 'Linux命令查询工具',
     inputPlaceholder: '请输入Linux命令名称',
+    searchLabel: '搜索 Linux 命令',
+    loadFailed: 'Linux 命令列表加载失败',
     syntax: '语法',
     examples: '示例',
     commonOptions: '常用选项',
@@ -374,6 +438,21 @@ export default {
   // PostMan
   postman: {
     title: 'API 测试工具',
+    feedback: {
+      requestPending: '请求正在发送，请等待完成',
+      requestComplete: '请求已完成',
+      requestSaved: '请求配置已保存',
+      requestLoaded: '请求配置已加载',
+      responseCopied: '响应内容已复制',
+      copyFailed: '复制失败，请手动复制',
+      historyLoaded: '历史请求已载入',
+      historyCleared: '请求历史已清空',
+      historyRemoved: '历史记录已删除',
+      environmentSaved: '环境已创建',
+      environmentDeleted: '环境已删除',
+      environmentExported: '环境已导出',
+      environmentImported: '环境已导入',
+    },
     urlPlaceholder: '请输入API地址',
     saveRequest: '保存请求',
     loadRequest: '加载请求',

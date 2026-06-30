@@ -14,6 +14,7 @@ declare module 'vue' {
     IconInbox: typeof import('./src/components/ImageCompressor/IconInbox.vue')['default']
     IconReset: typeof import('./src/components/ImageCompressor/IconReset.vue')['default']
     ImageCompressor: typeof import('./src/components/ImageCompressor/index.vue')['default']
+    InlineFeedback: typeof import('./src/components/Experience/InlineFeedback.vue')['default']
     JsonCtn: typeof import('./src/components/JsonCtn/index.vue')['default']
     LangTranslator: typeof import('./src/components/LangTranslator/index.vue')['default']
     LinuxCommand: typeof import('./src/components/LinuxCommand/index.vue')['default']
@@ -30,6 +31,8 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SvgEditor: typeof import('./src/components/SvgEditor/index.vue')['default']
     TechStackDetection: typeof import('./src/components/TechStackDetection/index.vue')['default']
+    ToolState: typeof import('./src/components/Experience/ToolState.vue')['default']
+    ToolWorkspace: typeof import('./src/components/Experience/ToolWorkspace.vue')['default']
     UnitCalculator: typeof import('./src/components/UnitCalculator/index.vue')['default']
   }
 }

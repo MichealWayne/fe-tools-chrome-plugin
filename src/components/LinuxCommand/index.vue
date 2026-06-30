@@ -1,126 +1,105 @@
 <template>
-  <section class="m-linux" @click.stop="handleStop">
-    <p class="m-filter_ctn u-c-middle">
+  <section class="reference-tool m-linux">
+    <label class="reference-tool__search">
+      <span class="reference-tool__label">{{ t('linuxCommand.searchLabel') }}</span>
       <input
         v-model="filterTxt"
         class="u-input"
-        type="text"
+        type="search"
         :placeholder="t('linuxCommand.inputPlaceholder')"
-        @input="handleFilter"
       />
-    </p>
-
-    <!-- 常用命令快捷按钮 -->
-    <div class="m-quick_commands g-mt20">
+    </label>
+    <div class="m-quick_commands" :aria-label="t('linuxCommand.commonCommands')">
       <button
         v-for="quickCmd in quickCommands"
         :key="quickCmd"
-        class="u-btn_quick g-mr10 g-mb10"
-        @click="handleQuickSearch(quickCmd)"
+        type="button"
+        class="u-btn_quick"
+        @click="filterTxt = quickCmd"
       >
         {{ quickCmd }}
       </button>
     </div>
+    <tool-state v-if="loading" state="loading" :message="t('experience.loading')" />
+    <tool-state
+      v-else-if="loadError"
+      state="error"
+      :message="loadError"
+      :action-label="t('experience.retry')"
+      @action="loadCommands"
+    />
+    <tool-state
+      v-else-if="filterTxt && !visibleCommands.length"
+      state="empty"
+      :message="t('linuxCommand.noResults')"
+    />
+    <p v-else class="reference-tool__count">
+      {{ t('experience.resultCount', { count: visibleCommands.length }) }}
+    </p>
 
-    <ul class="g-mt30">
-      <li
-        v-for="(item, index) in commandList"
-        :key="index"
-        :class="{
-          'z-fold': !item.isOpened,
-          'z-hide': !isCommandVisible(item),
-        }"
-        class="m-command_item g-center g-mb20"
-      >
-        <p class="g-fs14">
-          <strong class="command-name">{{ item.name }}</strong>
-          <span v-if="item.description" class="g-fs12">（{{ item.description }}）</span>
-          <a class="u-link g-fs12 g-ml5" s-cr_blue @click="handleCommandToggle(index)">
-            {{ item.isOpened ? t('common.collapse') : t('linuxCommand.viewDetails') }}
-          </a>
-        </p>
-
+    <ul class="reference-tool__list">
+      <li v-for="item in visibleCommands" :key="item.name" class="m-command_item">
+        <div class="reference-tool__item-header">
+          <span
+            ><strong>{{ item.name }}</strong> {{ item.description }}</span
+          >
+          <span class="reference-tool__actions">
+            <button type="button" @click="copyCommand(item.syntax)">{{ t('common.copy') }}</button>
+            <button
+              type="button"
+              :aria-expanded="item.isOpened"
+              @click="item.isOpened = !item.isOpened"
+            >
+              {{ item.isOpened ? t('common.collapse') : t('linuxCommand.viewDetails') }}
+            </button>
+          </span>
+        </div>
         <figure>
           <pre :class="$style.pre">{{ item.syntax }}</pre>
         </figure>
-
-        <!-- 详细信息区域 -->
-        <div class="j-fold command-details">
-          <!-- 示例 -->
-          <div v-if="item.examples && item.examples.length > 0" class="command-examples g-mt15">
-            <p class="g-fs14 g-mb10">
-              <strong style="color: #27ae60">{{ t('linuxCommand.examples') }}:</strong>
-            </p>
-            <div
-              v-for="(example, exIndex) in item.examples"
-              :key="exIndex"
-              class="example-item g-mb10"
-            >
-              <figure>
-                <pre :class="$style.example">$ {{ example.command }}</pre>
-              </figure>
-              <p class="g-fs12 g-mt5" style="color: #666; margin: 0">
-                {{ example.description }}
-              </p>
+        <div v-if="item.isOpened" class="command-details">
+          <section v-if="item.examples?.length">
+            <h3>{{ t('linuxCommand.examples') }}</h3>
+            <div v-for="example in item.examples" :key="example.command">
+              <pre :class="$style.example">$ {{ example.command }}</pre>
+              <p>{{ example.description }}</p>
             </div>
-          </div>
-
-          <!-- 常用选项 -->
-          <div v-if="item.options && item.options.length > 0" class="command-options g-mt15">
-            <p class="g-fs14 g-mb10">
-              <strong style="color: #8e44ad">{{ t('linuxCommand.commonOptions') }}:</strong>
-            </p>
-            <ul class="options-list">
-              <li v-for="(option, optIndex) in item.options" :key="optIndex" class="g-fs13 g-mb5">
-                <code class="option-flag">{{ option.flag }}</code>
-                <span class="option-desc">{{ option.description }}</span>
+          </section>
+          <section v-if="item.options?.length">
+            <h3>{{ t('linuxCommand.commonOptions') }}</h3>
+            <ul>
+              <li v-for="option in item.options" :key="option.flag">
+                <code>{{ option.flag }}</code> {{ option.description }}
               </li>
             </ul>
-          </div>
+          </section>
         </div>
       </li>
     </ul>
+    <inline-feedback :feedback="feedback" />
   </section>
 </template>
 
-<script lang="ts">
-export default {
-  name: 'LinuxCommand',
-};
-</script>
-
-<script lang="ts" setup>
-import { defineProps, ref, toRefs, onMounted } from 'vue';
-import { langManager } from '@/utils/i18n';
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue';
 import ajax from '@/api';
+import { langManager } from '@/utils/i18n';
+import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
+import ToolState from '@/components/Experience/ToolState.vue';
+import type { LinuxCommand } from '@/types/api';
+import type { InlineFeedbackMessage } from '@/types/experience';
 
-const t = (key: string) => langManager.t(key);
+defineOptions({ name: 'LinuxCommand' });
 
-const handleStop = (e: Event) => {
-  e.stopPropagation();
-};
-
-const props = defineProps({
-  keywords: {
-    type: String,
-    default: '',
-  },
-  back: {
-    type: Function,
-    default: undefined,
-  },
-});
-
-const { keywords } = toRefs(props);
-
-const filterTxt = ref('');
-const commandList = ref<any[]>([]);
-const isLoading = ref(false);
-
-/**
- * Commonly used command shortcuts for quick filtering.
- */
-const quickCommands = ref([
+type CommandItem = LinuxCommand & { isOpened: boolean };
+const props = withDefaults(defineProps<{ keywords?: string }>(), { keywords: '' });
+const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
+const filterTxt = ref(props.keywords);
+const commandList = ref<CommandItem[]>([]);
+const loading = ref(false);
+const loadError = ref('');
+const feedback = ref<InlineFeedbackMessage | null>(null);
+const quickCommands = [
   'ls',
   'cd',
   'pwd',
@@ -131,302 +110,84 @@ const quickCommands = ref([
   'find',
   'grep',
   'chmod',
-  'chown',
   'ps',
-  'kill',
-  'top',
-  'df',
-  'du',
-  'tar',
-  'wget',
   'curl',
   'ssh',
-]);
+];
 
-/**
- * Fetch and normalize the Linux command list.
- */
-const getLinuxCommands = async () => {
-  try {
-    isLoading.value = true;
-    const response = await ajax.getLinuxCommands();
-
-    const list = response?.list || response?.data;
-    if (Array.isArray(list)) {
-      commandList.value = list.map(item => ({
-        ...item,
-        isOpened: false,
-      }));
-    }
-  } catch (error) {
-    console.error('Failed to load Linux commands:', error);
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-/**
- * Placeholder hook for filtering (handled via computed).
- */
-const handleFilter = () => {
-  /**
-   * Filtering is handled in computed logic.
-   */
-};
-
-/**
- * Apply a quick-search keyword.
- * @param command - Command keyword to filter by.
- */
-const handleQuickSearch = (command: string) => {
-  filterTxt.value = command;
-};
-
-/**
- * Toggle the visibility of command details.
- * @param index - Index of the command in the list.
- */
-const handleCommandToggle = (index: number) => {
-  const item = commandList.value[index];
-  if (!item) return;
-  item.isOpened = !item.isOpened;
-};
-
-/**
- * Determine whether a command matches the current filter.
- * @param item - Command record.
- */
-const isCommandVisible = (item: any) => {
-  if (!filterTxt.value.trim()) return true;
-
-  const keyword = filterTxt.value.toLowerCase().trim();
-  const name = (item.name || '').toLowerCase();
-  const description = (item.description || '').toLowerCase();
-  const syntax = (item.syntax || '').toLowerCase();
-  return name.includes(keyword) || description.includes(keyword) || syntax.includes(keyword);
-};
-
-onMounted(() => {
-  getLinuxCommands();
-
-  if (keywords.value) {
-    filterTxt.value = keywords.value;
-  }
+const visibleCommands = computed(() => {
+  const keyword = filterTxt.value.trim().toLowerCase();
+  if (!keyword) return commandList.value;
+  return commandList.value.filter(item =>
+    `${item.name} ${item.description} ${item.syntax}`.toLowerCase().includes(keyword)
+  );
 });
+
+const loadCommands = async () => {
+  loading.value = true;
+  loadError.value = '';
+  try {
+    const response = await ajax.getLinuxCommands();
+    const list = response.list || response.data;
+    commandList.value = Array.isArray(list)
+      ? list.map(item => ({ ...(item as LinuxCommand), isOpened: false }))
+      : [];
+  } catch (error) {
+    loadError.value = (error as Error).message || t('linuxCommand.loadFailed');
+  } finally {
+    loading.value = false;
+  }
+};
+
+const copyCommand = async (syntax: string) => {
+  try {
+    await navigator.clipboard.writeText(syntax);
+    feedback.value = { message: t('experience.copied'), tone: 'success' };
+  } catch (error) {
+    feedback.value = { message: (error as Error).message, tone: 'error' };
+  }
+};
+
+onMounted(loadCommands);
 </script>
 
 <style module>
-.pre {
-  background: #f6f8ff;
-  border: 1px solid #e2e9ff;
-  border-radius: 8px;
-  padding: 12px;
-  margin: 0;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 13px;
-  line-height: 1.4;
-  color: #2b3a55;
-  overflow-x: auto;
-}
-
+.pre,
 .example {
-  background: #1f2a44;
-  color: #ecf0f1;
+  padding: 10px;
+  overflow: auto;
+  background: #f6f8ff;
   border-radius: 8px;
-  padding: 10px 12px;
-  margin: 0;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 13px;
-  line-height: 1.4;
-  overflow-x: auto;
+}
+.example {
+  color: #fff;
+  background: #1f2a44;
 }
 </style>
 
 <style scoped>
 .m-linux {
-  width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 22px 26px 18px;
-  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
-  border: 1px solid #e2e9ff;
-  border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
-  max-height: 400px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  max-height: 500px;
+  overflow: auto;
 }
-
-.m-filter_ctn {
-  margin-bottom: 18px;
-}
-
-.u-input {
-  width: 100%;
-  max-width: 400px;
-  padding: 10px 14px;
-  border: 1px solid #dbe3f9;
-  border-radius: 10px;
-  font-size: 14px;
-  color: #2b3a55;
-  background: #fff;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.u-input:focus {
-  outline: none;
-  border-color: #2969f7;
-  box-shadow: 0 0 0 3px rgba(41, 105, 247, 0.18);
-}
-
 .m-quick_commands {
-  text-align: center;
-  padding: 16px 0;
-  border-bottom: 1px solid #e2e9ff;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 10px 0;
 }
-
 .u-btn_quick {
-  background: #fff;
+  padding: 4px 8px;
   border: 1px solid #dbe3f9;
   border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 12px;
-  color: #2b3a55;
-  cursor: pointer;
-  box-shadow: 0 6px 14px rgba(28, 63, 124, 0.08);
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.u-btn_quick:hover {
-  background: linear-gradient(135deg, #2969f7 0%, #4d7fff 100%);
-  color: #fff;
-  border-color: #2c66f7;
-  transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(41, 105, 247, 0.2);
-}
-
-.m-command_item {
   background: #fff;
+}
+.m-command_item {
+  padding: 12px;
   border: 1px solid #e4e9f7;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 8px 18px rgba(28, 63, 124, 0.08);
-  transition:
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+  border-radius: 10px;
 }
-
-.m-command_item:hover {
-  box-shadow: 0 12px 22px rgba(28, 63, 124, 0.12);
-  transform: translateY(-1px);
-}
-
-.command-name {
-  color: #1f2a44;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.u-link {
-  color: #2969f7;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.u-link:hover {
-  text-decoration: underline;
-}
-
-.j-fold {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-}
-
-.m-command_item:not(.z-fold) .j-fold {
-  max-height: 1000px;
-}
-
-.z-hide {
-  display: none;
-}
-
-.command-examples {
-  border-left: 3px solid #2fb36b;
-  padding-left: 15px;
-}
-
-.example-item {
-  margin-bottom: 15px;
-}
-
-.command-options {
-  border-left: 3px solid #5d6bff;
-  padding-left: 15px;
-}
-
-.options-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.options-list li {
-  padding: 5px 0;
-  border-bottom: 1px solid #f0f4ff;
-}
-
-.option-flag {
-  background: #f6f8ff;
-  color: #2b3a55;
-  border: 1px solid #dbe3f9;
-  padding: 2px 6px;
-  border-radius: 6px;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 12px;
-  margin-right: 8px;
-}
-
-.option-desc {
-  color: #4a5a78;
-}
-
-.m-linux_back {
-  color: #2969f7;
-  cursor: pointer;
-  padding: 12px 0 4px;
-  border-radius: 8px;
-  position: sticky;
-  bottom: 0;
-  background: linear-gradient(180deg, rgba(245, 248, 255, 0) 0%, #f5f8ff 60%);
-  transition: color 0.2s ease;
-}
-
-.m-linux_back:hover {
-  color: #1f55d1;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .m-linux {
-    padding: 15px;
-  }
-
-  .m-command_item {
-    padding: 15px;
-  }
-
-  .u-btn_quick {
-    margin: 2px;
-    padding: 4px 8px;
-    font-size: 11px;
-  }
+.command-details h3 {
+  font-size: 13px;
 }
 </style>

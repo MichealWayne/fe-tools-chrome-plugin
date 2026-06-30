@@ -13,6 +13,9 @@
       </button>
       <button
         class="fullscreen-btn"
+        :aria-label="
+          isFullscreen ? t('postman.actions.exitFullscreen') : t('postman.actions.fullscreen')
+        "
         :title="
           isFullscreen ? t('postman.actions.exitFullscreen') : t('postman.actions.fullscreen')
         "
@@ -126,6 +129,9 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const emit = defineEmits<{
+  feedback: [message: string, tone: 'success' | 'error'];
+}>();
 
 const activeTab = ref('body');
 const isFormatting = ref(false);
@@ -366,11 +372,9 @@ const formatSize = (bytes?: number) => {
 const copyResponse = async () => {
   try {
     await navigator.clipboard.writeText(responseText.value);
-    /**
-     * Placeholder for a future success toast.
-     */
+    emit('feedback', t('postman.feedback.responseCopied'), 'success');
   } catch (error) {
-    console.error('复制失败:', error);
+    emit('feedback', t('postman.feedback.copyFailed'), 'error');
   }
 };
 

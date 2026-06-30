@@ -22,18 +22,30 @@
           class="json-converter__textarea"
           :placeholder="t('jsonCtn.inputPlaceholder')"
         />
-        <div v-if="error" class="json-converter__error">
-          {{ error }}
-        </div>
+        <inline-feedback :feedback="error ? { message: error, tone: 'validation' } : null" />
       </div>
 
       <div class="json-converter__divider">
         <div class="json-converter__action-icons">
           <a-tooltip :title="t('jsonCtn.actions.convert')">
-            <span class="action-icon to-json" @click="handleChange()">→</span>
+            <button
+              type="button"
+              class="action-icon to-json"
+              :aria-label="t('jsonCtn.actions.convert')"
+              @click="handleChange()"
+            >
+              →
+            </button>
           </a-tooltip>
           <a-tooltip :title="t('jsonCtn.actions.reverse')">
-            <span class="action-icon to-js" @click="handleReverse()">←</span>
+            <button
+              type="button"
+              class="action-icon to-js"
+              :aria-label="t('jsonCtn.actions.reverse')"
+              @click="handleReverse()"
+            >
+              ←
+            </button>
           </a-tooltip>
         </div>
       </div>
@@ -95,13 +107,9 @@
       </ul>
     </div>
 
-    <a-modal
-      v-model:visible="successVisible"
-      :title="t('jsonCtn.modal.successTitle')"
-      @ok="successVisible = false"
-    >
-      <p>{{ successMessage }}</p>
-    </a-modal>
+    <inline-feedback
+      :feedback="successVisible ? { message: successMessage, tone: 'success' } : null"
+    />
   </section>
 </template>
 
@@ -111,6 +119,7 @@ import { langManager } from '@/utils/i18n';
 
 const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 import DOMPurify from 'dompurify';
+import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 
 defineOptions({
   name: 'JsonCtn',

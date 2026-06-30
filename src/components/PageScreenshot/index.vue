@@ -4,7 +4,19 @@
       <h2 class="g-fs18">{{ t('pageScreenshot.title') }}</h2>
     </header>
 
-    <p v-if="errorMessage" class="m-screenshot_error g-fs12">{{ errorMessage }}</p>
+    <tool-state
+      v-if="errorMessage"
+      state="error"
+      :message="errorMessage"
+      :action-label="t('experience.retry')"
+      @action="retryLastAction"
+    />
+    <tool-state
+      v-else-if="isCapturing || isSelecting"
+      state="loading"
+      :message="isSelecting ? t('pageScreenshot.selecting') : t('pageScreenshot.capturing')"
+    />
+    <inline-feedback :feedback="feedback" />
 
     <div v-if="!previewUrl" class="m-screenshot_actions m-screenshot_actions--primary">
       <button
@@ -78,8 +90,11 @@ export default {
 </script>
 
 <script lang="ts" setup>
-import { defineProps, ref } from 'vue';
+import { ref } from 'vue';
 import { langManager } from '@/utils/i18n';
+import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
+import ToolState from '@/components/Experience/ToolState.vue';
+import type { InlineFeedbackMessage } from '@/types/experience';
 
 const t = (key: string) => langManager.t(key);
 
@@ -94,6 +109,8 @@ const previewUrl = ref('');
 const isCapturing = ref(false);
 const isSelecting = ref(false);
 const errorMessage = ref('');
+const feedback = ref<InlineFeedbackMessage | null>(null);
+const lastAction = ref<'capture' | 'select'>('capture');
 
 const handleStop = (e: Event) => {
   e.stopPropagation();
@@ -358,9 +375,15 @@ const captureFullPage = async (cropRect?: CropRect) => {
   }
 };
 
-const startCapture = () => captureFullPage();
+const startCapture = () => {
+  lastAction.value = 'capture';
+  feedback.value = null;
+  return captureFullPage();
+};
 
 const startNodeSelect = async () => {
+  lastAction.value = 'select';
+  feedback.value = null;
   errorMessage.value = '';
   previewUrl.value = '';
   isSelecting.value = true;
@@ -404,6 +427,12 @@ const startNodeSelect = async () => {
 const resetCapture = () => {
   previewUrl.value = '';
   errorMessage.value = '';
+  feedback.value = null;
+};
+
+const retryLastAction = () => {
+  errorMessage.value = '';
+  return lastAction.value === 'select' ? startNodeSelect() : startCapture();
 };
 
 const saveScreenshot = () => {
@@ -421,6 +450,7 @@ const saveScreenshot = () => {
       conflictAction: 'overwrite',
       filename,
     });
+    feedback.value = { message: t('pageScreenshot.saveSuccess'), tone: 'success' };
   } catch (error) {
     errorMessage.value = (error as Error)?.message || t('pageScreenshot.errorCapture');
   }

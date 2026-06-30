@@ -4,23 +4,26 @@
       <h1>{{ t('postman.title') }}</h1>
       <div class="header-actions">
         <button class="save-btn" @click="saveRequest">
-          <i class="fas fa-save"></i> {{ t('postman.saveRequest') }}
+          <i class="fas fa-save" aria-hidden="true"></i> {{ t('postman.saveRequest') }}
         </button>
         <button class="load-btn" @click="loadRequest">
-          <i class="fas fa-folder-open"></i> {{ t('postman.loadRequest') }}
+          <i class="fas fa-folder-open" aria-hidden="true"></i> {{ t('postman.loadRequest') }}
         </button>
       </div>
     </div>
+    <inline-feedback :feedback="feedback" />
 
     <!-- 环境变量组件 -->
     <EnvironmentVariables
       ref="envRef"
       v-model:environments="environments"
       v-model:current-environment="currentEnvironment"
+      @feedback="setFeedback"
     />
 
     <!-- 请求配置面板 -->
     <RequestPanel
+      ref="requestPanelRef"
       :request="request"
       :loading="loading"
       @send-request="sendRequest"
@@ -34,6 +37,7 @@
       :error="error"
       :response-time="responseTime"
       :response-size="responseSize"
+      @feedback="setFeedback"
     />
 
     <!-- 请求历史 -->
@@ -53,7 +57,7 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, nextTick } from 'vue';
 import { langManager } from '@/utils/i18n';
 
 import axios, { AxiosResponse, Method } from 'axios';
@@ -69,12 +73,15 @@ import type {
   PostmanHistoryItem,
   PostmanEnvironment,
 } from './types';
+import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
+import type { InlineFeedbackMessage } from '@/types/experience';
 
 const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 
 type EnvRef = {
   replaceVariables: (value: string) => string;
 };
+type RequestPanelRef = { focusUrl: () => void };
 
 /**
  * Reactive state for request lifecycle and UI panels.
@@ -85,6 +92,12 @@ const response = ref<PostmanResponseData | null>(null);
 const responseTime = ref(0);
 const responseSize = ref(0);
 const envRef = ref<EnvRef | null>(null);
+const requestPanelRef = ref<RequestPanelRef | null>(null);
+const feedback = ref<InlineFeedbackMessage | null>(null);
+
+const setFeedback = (message: string, tone: 'success' | 'error') => {
+  feedback.value = { message, tone };
+};
 
 /**
  * Active request configuration edited by the user.
@@ -123,8 +136,12 @@ onMounted(() => {
  * Send the configured request and store the response.
  */
 const sendRequest = async () => {
+  if (loading.value) return;
   if (!request.url.trim()) {
     error.value = t('postman.request.missingUrl');
+    setFeedback(error.value, 'error');
+    await nextTick();
+    requestPanelRef.value?.focusUrl();
     return;
   }
 
@@ -186,6 +203,7 @@ const sendRequest = async () => {
       status: axiosResponse.status,
       responseTime: responseTime.value,
     });
+    setFeedback(t('postman.feedback.requestComplete'), 'success');
   } catch (err) {
     const endTime = Date.now();
     responseTime.value = endTime - startTime;
@@ -219,6 +237,7 @@ const sendRequest = async () => {
     } else {
       error.value = t('postman.request.unknownError', { message: (err as Error).message });
     }
+    if (error.value) setFeedback(error.value, 'error');
   } finally {
     loading.value = false;
   }
@@ -265,16 +284,19 @@ const loadHistoryItem = (item: PostmanHistoryItem) => {
       request.body = { type: 'json', json: JSON.stringify(item.body, null, 2) };
     }
   }
+  setFeedback(t('postman.feedback.historyLoaded'), 'success');
 };
 
 const clearHistory = () => {
   requestHistory.value = [];
   saveToStorage();
+  setFeedback(t('postman.feedback.historyCleared'), 'success');
 };
 
 const removeHistoryItem = (index: number) => {
   requestHistory.value.splice(index, 1);
   saveToStorage();
+  setFeedback(t('postman.feedback.historyRemoved'), 'success');
 };
 
 /**
@@ -296,6 +318,7 @@ const saveRequest = () => {
   link.click();
 
   URL.revokeObjectURL(url);
+  setFeedback(t('postman.feedback.requestSaved'), 'success');
 };
 
 /**
@@ -319,8 +342,10 @@ const loadRequest = () => {
          * Apply imported request configuration to the editor.
          */
         Object.assign(request, requestData);
+        setFeedback(t('postman.feedback.requestLoaded'), 'success');
+        nextTick(() => requestPanelRef.value?.focusUrl());
       } catch (error) {
-        alert(t('postman.request.loadFailed'));
+        setFeedback(t('postman.request.loadFailed'), 'error');
       }
     };
     reader.readAsText(file);

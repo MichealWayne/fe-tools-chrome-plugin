@@ -35,4 +35,10 @@ export type ComponentDataTypes = {
   currentLang: string;
   enablePinyinSearch: boolean;
   languageChangeHandler?: (lang: string) => void;
+  feToolsLoading: boolean;
+  feToolsError: string;
+  activeResultIndex: number;
+  resultsDismissed: boolean;
+  lastToolTrigger?: HTMLElement | null;
+  settingsTrigger?: HTMLElement | null;
 };
