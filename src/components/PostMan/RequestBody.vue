@@ -2,7 +2,7 @@
   <div class="request-body">
     <div class="section-header">
       <h3>{{ t('postman.body.title') }}</h3>
-      <select v-model="bodyType" @change="onBodyTypeChange" class="body-type-select">
+      <select v-model="bodyType" class="body-type-select" @change="onBodyTypeChange">
         <option value="none">{{ t('postman.body.types.none') }}</option>
         <option value="json">{{ t('postman.body.types.json') }}</option>
         <option value="form-data">{{ t('postman.body.types.formData') }}</option>
@@ -18,7 +18,10 @@
         class="json-textarea"
         @input="updateBody"
       ></textarea>
-      <button @click="formatJson" class="format-btn">{{ t('postman.actions.formatJson') }}</button>
+      <button class="format-btn" @click="formatJson">{{ t('postman.actions.formatJson') }}</button>
+      <inline-feedback
+        :feedback="formatError ? { message: formatError, tone: 'validation' } : null"
+      />
     </div>
 
     <div v-else-if="bodyType === 'form-data'" class="form-data-body">
@@ -35,11 +38,15 @@
           class="form-input"
           @input="updateBody"
         />
-        <button @click="removeFormItem(index)" class="remove-btn">
+        <button
+          class="remove-btn"
+          :aria-label="t('postman.actions.remove')"
+          @click="removeFormItem(index)"
+        >
           <i class="fas fa-trash"></i>
         </button>
       </div>
-      <button @click="addFormItem" class="add-btn">
+      <button class="add-btn" @click="addFormItem">
         <i class="fas fa-plus"></i> {{ t('postman.actions.addField') }}
       </button>
     </div>
@@ -58,11 +65,15 @@
           class="form-input"
           @input="updateBody"
         />
-        <button @click="removeUrlencodedItem(index)" class="remove-btn">
+        <button
+          class="remove-btn"
+          :aria-label="t('postman.actions.remove')"
+          @click="removeUrlencodedItem(index)"
+        >
           <i class="fas fa-trash"></i>
         </button>
       </div>
-      <button @click="addUrlencodedItem" class="add-btn">
+      <button class="add-btn" @click="addUrlencodedItem">
         <i class="fas fa-plus"></i> {{ t('postman.actions.addField') }}
       </button>
     </div>
@@ -88,6 +99,7 @@ export default {
 import { ref, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
 import type { FormDataEntry, RequestBodyData } from './types';
+import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 
 const t = (key: string) => langManager.t(key);
 
@@ -104,6 +116,7 @@ const jsonBody = ref(props.modelValue.json || '');
 const formData = ref<FormDataEntry[]>(props.modelValue.formData || []);
 const urlencodedData = ref<FormDataEntry[]>(props.modelValue.urlencoded || []);
 const rawBody = ref(props.modelValue.raw || '');
+const formatError = ref('');
 
 watch(
   () => props.modelValue,
@@ -133,12 +146,13 @@ const updateBody = () => {
 };
 
 const formatJson = () => {
+  formatError.value = '';
   try {
     const parsed = JSON.parse(jsonBody.value);
     jsonBody.value = JSON.stringify(parsed, null, 2);
     updateBody();
   } catch (error) {
-    alert(t('postman.body.jsonFormatError'));
+    formatError.value = t('postman.body.jsonFormatError');
   }
 };
 

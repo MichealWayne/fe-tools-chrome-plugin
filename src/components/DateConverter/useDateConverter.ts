@@ -107,14 +107,14 @@ export const useDateConverter = (
       const timestamp =
         timestampUnit.value === 'seconds' ? inputTimestamp.value * 1000 : inputTimestamp.value;
 
-      currentDate.value = dayjs(timestamp);
-
-      inputIso.value = currentDate.value.toISOString();
-      inputLocalString.value = currentDate.value.format('YYYY-MM-DDTHH:mm');
-      inputCustom.value = currentDate.value.format(customFormat.value);
+      const candidate = dayjs(timestamp);
+      if (!candidate.isValid()) throw new Error(t('dateConverter.messages.invalidDate'));
+      currentDate.value = candidate;
+      inputIso.value = candidate.toISOString();
+      inputLocalString.value = candidate.format('YYYY-MM-DDTHH:mm');
+      inputCustom.value = candidate.format(customFormat.value);
     } catch (e) {
       error.value = t('dateConverter.messages.convertFailed', { message: (e as Error).message });
-      currentDate.value = null;
     }
   };
 
@@ -127,18 +127,17 @@ export const useDateConverter = (
 
     try {
       const sanitizedInput = DOMPurify.sanitize(inputIso.value);
-      currentDate.value = dayjs(sanitizedInput);
+      const candidate = dayjs(sanitizedInput);
 
-      if (!currentDate.value.isValid()) {
+      if (!candidate.isValid()) {
         throw new Error(t('dateConverter.messages.invalidIso'));
       }
-
-      inputTimestamp.value = Math.floor(currentDate.value.valueOf() / 1000);
-      inputLocalString.value = currentDate.value.format('YYYY-MM-DDTHH:mm');
-      inputCustom.value = currentDate.value.format(customFormat.value);
+      currentDate.value = candidate;
+      inputTimestamp.value = Math.floor(candidate.valueOf() / 1000);
+      inputLocalString.value = candidate.format('YYYY-MM-DDTHH:mm');
+      inputCustom.value = candidate.format(customFormat.value);
     } catch (e) {
       error.value = t('dateConverter.messages.convertFailed', { message: (e as Error).message });
-      currentDate.value = null;
     }
   };
 
@@ -150,18 +149,17 @@ export const useDateConverter = (
     }
 
     try {
-      currentDate.value = dayjs(inputLocalString.value);
+      const candidate = dayjs(inputLocalString.value);
 
-      if (!currentDate.value.isValid()) {
+      if (!candidate.isValid()) {
         throw new Error(t('dateConverter.messages.invalidDate'));
       }
-
-      inputTimestamp.value = Math.floor(currentDate.value.valueOf() / 1000);
-      inputIso.value = currentDate.value.toISOString();
-      inputCustom.value = currentDate.value.format(customFormat.value);
+      currentDate.value = candidate;
+      inputTimestamp.value = Math.floor(candidate.valueOf() / 1000);
+      inputIso.value = candidate.toISOString();
+      inputCustom.value = candidate.format(customFormat.value);
     } catch (e) {
       error.value = t('dateConverter.messages.convertFailed', { message: (e as Error).message });
-      currentDate.value = null;
     }
   };
 
@@ -176,18 +174,17 @@ export const useDateConverter = (
       const sanitizedInput = DOMPurify.sanitize(inputCustom.value);
       const sanitizedFormat = DOMPurify.sanitize(customFormat.value);
 
-      currentDate.value = dayjs(sanitizedInput, sanitizedFormat);
+      const candidate = dayjs(sanitizedInput, sanitizedFormat);
 
-      if (!currentDate.value.isValid()) {
+      if (!candidate.isValid()) {
         throw new Error(t('dateConverter.messages.invalidDate'));
       }
-
-      inputTimestamp.value = Math.floor(currentDate.value.valueOf() / 1000);
-      inputIso.value = currentDate.value.toISOString();
-      inputLocalString.value = currentDate.value.format('YYYY-MM-DDTHH:mm');
+      currentDate.value = candidate;
+      inputTimestamp.value = Math.floor(candidate.valueOf() / 1000);
+      inputIso.value = candidate.toISOString();
+      inputLocalString.value = candidate.format('YYYY-MM-DDTHH:mm');
     } catch (e) {
       error.value = t('dateConverter.messages.convertFailed', { message: (e as Error).message });
-      currentDate.value = null;
     }
   };
 
@@ -211,7 +208,7 @@ export const useDateConverter = (
     }
   };
 
-  const copyToClipboard = () => {
+  const copyToClipboard = async () => {
     if (!currentDate.value) return;
 
     const textToCopy = `${t('dateConverter.resultLabels.timestampSeconds')} ${outputTimestampSeconds.value}
@@ -222,7 +219,7 @@ ${t('dateConverter.resultLabels.utc')} ${outputUtc.value}
 ${t('dateConverter.resultLabels.relative')} ${outputRelative.value}`;
 
     try {
-      navigator.clipboard.writeText(textToCopy);
+      await navigator.clipboard.writeText(textToCopy);
       showSuccess(t('dateConverter.messages.copySuccess'));
     } catch (e) {
       error.value = t('dateConverter.messages.copyFailed', { message: (e as Error).message });

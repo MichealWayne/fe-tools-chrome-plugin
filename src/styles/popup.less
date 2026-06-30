@@ -217,8 +217,21 @@
 }
 
 .m-ctn {
+  box-sizing: border-box;
   width: 500px;
   height: 450px;
+}
+
+.m-ctn--scrollable {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.m-ctn--home {
+  overflow: hidden;
+  scrollbar-gutter: auto;
 }
 
 .m-ctn .m-s_input {

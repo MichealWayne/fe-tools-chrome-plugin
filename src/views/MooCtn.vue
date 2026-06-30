@@ -1,39 +1,43 @@
 <template>
-  <section class="m-moo">
-    <h1 :class="{ 'z-fold': logoFold }" class="f-tc j-logo_ctn f-ovhidden">
-      <img
-        class="m-logo u-link"
-        src="https://blog.michealwayne.cn/Moo-CSS/docs/logo.png"
-        alt="feTools icon"
-        @click="toMooHome"
-      />
-    </h1>
+  <section class="reference-tool m-moo">
     <section>
-      <p class="u-c-middle g-mt50">
+      <label class="reference-tool__search">
+        <span class="reference-tool__label">{{ t('mooCss.searchLabel') }}</span>
         <input
-          id="search"
           v-model="keywords"
-          class="m-s_input g-fs16 u-w300"
+          class="m-s_input g-fs16"
           :placeholder="t('mooCss.searchPlaceholder')"
           autocomplete="off"
-          type="text"
-          autofocus
-          @focus="handleInputFocus"
-          @blur="handleInputBlur"
+          type="search"
           @input="handleInputInput"
         />
-        <button class="u-btn_il j-search g-fs18 g-ml10" s-color="blue" @click="setSearchResult">
-          {{ t('common.search') }}
-        </button>
-      </p>
+      </label>
     </section>
-
-    <ul class="m-searchList u-w420 j-searchList g-center">
-      <li v-for="(item, index) in resultList" :key="index" @click="handleResultClick(item)">
-        <em v-if="item.label" class="u-icon_il icon-label" :class="getResultLabel(item.label)">{{
-          item.label
-        }}</em>
-        <span v-html="getResultName(item)"></span>
+    <tool-state v-if="loading" state="loading" :message="t('experience.loading')" />
+    <tool-state
+      v-else-if="loadError"
+      state="error"
+      :message="loadError"
+      :action-label="t('experience.retry')"
+      @action="loadMooCss"
+    />
+    <tool-state
+      v-else-if="keywords.length > 1 && !resultList.length"
+      state="empty"
+      :message="t('experience.noResults')"
+    />
+    <p v-else class="reference-tool__count">
+      {{ t('experience.resultCount', { count: resultList.length }) }}
+    </p>
+    <ul class="reference-tool__list">
+      <li v-for="(item, index) in resultList" :key="`${item.link}-${index}`">
+        <button type="button" class="reference-tool__result" @click="handleResultClick(item)">
+          <em v-if="item.label" class="u-icon_il icon-label" :class="getResultLabel(item.label)">{{
+            item.label
+          }}</em>
+          <span v-html="getResultName(item)"></span>
+          <small>{{ t('experience.external') }}</small>
+        </button>
       </li>
     </ul>
   </section>
@@ -47,6 +51,7 @@ import { AnyFunc } from '@/types';
 import { jumpAction } from '@/utils/chrome';
 import ajax from '@/api';
 import { sanitizeInlineMarkup } from '@/utils/sanitize';
+import ToolState from '@/components/Experience/ToolState.vue';
 
 type MooSearchResult = {
   label: string;
@@ -84,6 +89,8 @@ type MooClassItem = {
 export default defineComponent({
   name: 'MooCtn',
 
+  components: { ToolState },
+
   props: {
     back: {
       type: Function as AnyFunc,
@@ -99,6 +106,8 @@ export default defineComponent({
     mooColorList: MooColorItem[];
     mooFuncList: MooFuncItem[];
     mooClassList: MooClassItem[];
+    loading: boolean;
+    loadError: string;
   } {
     return {
       keywords: '',
@@ -128,22 +137,33 @@ export default defineComponent({
        * MooCSS class dictionary list.
        */
       mooClassList: [],
+      loading: false,
+      loadError: '',
     };
   },
 
   mounted() {
-    ajax.getMooCSS().then((data: { list?: unknown }) => {
-      if (data?.list) {
-        this.handleList(data.list);
-      }
-    });
+    this.loadMooCss();
   },
   methods: {
     /**
      * Translate a key into the current language.
      */
-    t(key: string) {
-      return langManager.t(key);
+    t(key: string, params?: Record<string, string | number>) {
+      return langManager.t(key, params);
+    },
+
+    async loadMooCss() {
+      this.loading = true;
+      this.loadError = '';
+      try {
+        const data = await ajax.getMooCSS();
+        if (data?.list) this.handleList(data.list);
+      } catch (error) {
+        this.loadError = (error as Error).message || this.t('mooCss.loadFailed');
+      } finally {
+        this.loading = false;
+      }
     },
 
     toMooHome() {

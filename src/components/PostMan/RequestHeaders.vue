@@ -23,6 +23,7 @@
         />
         <button
           class="remove-btn"
+          :aria-label="t('postman.actions.remove')"
           :title="t('postman.actions.remove')"
           @click="removeHeader(index)"
         >

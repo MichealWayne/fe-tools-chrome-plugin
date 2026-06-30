@@ -6,10 +6,22 @@
         <button class="clear-btn" @click="clearHistory">
           <i class="fas fa-trash"></i> {{ t('postman.actions.clear') }}
         </button>
-        <button class="toggle-btn" @click="toggleHistory">
+        <button
+          class="toggle-btn"
+          :aria-label="isExpanded ? t('common.collapse') : t('linuxCommand.viewDetails')"
+          @click="toggleHistory"
+        >
+          <span class="z-hide">{{
+            isExpanded ? t('common.collapse') : t('linuxCommand.viewDetails')
+          }}</span>
           <i :class="['fas', isExpanded ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
         </button>
       </div>
+    </div>
+    <div v-if="confirmingClear" class="postman-confirm" role="alertdialog">
+      <span>{{ t('postman.history.clearConfirm') }}</span>
+      <button type="button" @click="confirmClearHistory">{{ t('experience.confirm') }}</button>
+      <button type="button" @click="confirmingClear = false">{{ t('experience.cancel') }}</button>
     </div>
 
     <div v-if="isExpanded" class="history-content">
@@ -19,21 +31,21 @@
       </div>
 
       <div v-else class="history-list">
-        <div
-          v-for="(item, index) in history"
-          :key="index"
-          class="history-item"
-          @click="selectHistoryItem(item)"
-        >
-          <div class="history-method" :class="item.method.toLowerCase()">
-            {{ item.method }}
-          </div>
-          <div class="history-url">{{ item.url }}</div>
-          <div class="history-time">{{ formatTime(item.timestamp) }}</div>
-          <div class="history-status" :class="getStatusClass(item.status)">
-            {{ item.status }}
-          </div>
-          <button class="remove-btn" @click.stop="removeHistoryItem(index)">
+        <div v-for="(item, index) in history" :key="index" class="history-item">
+          <button type="button" class="history-select" @click="selectHistoryItem(item)">
+            <span class="history-method" :class="item.method.toLowerCase()">{{ item.method }}</span>
+            <span class="history-url">{{ item.url }}</span>
+            <span class="history-time">{{ formatTime(item.timestamp) }}</span>
+            <span class="history-status" :class="getStatusClass(item.status)">{{
+              item.status
+            }}</span>
+          </button>
+          <button
+            class="remove-btn"
+            type="button"
+            :aria-label="t('postman.actions.remove')"
+            @click="removeHistoryItem(index)"
+          >
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -66,6 +78,7 @@ const emit = defineEmits<{
 }>();
 
 const isExpanded = ref(true);
+const confirmingClear = ref(false);
 
 const toggleHistory = () => {
   isExpanded.value = !isExpanded.value;
@@ -76,9 +89,12 @@ const selectHistoryItem = (item: PostmanHistoryItem) => {
 };
 
 const clearHistory = () => {
-  if (confirm(t('postman.history.clearConfirm'))) {
-    emit('clear-history');
-  }
+  confirmingClear.value = true;
+};
+
+const confirmClearHistory = () => {
+  emit('clear-history');
+  confirmingClear.value = false;
 };
 
 const removeHistoryItem = (index: number) => {
@@ -168,6 +184,14 @@ const getStatusClass = (status?: number) => {
 .history-content {
   max-height: 300px;
   overflow-y: auto;
+}
+
+.history-select {
+  display: contents;
+  color: inherit;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
 }
 
 .no-history {

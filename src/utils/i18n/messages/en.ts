@@ -6,6 +6,29 @@ export default {
   search: {
     qrCodeResult: 'Generate QR Code',
     searchIn: 'Search in {site}: <strong>{keywords}</strong>',
+    resultsLabel: 'Search results',
+  },
+  experience: {
+    loading: 'Loading…',
+    empty: 'Nothing here yet',
+    noResults: 'No matching results',
+    retry: 'Retry',
+    copied: 'Copied',
+    saved: 'Saved',
+    downloaded: 'Downloaded',
+    required: 'This field is required',
+    invalid: 'Enter a valid value',
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    external: 'External website',
+    standalone: 'Standalone page',
+    resultCount: '{count} items',
+    categories: {
+      transform: 'Convert & Generate',
+      inspect: 'Page & Media',
+      reference: 'Search & Reference',
+      network: 'Network & API',
+    },
   },
   settings: {
     entryLabel: 'Settings',
@@ -13,6 +36,7 @@ export default {
     title: 'Settings',
     close: 'Close settings',
     language: 'Language',
+    languageHelp: 'Visible copy updates immediately after switching',
     pinyinSearch: 'Pinyin search',
     pinyinSearchHelp: 'Enable pinyin or initials for Chinese content',
   },
@@ -23,6 +47,7 @@ export default {
   title: 'FE Toolbox',
   language: 'Language',
   searchPlaceholder: 'Enter keywords or QR code generation address',
+  toolsLabel: 'Tool categories',
 
   // Tool modules
   tools: {
@@ -72,6 +97,14 @@ export default {
     clear: 'Clear',
     rightClickTip: 'Right click to save QR code image',
     saveImageTip: '*Right click on image to save QR code PNG image',
+    sourceLabel: 'QR code content',
+    previewAlt: 'Generated QR code preview',
+    emptyPreview: 'Enter content to generate a QR code preview',
+    messages: {
+      required: 'Enter QR code content',
+      generated: 'QR code generated',
+      generateFailed: 'Failed to generate QR code',
+    },
   },
 
   // Image Compressor
@@ -80,9 +113,18 @@ export default {
     formatTip: '(*.jpg/*.png/*.gif formats)',
     resetTip: 'Click to reset image',
     compressRatio: 'Image compression ratio (0~1, default 1)',
+    ratioLabel: 'Compression ratio',
+    compress: 'Compress',
+    download: 'Download image',
+    processing: 'Processing image…',
+    previewAlt: 'Compressed image preview',
+    base64Label: 'Compressed Base64 result',
     backHome: 'Back to Home',
     messages: {
       convertFailed: 'Conversion failed. Please try again.',
+      invalidRate: 'The compression ratio must be greater than 0 and no more than 1',
+      invalidFile: 'Select a valid image file',
+      ready: 'Image processing complete',
     },
   },
 
@@ -102,6 +144,7 @@ export default {
     errorCapture: 'Capture failed, please retry',
     errorUnavailable: 'Capture is unavailable on this page',
     errorSelection: 'Failed to select element',
+    saveSuccess: 'Screenshot submitted for saving',
   },
 
   // Tech stack detection
@@ -219,6 +262,7 @@ export default {
     },
     messages: {
       inputRequired: 'Please enter SVG code',
+      clearConfirm: 'Clear the current SVG input and optimized result?',
       parseError: 'SVG parse error: {message}',
       optimizeSuccess: 'SVG optimized successfully!',
       optimizeFailed: 'Optimization failed: {message}',
@@ -318,24 +362,35 @@ export default {
     remRatioPlaceholder: 'rem conversion ratio, default 1rem=75px',
     keepDigits: 'decimal places',
     keepDigitsPlaceholder: 'keep decimal places, default 2',
+    messages: {
+      invalidValue: 'Enter a valid number',
+      invalidRate: 'The rem ratio must be greater than 0',
+      invalidPrecision: 'Decimal places must be an integer from 0 to 10',
+    },
   },
 
   // Regex Tools
   regex: {
+    filterLabel: 'Filter regular expressions',
     filter: 'Filter',
     test: 'Test',
     inputTest: 'Enter test string',
     result: 'Result',
+    loadFailed: 'Failed to load regular expressions',
   },
 
   // Moo CSS
   mooCss: {
+    searchLabel: 'Search CSS and Moo CSS dictionaries',
     searchPlaceholder: 'Enter module or style property',
+    loadFailed: 'Failed to load the Moo CSS dictionary',
   },
 
   // Utils
   utils: {
+    searchLabel: 'Search utility functions',
     searchPlaceholder: 'Enter method name or module name',
+    loadFailed: 'Failed to load utility functions',
   },
 
   // Color Pass
@@ -349,7 +404,14 @@ export default {
     },
     hexPlaceholder: 'HEX color value',
     rgbPlaceholder: 'RGB color value',
+    hsbPlaceholder: 'HSB value, e.g. 0,100%,100%',
     hslPlaceholder: 'HSL color value',
+    messages: {
+      invalidHex: 'HEX must contain 6 hexadecimal characters',
+      invalidRgb: 'RGB must contain three integers from 0 to 255',
+      invalidHsb: 'HSB must contain valid hue, saturation, and brightness values',
+      invalidHsl: 'HSL must contain valid hue, saturation, and lightness values',
+    },
     backHome: 'Back to Home',
     remarks: {
       title: 'Note:',
@@ -364,6 +426,8 @@ export default {
   linuxCommand: {
     title: 'Linux Command Reference Tool',
     inputPlaceholder: 'Enter Linux command name',
+    searchLabel: 'Search Linux commands',
+    loadFailed: 'Failed to load Linux commands',
     syntax: 'Syntax',
     examples: 'Examples',
     commonOptions: 'Common Options',
@@ -376,6 +440,21 @@ export default {
   // PostMan
   postman: {
     title: 'API Testing Tool',
+    feedback: {
+      requestPending: 'A request is already in progress',
+      requestComplete: 'Request complete',
+      requestSaved: 'Request configuration saved',
+      requestLoaded: 'Request configuration loaded',
+      responseCopied: 'Response copied',
+      copyFailed: 'Copy failed; copy the response manually',
+      historyLoaded: 'History request loaded',
+      historyCleared: 'Request history cleared',
+      historyRemoved: 'History item removed',
+      environmentSaved: 'Environment created',
+      environmentDeleted: 'Environment deleted',
+      environmentExported: 'Environment exported',
+      environmentImported: 'Environment imported',
+    },
     urlPlaceholder: 'Enter API URL',
     saveRequest: 'Save Request',
     loadRequest: 'Load Request',

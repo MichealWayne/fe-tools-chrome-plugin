@@ -13,15 +13,24 @@
       </select>
 
       <input
+        ref="urlInput"
         v-model="localRequest.url"
         :placeholder="t('postman.urlPlaceholder')"
         class="url-input"
+        :aria-label="t('postman.urlPlaceholder')"
         @keyup.enter="$emit('send-request')"
         @input="updateRequest"
       />
 
       <button
         :disabled="loading || !localRequest.url"
+        :title="
+          loading
+            ? t('postman.feedback.requestPending')
+            : !localRequest.url
+              ? t('postman.request.missingUrl')
+              : ''
+        "
         class="send-btn"
         @click="$emit('send-request')"
       >
@@ -173,6 +182,7 @@ const localRequest = reactive<PostmanRequestConfig>({
  * Active request tab (headers/body/auth).
  */
 const activeTab = ref('headers');
+const urlInput = ref<HTMLInputElement | null>(null);
 
 /**
  * Tab metadata for the request editor.
@@ -200,6 +210,10 @@ watch(
 const updateRequest = () => {
   emit('update:request', { ...localRequest });
 };
+
+defineExpose({
+  focusUrl: () => urlInput.value?.focus(),
+});
 </script>
 
 <style scoped>

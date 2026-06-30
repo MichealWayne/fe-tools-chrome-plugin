@@ -1,263 +1,171 @@
 <template>
-  <div class="u-w400" @click.stop="stopPropagation">
-    <!-- 实际的上传入口 -->
-    <input
-      ref="uploadPicElem"
-      class="z-hide"
-      type="file"
-      accept="image/*"
-      name="image"
-      @change="_handleInputChange"
-    />
-
-    <div
-      v-show="!imgUrl"
-      id="dragbox"
-      class="u-link f-tc g-center"
-      :class="$style.box"
-      s-bg_white
-      @click.stop="handleBoxClick"
+  <section class="media-tool image-compressor">
+    <input ref="fileInput" class="z-hide" type="file" accept="image/*" @change="onFileChange" />
+    <button
+      v-if="!imgUrl"
+      type="button"
+      class="image-dropzone"
+      @click="fileInput?.click()"
+      @dragover.prevent
+      @drop.prevent="onDrop"
     >
-      <!-- 文件上传交互入口，点击/拖拽文件上传 -->
       <icon-inbox />
-      <p class="g-fs14" s-ft_sub>
-        {{ t('imageCompressor.dragTip') }}<br />
-        <em class="g-fs12">{{ t('imageCompressor.formatTip') }}</em>
-      </p>
-    </div>
-    <!-- 上传效果图片展示 -->
-    <div v-if="imgUrl" class="f-tc g-pr">
-      <em
-        :class="$style.close"
-        class="u-icon u-icon-close u-link g-pa"
-        :title="t('imageCompressor.resetTip')"
-        @click="reset"
-      >
-        <icon-reset />
-      </em>
-      <img class="u-w100" style="max-height: 300px" :src="imgUrl" alt="compressed image" />
+      <span>{{ t('imageCompressor.dragTip') }}</span>
+      <small>{{ t('imageCompressor.formatTip') }}</small>
+    </button>
+    <div v-else class="image-compressor__preview">
+      <img :src="imgUrl" :alt="t('imageCompressor.previewAlt')" />
     </div>
 
-    <!-- 压缩比例调整 -->
-    <div class="g-mt20 f-tc">
+    <label class="converter-field" for="compression-rate">
+      <span>{{ t('imageCompressor.ratioLabel') }}</span>
       <input
-        v-model.number="compressRate"
-        class="u-input u-w200 u-p10 g-fs14"
+        id="compression-rate"
+        v-model="compressRate"
         type="number"
-        :placeholder="t('imageCompressor.compressRatio')"
-        min="0"
+        min="0.01"
         max="1"
-        @blur="handleRateBlur"
+        step="0.05"
+        :aria-invalid="Boolean(error)"
       />
-      <button class="u-btn_il g-ml10" s-color="blue" @click="handleCompressConfirm">
-        {{ t('common.confirm') }}
+    </label>
+    <div class="converter-tool__actions">
+      <button type="button" :disabled="!imgUrl || processing" @click="compress">
+        {{ t('imageCompressor.compress') }}
       </button>
+      <button type="button" :disabled="!base64Result" @click="copyResult">
+        {{ t('common.copy') }}
+      </button>
+      <button type="button" :disabled="!base64Result" @click="downloadResult">
+        {{ t('imageCompressor.download') }}
+      </button>
+      <button type="button" :disabled="!imgUrl" @click="reset">{{ t('common.clear') }}</button>
     </div>
-
-    <!-- base64压缩结果 -->
-    <div v-show="base64result" class="g-mt20">
-      <textarea
-        v-model="base64result"
-        class="u-block u-h60 u-p10 g-fs12 u-w92per g-center"
-        @click="textFocus"
-      ></textarea>
-    </div>
-  </div>
+    <tool-state v-if="processing" state="loading" :message="t('imageCompressor.processing')" />
+    <inline-feedback :feedback="error ? { message: error, tone: 'error' } : feedback" />
+    <textarea
+      v-if="base64Result"
+      v-model="base64Result"
+      readonly
+      :aria-label="t('imageCompressor.base64Label')"
+    ></textarea>
+  </section>
 </template>
 
-<script lang="ts">
-export default {
-  name: 'ImageCompressor',
-};
-</script>
-
-<script lang="ts" setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+<script setup lang="ts">
+import { ref } from 'vue';
 import { langManager } from '@/utils/i18n';
-
 import { getFileBase64 } from '@/utils';
 import { getCompressedImageBase64, handleInputUploadImageFile } from '@/utils/image';
-
+import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
+import ToolState from '@/components/Experience/ToolState.vue';
+import type { InlineFeedbackMessage } from '@/types/experience';
 import IconInbox from './IconInbox.vue';
-import IconReset from './IconReset.vue';
+
+defineOptions({ name: 'ImageCompressor' });
 
 const t = (key: string) => langManager.t(key);
-
-/**
- * Compression ratio selected by the user.
- */
-const compressRate = ref<number>();
-
-/**
- * Preview image URL used by the UI.
- */
+const fileInput = ref<HTMLInputElement | null>(null);
+const compressRate = ref('0.8');
 const imgUrl = ref('');
-
-/**
- * Compressed image Base64 output.
- */
-const base64result = ref('');
+const base64Result = ref('');
 const originalBase64 = ref('');
+const processing = ref(false);
+const error = ref('');
+const feedback = ref<InlineFeedbackMessage | null>(null);
 
-/**
- * Input element reference for file uploads.
- */
-const uploadPicElem = ref<any>(null);
-
-const stopPropagation = () => false;
-
-/**
- * Select the Base64 output when the textarea is clicked.
- * @param e - Click event from the textarea.
- */
-const textFocus = (e: Event) => {
-  if (!e || !(e.target instanceof HTMLTextAreaElement)) return;
-  e.target.select();
+const validRate = () => {
+  const value = Number(compressRate.value);
+  if (!Number.isFinite(value) || value <= 0 || value > 1)
+    throw new Error(t('imageCompressor.messages.invalidRate'));
+  return value;
 };
 
-/**
- * Clear the current image state and outputs.
- */
-const reset = () => {
-  imgUrl.value = '';
-  base64result.value = '';
-  originalBase64.value = '';
-};
-
-/**
- * Re-compress the image when compression input loses focus.
- */
-const handleCompressConfirm = () => {
-  if (!imgUrl.value) return;
-  const rateNum = Number(compressRate.value);
-  if (!Number.isFinite(rateNum) || rateNum <= 0 || rateNum > 1) {
-    base64result.value = originalBase64.value;
+const handleFiles = async (files?: FileList | null) => {
+  const file = files?.[0];
+  if (!file || !file.type.startsWith('image/')) {
+    error.value = t('imageCompressor.messages.invalidFile');
     return;
   }
-
-  getCompressedImageBase64(imgUrl.value, rateNum)
-    .then(base64 => {
-      base64result.value = base64;
-    })
-    .catch(e => {
-      console.error(e);
-      alert(t('imageCompressor.messages.convertFailed'));
-    });
-};
-
-const handleRateBlur = () => {
-  handleCompressConfirm();
-};
-
-/**
- * Handle FileList uploads and compute preview/base64 outputs.
- * @param fileList - FileList from input or drag-drop.
- */
-const handleFileList = (fileList?: FileList) => {
-  const file = fileList?.[0];
-  if (file) {
-    getFileBase64(file, (base64: string) => {
-      originalBase64.value = base64;
-      const rateNum = Number(compressRate.value);
-      if (!Number.isFinite(rateNum) || rateNum <= 0 || rateNum > 1) {
-        base64result.value = base64;
-      }
-    });
+  processing.value = true;
+  error.value = '';
+  feedback.value = null;
+  getFileBase64(file, value => {
+    originalBase64.value = value;
+  });
+  try {
+    const result = await handleInputUploadImageFile(files || undefined, validRate());
+    imgUrl.value = result.imgUrl;
+    base64Result.value = result.base64result;
+    feedback.value = { message: t('imageCompressor.messages.ready'), tone: 'success' };
+  } catch (cause) {
+    error.value = (cause as Error).message || t('imageCompressor.messages.convertFailed');
+  } finally {
+    processing.value = false;
   }
-
-  handleInputUploadImageFile(fileList, compressRate.value)
-    .then(({ imgUrl: newImgUrl, base64result: newBase64result }) => {
-      imgUrl.value = newImgUrl;
-      base64result.value = newBase64result;
-    })
-    .catch(e => alert(e));
 };
 
-/**
- * Handle the actual file input change event.
- * @param e - Change event from the file input.
- */
-const _handleInputChange = (e: Event) => {
-  if (!e || !(e.target instanceof HTMLInputElement)) return;
+const onFileChange = (event: Event) => handleFiles((event.target as HTMLInputElement).files);
+const onDrop = (event: DragEvent) => handleFiles(event.dataTransfer?.files);
 
-  handleFileList(e.target.files!);
+const compress = async () => {
+  if (!imgUrl.value) return;
+  processing.value = true;
+  error.value = '';
+  try {
+    base64Result.value = await getCompressedImageBase64(imgUrl.value, validRate());
+    feedback.value = { message: t('imageCompressor.messages.ready'), tone: 'success' };
+  } catch (cause) {
+    error.value = (cause as Error).message || t('imageCompressor.messages.convertFailed');
+  } finally {
+    processing.value = false;
+  }
 };
 
-/**
- * Handle drag-and-drop uploads on the drop zone.
- * @param e - Drag event with transfer data.
- */
-const handleBoxDrag = (e: Event) => {
-  if (!e) return;
-
-  /**
-   * Prevent browser default drag-drop behavior.
-   */
-  e.preventDefault();
-
-  /**
-   * Extract files from the drag event.
-   */
-  const { files } = (e as DragEvent).dataTransfer!;
-  handleFileList(files);
-};
-const handleBoxClick = () => {
-  (uploadPicElem.value as HTMLInputElement).click();
+const copyResult = async () => {
+  await navigator.clipboard.writeText(base64Result.value);
+  feedback.value = { message: t('experience.copied'), tone: 'success' };
 };
 
-const setEvents = () => {
-  const box = document.querySelector('#dragbox');
-
-  /**
-   * Prevent the browser from opening dropped files.
-   */
-  document.addEventListener('drop', e => {
-    e.preventDefault();
-  });
-
-  if (!box) return;
-
-  box.addEventListener('dragover', e => {
-    box?.classList.add('over');
-    e.preventDefault();
-  });
-  box.addEventListener('dragleave', e => {
-    box?.classList.remove('over');
-    e.preventDefault();
-  });
-
-  box.addEventListener('drop', handleBoxDrag, false);
-};
-const removeEvents = () => {
-  const box = document.querySelector('#dragbox');
-  if (!box) return;
-
-  box.removeEventListener('drop', handleBoxDrag);
+const downloadResult = () => {
+  const link = document.createElement('a');
+  link.href = base64Result.value;
+  link.download = 'compressed-image.png';
+  link.click();
+  feedback.value = { message: t('experience.downloaded'), tone: 'success' };
 };
 
-onMounted(() => {
-  setEvents();
-});
-
-onBeforeUnmount(() => {
-  removeEvents();
-});
+const reset = () => {
+  imgUrl.value = '';
+  base64Result.value = '';
+  originalBase64.value = '';
+  error.value = '';
+  feedback.value = null;
+  if (fileInput.value) fileInput.value.value = '';
+};
 </script>
 
-<style lang="less" module>
-.box {
-  position: relative;
-  padding: 40px 15px;
-  width: 300px;
-  border-radius: 4px;
+<style scoped>
+.image-compressor {
+  display: grid;
+  gap: 12px;
 }
-.close {
-  right: 0;
-  top: 0;
-  width: 30px;
-  height: 30px;
-  line-height: 30px;
-  border-radius: 50%;
-  background-color: #e2e2e2;
+.image-dropzone {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-height: 170px;
+  border: 2px dashed var(--color-border);
+  border-radius: 10px;
+  background: var(--color-background);
+  cursor: pointer;
+}
+.image-compressor__preview img {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+}
+.image-compressor textarea {
+  min-height: 70px;
 }
 </style>

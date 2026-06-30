@@ -7,9 +7,13 @@
   >
     <section>
       <p>
-        {{ t('langTranslator.original') }}（<a class="u-link" s-cr_blue @click="reset">{{
-          t('common.clear')
-        }}</a
+        {{ t('langTranslator.original') }}（<button
+          type="button"
+          class="u-link link-button"
+          s-cr_blue
+          @click="reset"
+        >
+          {{ t('common.clear') }}</button
         >）
       </p>
       <textarea
@@ -21,11 +25,13 @@
 
     <section>
       <p>
-        {{ t('langTranslator.result') }}（<a
+        {{ t('langTranslator.result') }}（<button
+          type="button"
           class="u-link"
           s-cr_blue
           @click="handleTranslate(originTxt)"
-          >{{ t('langTranslator.retranslate') }}</a
+        >
+          {{ t('langTranslator.retranslate') }}</button
         >）
       </p>
       <textarea v-model="resultTxt" class="u-textarea" @click.stop="textFocus"></textarea>
@@ -135,3 +141,11 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.link-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+</style>

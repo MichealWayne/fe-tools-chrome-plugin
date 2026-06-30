@@ -12,7 +12,11 @@
         <button class="add-env-btn" @click="showAddEnvModal = true">
           <i class="fas fa-plus"></i> {{ t('postman.environments.addEnv') }}
         </button>
-        <button class="toggle-btn" @click="toggleVariables">
+        <button
+          class="toggle-btn"
+          :aria-label="isExpanded ? t('common.collapse') : t('linuxCommand.viewDetails')"
+          @click="toggleVariables"
+        >
           <i :class="['fas', isExpanded ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
         </button>
       </div>
@@ -52,7 +56,11 @@
               class="var-input description"
               @input="updateVariables"
             />
-            <button class="remove-btn" @click="removeVariable(index)">
+            <button
+              class="remove-btn"
+              :aria-label="t('postman.actions.remove')"
+              @click="removeVariable(index)"
+            >
               <i class="fas fa-trash"></i>
             </button>
           </div>
@@ -69,15 +77,32 @@
             <i class="fas fa-trash"></i> {{ t('postman.environments.deleteEnv') }}
           </button>
         </div>
+        <div v-if="pendingDelete" class="postman-confirm" role="alertdialog">
+          <span>{{ t('postman.environments.deleteConfirm', { env: currentEnv }) }}</span>
+          <button type="button" @click="confirmDeleteEnvironment">
+            {{ t('experience.confirm') }}
+          </button>
+          <button type="button" @click="pendingDelete = false">{{ t('experience.cancel') }}</button>
+        </div>
       </div>
     </div>
 
     <!-- 新建环境模态框 -->
     <div v-if="showAddEnvModal" class="modal-overlay" @click="showAddEnvModal = false">
-      <div class="modal" @click.stop>
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('postman.environments.newEnvTitle')"
+        @click.stop
+      >
         <div class="modal-header">
           <h3>{{ t('postman.environments.newEnvTitle') }}</h3>
-          <button class="close-btn" @click="showAddEnvModal = false">
+          <button
+            class="close-btn"
+            :aria-label="t('postman.environments.cancel')"
+            @click="showAddEnvModal = false"
+          >
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -97,15 +122,31 @@
             {{ t('postman.environments.confirm') }}
           </button>
         </div>
+        <div v-if="pendingImport" class="postman-confirm" role="alertdialog">
+          <span>{{ t('postman.environments.envExistsConfirm', { env: pendingImport.name }) }}</span>
+          <button type="button" @click="confirmImportReplace">{{ t('experience.confirm') }}</button>
+          <button type="button" @click="pendingImport = null">{{ t('experience.cancel') }}</button>
+        </div>
       </div>
     </div>
+    <inline-feedback :feedback="feedback" />
 
     <!-- 导入模态框 -->
     <div v-if="showImportModal" class="modal-overlay" @click="showImportModal = false">
-      <div class="modal" @click.stop>
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('postman.environments.importTitle')"
+        @click.stop
+      >
         <div class="modal-header">
           <h3>{{ t('postman.environments.importTitle') }}</h3>
-          <button class="close-btn" @click="showImportModal = false">
+          <button
+            class="close-btn"
+            :aria-label="t('postman.environments.cancel')"
+            @click="showImportModal = false"
+          >
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -139,6 +180,8 @@ export default {
 import { ref, computed, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
 import type { PostmanEnvironment } from './types';
+import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
+import type { InlineFeedbackMessage } from '@/types/experience';
 
 const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 
@@ -151,6 +194,7 @@ const emit = defineEmits<{
   'update:environments': [environments: PostmanEnvironment[]];
   'update:currentEnvironment': [envName: string];
   'variable-replaced': [text: string];
+  feedback: [message: string, tone: 'success' | 'error'];
 }>();
 
 const isExpanded = ref(false);
@@ -159,6 +203,14 @@ const showAddEnvModal = ref(false);
 const showImportModal = ref(false);
 const newEnvName = ref('');
 const importData = ref('');
+const pendingDelete = ref(false);
+const pendingImport = ref<PostmanEnvironment | null>(null);
+const feedback = ref<InlineFeedbackMessage | null>(null);
+
+const report = (message: string, tone: 'success' | 'error') => {
+  feedback.value = { message, tone };
+  emit('feedback', message, tone);
+};
 
 const currentVariables = computed(() => {
   const env = props.environments.find(e => e.name === currentEnv.value);
@@ -216,18 +268,21 @@ const createEnvironment = () => {
 
   newEnvName.value = '';
   showAddEnvModal.value = false;
+  report(t('postman.feedback.environmentSaved'), 'success');
 };
 
 const deleteEnvironment = () => {
   if (!currentEnv.value) return;
+  pendingDelete.value = true;
+};
 
-  if (confirm(t('postman.environments.deleteConfirm', { env: currentEnv.value }))) {
-    const updatedEnvs = props.environments.filter(e => e.name !== currentEnv.value);
-    emit('update:environments', updatedEnvs);
-
-    currentEnv.value = '';
-    emit('update:currentEnvironment', '');
-  }
+const confirmDeleteEnvironment = () => {
+  const updatedEnvs = props.environments.filter(e => e.name !== currentEnv.value);
+  emit('update:environments', updatedEnvs);
+  currentEnv.value = '';
+  emit('update:currentEnvironment', '');
+  pendingDelete.value = false;
+  report(t('postman.feedback.environmentDeleted'), 'success');
 };
 
 const exportEnvironment = () => {
@@ -244,6 +299,25 @@ const exportEnvironment = () => {
   link.click();
 
   URL.revokeObjectURL(url);
+  report(t('postman.feedback.environmentExported'), 'success');
+};
+
+const applyImportedEnvironment = (envData: PostmanEnvironment) => {
+  const existingIndex = props.environments.findIndex(e => e.name === envData.name);
+  const updatedEnvs = [...props.environments];
+  if (existingIndex >= 0) updatedEnvs[existingIndex] = envData;
+  else updatedEnvs.push(envData);
+  emit('update:environments', updatedEnvs);
+  currentEnv.value = envData.name;
+  emit('update:currentEnvironment', envData.name);
+  importData.value = '';
+  showImportModal.value = false;
+  pendingImport.value = null;
+  report(t('postman.feedback.environmentImported'), 'success');
+};
+
+const confirmImportReplace = () => {
+  if (pendingImport.value) applyImportedEnvironment(pendingImport.value);
 };
 
 const importEnvironment = () => {
@@ -254,29 +328,13 @@ const importEnvironment = () => {
       throw new Error(t('postman.environments.invalidEnvData'));
     }
 
-    const existingIndex = props.environments.findIndex(e => e.name === envData.name);
-    let updatedEnvs;
-
-    if (existingIndex >= 0) {
-      if (confirm(t('postman.environments.envExistsConfirm', { env: envData.name }))) {
-        updatedEnvs = [...props.environments];
-        updatedEnvs[existingIndex] = envData;
-      } else {
-        return;
-      }
-    } else {
-      updatedEnvs = [...props.environments, envData];
+    if (props.environments.some(e => e.name === envData.name)) {
+      pendingImport.value = envData as PostmanEnvironment;
+      return;
     }
-
-    emit('update:environments', updatedEnvs);
-
-    currentEnv.value = envData.name;
-    emit('update:currentEnvironment', envData.name);
-
-    importData.value = '';
-    showImportModal.value = false;
+    applyImportedEnvironment(envData as PostmanEnvironment);
   } catch (error) {
-    alert(t('postman.environments.importFailed', { message: (error as Error).message }));
+    report(t('postman.environments.importFailed', { message: (error as Error).message }), 'error');
   }
 };
 

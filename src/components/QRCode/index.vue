@@ -1,119 +1,121 @@
 <template>
-  <div>
-    <p class="m-qr_search u-c-middle" @click.stop="handleStop">
+  <section class="converter-tool qr-tool">
+    <label for="qr-source">{{ t('qrcode.sourceLabel') }}</label>
+    <div class="converter-tool__row">
       <input
+        id="qr-source"
+        ref="sourceInput"
         v-model="originWords"
         :placeholder="t('qrcode.inputPlaceholder')"
         class="u-input"
         type="text"
+        :aria-invalid="Boolean(error)"
+        aria-describedby="qr-feedback"
+        @keydown.enter="generateQr"
       />
-      <button class="u-btn u-w80 g-ml10" s-color="blue" @click.stop="handleUpdate">
-        {{ t('qrcode.generate') }}
+      <button class="u-btn" s-color="blue" @click="generateQr">{{ t('qrcode.generate') }}</button>
+      <button type="button" class="u-btn" :disabled="!originWords" @click="reset">
+        {{ t('common.clear') }}
       </button>
-    </p>
-    <img
-      class="u-icon u-w200 g-mt20 g-center"
-      :src="QRUrl"
-      :title="t('qrcode.rightClickTip')"
-      alt="qrcode"
+    </div>
+    <inline-feedback
+      :feedback="error ? { id: 'qr-feedback', message: error, tone: 'validation' } : feedback"
     />
-    <p class="f-tc g-fs12 g-mt10">{{ t('qrcode.saveImageTip') }}</p>
-    <button
-      class="u-btn u-w100 u-h40 g-center g-mt10"
-      s-color="blue"
-      @click.stop="() => handleDownloadQR()"
-    >
-      {{ t('qrcode.downloadSvg') }}
-    </button>
-  </div>
+    <div v-if="qrUrl" class="qr-tool__result">
+      <img class="qr-tool__image" :src="qrUrl" :alt="t('qrcode.previewAlt')" />
+      <button class="u-btn" s-color="blue" @click="downloadQr">
+        {{ t('qrcode.downloadSvg') }}
+      </button>
+    </div>
+    <tool-state v-else state="empty" :message="t('qrcode.emptyPreview')" />
+  </section>
 </template>
 
-<script lang="ts">
-export default {
-  name: 'QRCode',
-};
-</script>
-
-<script lang="ts" setup>
-import { defineProps, ref, watch, toRefs, onMounted } from 'vue';
+<script setup lang="ts">
+import { onMounted, ref, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
-
 import { getLocalTabUrl } from '@/utils/chrome';
 import { handleQRCode } from '@/utils';
+import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
+import ToolState from '@/components/Experience/ToolState.vue';
+import type { InlineFeedbackMessage } from '@/types/experience';
 
+defineOptions({ name: 'QRCode' });
+
+const props = withDefaults(defineProps<{ keywords?: string }>(), { keywords: '' });
 const t = (key: string) => langManager.t(key);
-
-const props = defineProps({
-  keywords: {
-    type: String,
-    default: '',
-  },
-});
-
-const { keywords } = toRefs(props);
-
 const originWords = ref('');
+const qrUrl = ref('');
+const generatedValue = ref('');
+const error = ref('');
+const feedback = ref<InlineFeedbackMessage | null>(null);
+const sourceInput = ref<HTMLInputElement | null>(null);
 
-const QRUrl = ref('');
-const qrdownloadUrl = ref('');
-
-const handleStop = (e: Event) => {
-  e.stopPropagation();
-};
-
-/**
- * Trigger a manual refresh of the QR code.
- */
-const handleUpdate = () => {
-  handleQR();
-};
-
-/**
- * Generate a QR code from input or the current tab URL.
- */
-const handleQR = () => {
-  const keywords = originWords.value;
-  const useInputUrl = keywords?.includes('http');
-
-  if (useInputUrl) {
-    /**
-     * Use user-provided URL directly.
-     */
-    qrdownloadUrl.value = keywords;
-    QRUrl.value = handleQRCode(keywords)!.getImgUrl();
-  } else {
-    /**
-     * Fall back to the current tab URL.
-     */
-    getLocalTabUrl((url: string) => {
-      originWords.value = url;
-      qrdownloadUrl.value = url;
-      QRUrl.value = handleQRCode(url)!.getImgUrl();
-    });
+const generateQr = () => {
+  const value = originWords.value.trim();
+  error.value = '';
+  feedback.value = null;
+  if (!value) {
+    error.value = t('qrcode.messages.required');
+    sourceInput.value?.focus();
+    return;
+  }
+  try {
+    generatedValue.value = value;
+    qrUrl.value = handleQRCode(value)?.getImgUrl() || '';
+    feedback.value = { message: t('qrcode.messages.generated'), tone: 'success' };
+  } catch (cause) {
+    error.value = (cause as Error).message || t('qrcode.messages.generateFailed');
   }
 };
 
-/**
- * 下载二维码
- */
-const handleDownloadQR = (type = 'svg') => {
-  handleQRCode(qrdownloadUrl.value)!.downloadQR(type);
+const downloadQr = () => {
+  if (!generatedValue.value) return;
+  handleQRCode(generatedValue.value)?.downloadQR('svg');
+  feedback.value = { message: t('experience.downloaded'), tone: 'success' };
 };
 
-watch(keywords, (newVal, oldVal) => {
-  if (newVal !== oldVal && newVal !== originWords.value) {
-    originWords.value = newVal;
-  }
-});
+const reset = () => {
+  originWords.value = '';
+  qrUrl.value = '';
+  generatedValue.value = '';
+  error.value = '';
+  feedback.value = null;
+  sourceInput.value?.focus();
+};
 
-watch(originWords, (newVal, oldVal) => {
-  if (newVal && newVal !== oldVal) {
-    handleQR();
+watch(
+  () => props.keywords,
+  value => {
+    if (value && value !== originWords.value) {
+      originWords.value = value;
+      generateQr();
+    }
   }
-});
+);
 
 onMounted(() => {
-  originWords.value = keywords.value || '';
-  handleQR();
+  if (props.keywords) {
+    originWords.value = props.keywords;
+    generateQr();
+    return;
+  }
+  getLocalTabUrl((url: string) => {
+    originWords.value = url || '';
+    if (url) generateQr();
+  });
 });
 </script>
+
+<style scoped>
+.qr-tool__result {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.qr-tool__image {
+  width: 200px;
+  max-width: 100%;
+}
+</style>

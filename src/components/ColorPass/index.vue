@@ -1,234 +1,134 @@
 <template>
-  <section class="color-pass" s-bg_white @click.stop="stopPropagation">
-    <p :class="$style.title">{{ t('colorPass.title') }}</p>
-    <!--颜色输入-->
-    <section :class="$style.content">
-      <div class="m-color-input">
-        <span>{{ t('colorPass.labels.hex') }}：</span>
-        <input
-          v-model="hex"
-          maxlength="6"
-          data-type="hex"
-          :placeholder="t('colorPass.hexPlaceholder')"
-          @keyup="changeColor"
-        />
-      </div>
-
-      <div class="m-color-input">
-        <span>{{ t('colorPass.labels.rgb') }}：</span>
-        <input
-          v-model="rgb"
-          maxlength="11"
-          data-type="rgb"
-          :placeholder="t('colorPass.rgbPlaceholder')"
-          @keyup="changeColor"
-        />
-      </div>
-
-      <div class="m-color-input">
-        <span>{{ t('colorPass.labels.hsb') }}：</span>
-        <input
-          v-model="hsb"
-          maxlength="13"
-          data-type="hsb"
-          :placeholder="t('colorPass.hsbPlaceholder')"
-          @keyup="changeColor"
-        />
-      </div>
-
-      <div class="m-color-input">
-        <span>{{ t('colorPass.labels.hsl') }}：</span>
-        <input
-          v-model="hsl"
-          maxlength="13"
-          data-type="hsl"
-          :placeholder="t('colorPass.hslPlaceholder')"
-          @keyup="changeColor"
-        />
-      </div>
-    </section>
-
-    <!--颜色展示-->
-    <div class="m-color-show" :style="{ backgroundColor: `#${hex || 'fff'}` }"></div>
-
-    <!--备注-->
+  <section class="converter-tool color-pass">
+    <div v-for="field in fields" :key="field.key" class="converter-field">
+      <label :for="`color-${field.key}`">{{ field.label }}</label>
+      <input
+        :id="`color-${field.key}`"
+        v-model="values[field.key]"
+        :placeholder="field.placeholder"
+        :aria-invalid="activeSource === field.key && Boolean(error)"
+        aria-describedby="color-feedback"
+        @input="convert(field.key)"
+      />
+      <button type="button" :disabled="!values[field.key]" @click="copy(values[field.key])">
+        {{ t('common.copy') }}
+      </button>
+    </div>
+    <div class="converter-tool__actions">
+      <button type="button" @click="reset">{{ t('common.clear') }}</button>
+    </div>
+    <inline-feedback
+      :feedback="error ? { id: 'color-feedback', message: error, tone: 'validation' } : feedback"
+    />
+    <div
+      class="m-color-show"
+      :style="{ backgroundColor: values.hex ? `#${values.hex}` : '#fff' }"
+    ></div>
     <remark-infos />
   </section>
 </template>
 
-<script lang="ts">
-export default {
-  name: 'ColorPass',
-};
-</script>
-
-<script lang="ts" setup>
-import { ref } from 'vue';
+<script setup lang="ts">
+import { computed, reactive, ref } from 'vue';
 import { langManager } from '@/utils/i18n';
-
 import RemarkInfos from './RemarkInfos.vue';
-
+import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
+import type { InlineFeedbackMessage } from '@/types/experience';
 import {
   hsbToRgb,
   rgbToHex,
   rgbToHsb,
   hexToRgb,
   divisionString,
-  checkHex,
-  checkRgb,
-  checkHsb,
   rgbToHsl,
   hslToRgb,
-  checkHsl,
 } from '@/utils/color';
 
+defineOptions({ name: 'ColorPass' });
+
+type ColorKey = 'hex' | 'rgb' | 'hsb' | 'hsl';
 const t = (key: string) => langManager.t(key);
+const values = reactive<Record<ColorKey, string>>({ hex: '', rgb: '', hsb: '', hsl: '' });
+const activeSource = ref<ColorKey>('hex');
+const error = ref('');
+const feedback = ref<InlineFeedbackMessage | null>(null);
+const fields = computed(() => [
+  { key: 'hex' as const, label: 'HEX', placeholder: t('colorPass.hexPlaceholder') },
+  { key: 'rgb' as const, label: 'RGB', placeholder: t('colorPass.rgbPlaceholder') },
+  { key: 'hsb' as const, label: 'HSB', placeholder: t('colorPass.hsbPlaceholder') },
+  { key: 'hsl' as const, label: 'HSL', placeholder: t('colorPass.hslPlaceholder') },
+]);
 
-const hex = ref('');
-const rgb = ref('');
-const hsb = ref('');
-const hsl = ref('');
+const parseTriplet = (value: string, firstMax: number) => {
+  const parts = value.split(',').map(part => Number(part.replace('%', '').trim()));
+  return parts.length === 3 &&
+    parts.every(Number.isFinite) &&
+    parts[0] >= 0 &&
+    parts[0] <= firstMax &&
+    parts[1] >= 0 &&
+    parts[1] <= 100 &&
+    parts[2] >= 0 &&
+    parts[2] <= 100
+    ? parts
+    : null;
+};
 
-const stopPropagation = () => false;
-
-const changeColor = (e: Event) => {
-  if (!e || !(e.target instanceof HTMLElement)) return;
-  const { type } = e.target.dataset;
-
-  const setEmptyOutput = () => {
-    hsb.value = rgb.value = hsl.value = '';
-  };
-
-  switch (type) {
-    case 'hex':
-      checkHex(
-        hex.value,
-        () => {
-          const divisionNum = 2;
-          rgb.value = hexToRgb(divisionString(hex.value, divisionNum)).join(',');
-          const rgbArr = rgb.value.split(',');
-          hsb.value = rgbToHsb(rgbArr).join(',');
-          hsl.value = rgbToHsl(rgbArr).join(',');
-        },
-        setEmptyOutput
-      );
-      break;
-    case 'rgb':
-      checkRgb(
-        rgb.value,
-        () => {
-          const rgbArr = rgb.value.split(',');
-          hex.value = rgbToHex(rgbArr).join('');
-          hsb.value = rgbToHsb(rgbArr).join(',');
-          hsl.value = rgbToHsl(rgbArr).join(',');
-        },
-        setEmptyOutput
-      );
-      break;
-    case 'hsb':
-      checkHsb(
-        hsb.value,
-        () => {
-          rgb.value = hsbToRgb(hsb.value.split(',').map(val => parseInt(val, 10))).join(',');
-          const rgbArr = rgb.value.split(',');
-          hex.value = rgbToHex(rgbArr).join('');
-          hsl.value = rgbToHsl(rgbArr).join(',');
-        },
-        setEmptyOutput
-      );
-      break;
-    case 'hsl':
-      checkHsl(
-        hsl.value,
-        () => {
-          const hslArr = hsl.value.split(',');
-          rgb.value = hslToRgb(hslArr).join(',');
-          const rgbArr = rgb.value.split(',');
-          hex.value = rgbToHex(rgbArr).join('');
-          hsb.value = rgbToHsb(rgbArr).join(',');
-        },
-        setEmptyOutput
-      );
-      break;
-    default:
-      console.error(`[Warning]illegal type:${type}(ColorPass)`);
+const convert = (source: ColorKey) => {
+  activeSource.value = source;
+  error.value = '';
+  feedback.value = null;
+  const value = values[source].trim();
+  if (!value) return;
+  try {
+    let rgb: string[];
+    if (source === 'hex') {
+      if (!/^[\da-f]{6}$/i.test(value)) throw new Error(t('colorPass.messages.invalidHex'));
+      rgb = hexToRgb(divisionString(value, 2)).map(String);
+    } else if (source === 'rgb') {
+      const parts = value.split(',').map(part => Number(part.trim()));
+      if (
+        parts.length !== 3 ||
+        parts.some(part => !Number.isInteger(part) || part < 0 || part > 255)
+      )
+        throw new Error(t('colorPass.messages.invalidRgb'));
+      rgb = parts.map(String);
+    } else if (source === 'hsb') {
+      const parts = parseTriplet(value, 360);
+      if (!parts) throw new Error(t('colorPass.messages.invalidHsb'));
+      rgb = hsbToRgb(parts).map(String);
+    } else {
+      const parts = parseTriplet(value, 360);
+      if (!parts) throw new Error(t('colorPass.messages.invalidHsl'));
+      rgb = hslToRgb([String(parts[0]), `${parts[1]}%`, `${parts[2]}%`]).map(String);
+    }
+    if (source !== 'rgb') values.rgb = rgb.join(',');
+    if (source !== 'hex') values.hex = rgbToHex(rgb).join('');
+    if (source !== 'hsb') values.hsb = rgbToHsb(rgb).join(',');
+    if (source !== 'hsl') values.hsl = rgbToHsl(rgb).join(',');
+  } catch (cause) {
+    error.value = (cause as Error).message;
   }
+};
+
+const copy = async (value: string) => {
+  await navigator.clipboard.writeText(value);
+  feedback.value = { message: t('experience.copied'), tone: 'success' };
+};
+const reset = () => {
+  Object.assign(values, { hex: '', rgb: '', hsb: '', hsl: '' });
+  error.value = '';
+  feedback.value = null;
 };
 </script>
 
-<style lang="less" module>
-.title {
-  padding: 6px 0 12px;
-  text-align: center;
-  font-size: 16px;
-  font-weight: 600;
-  color: #1f2a44;
-}
-.content {
-  padding: 6px 20px 12px;
-}
-</style>
-
-<style lang="less">
+<style scoped>
 .color-pass {
-  padding: 18px 20px 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
-  border: 1px solid #e2e9ff;
-  border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
+  padding: 4px;
 }
-
-/**
- * Color input slider section.
- */
-.m-color-input {
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background-color: #fff;
-  border: 1px solid #e4e9f7;
-  box-shadow: 0 6px 14px rgba(28, 63, 124, 0.06);
-
-  & > span {
-    min-width: 46px;
-    font-size: 13px;
-    color: #4a5a78;
-  }
-
-  & > input {
-    flex: 1;
-    min-width: 0;
-    font-size: 14px;
-    border: none;
-    background: transparent;
-    color: #1f2a44;
-    padding: 2px 0;
-
-    &:focus {
-      outline: none;
-    }
-
-    &::placeholder {
-      font-size: 12px;
-      color: #9aa6bf;
-    }
-  }
-}
-
-/**
- * Color description and guidance section.
- */
-.m-color-intro {
-  padding: 12px 20px 4px;
-  color: #6b7a99;
-  background-color: #f6f8ff;
-  border-radius: 10px;
-  border: 1px solid #e2e9f7;
-  & > p {
-    margin-bottom: 6px;
-  }
+.m-color-show {
+  height: 70px;
+  margin-top: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
 }
 </style>

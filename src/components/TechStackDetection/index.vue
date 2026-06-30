@@ -11,7 +11,14 @@
       </button>
     </div>
 
-    <p v-if="errorMessage" class="m-tech-stack__error g-fs12">{{ errorMessage }}</p>
+    <tool-state
+      v-if="errorMessage"
+      state="error"
+      :message="errorMessage"
+      :action-label="t('experience.retry')"
+      @action="startDetect"
+    />
+    <tool-state v-else-if="isAnalyzing" state="loading" :message="t('techStack.analyzing')" />
 
     <div v-if="analyzed" class="m-tech-stack__result">
       <template v-if="hits.length">
@@ -38,7 +45,7 @@
         </section>
       </template>
 
-      <p v-else class="g-fs12 m-tech-stack__empty">{{ t('techStack.empty') }}</p>
+      <tool-state v-else state="empty" :message="t('techStack.empty')" />
     </div>
   </section>
 </template>
@@ -53,6 +60,7 @@ export default {
 import { computed, ref } from 'vue';
 import { langManager } from '@/utils/i18n';
 import { detectTechStackFromSignals, type ProbeSignals, type TechStackHit } from './detector';
+import ToolState from '@/components/Experience/ToolState.vue';
 
 const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 
