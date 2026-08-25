@@ -95,3 +95,56 @@ const reset = () => {
   error.value = '';
 };
 </script>
+
+<style scoped>
+.unit-calculator {
+  display: grid;
+  gap: var(--spacing-sm);
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.unit-calculator .converter-field {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.35fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.unit-calculator .converter-field label {
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.unit-calculator .converter-field input {
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 10px;
+}
+
+.unit-calculator > button {
+  justify-self: start;
+  min-width: 88px;
+  min-height: 36px;
+  padding: 8px 16px;
+  color: var(--color-text-inverse);
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+}
+
+.unit-calculator > button:hover {
+  background: var(--color-primary-dark);
+}
+
+@media (max-width: 520px) {
+  .unit-calculator .converter-field {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xs);
+  }
+}
+</style>

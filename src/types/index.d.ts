@@ -10,10 +10,6 @@ declare global {
   interface Window {
     AraleQRCode: any;
   }
-  /**
-   * Chrome extension global API reference.
-   */
-  const chrome: any;
 }
 
 /**

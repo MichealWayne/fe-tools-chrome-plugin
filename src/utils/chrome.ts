@@ -4,7 +4,7 @@
  * @LastEditTime 2023-11-26 10:02:13
  */
 
-import { AnyFunc, AnyObj } from '@/types';
+import { AnyObj } from '@/types';
 import { IS_DEV } from '@/constant';
 
 /**
@@ -46,7 +46,7 @@ export function getLocalTabUrl(cb: (url: string, tab?: any) => any) {
  * Retrieve bookmarks and flatten them into a list.
  * @param cb - Callback invoked with the flattened bookmark list.
  */
-export function getMarkTree(cb: AnyFunc) {
+export function getMarkTree<T extends AnyObj>(cb: (items: T[]) => void) {
   const result: AnyObj[] = [];
 
   function clearUpFavorite(data: any[]) {
@@ -73,7 +73,7 @@ export function getMarkTree(cb: AnyFunc) {
       try {
         clearUpFavorite(bookmarkArray);
 
-        cb(result);
+        cb(result as T[]);
       } catch (e) {
         alert((e as Error)?.message);
       }

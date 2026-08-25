@@ -393,9 +393,7 @@ export default defineComponent({
         const name = String(record.name || '');
         const children = Array.isArray(record.children) ? record.children : [];
         if (name === '样式模块词典') {
-          this.styleList = Object.freeze(
-            this.handleStyleList(children as Record<string, unknown>[])
-          );
+          this.styleList = this.handleStyleList(children as Record<string, unknown>[]);
           return;
         }
         if (name === 'moo-css-base词典') {
@@ -404,30 +402,24 @@ export default defineComponent({
             const subName = String(subRecord.name || '');
             switch (subName) {
               case '颜色':
-                this.mooColorList = Object.freeze(
-                  this.handleMooColorList(
-                    Array.isArray(subRecord.children)
-                      ? (subRecord.children as Record<string, unknown>[])
-                      : []
-                  )
+                this.mooColorList = this.handleMooColorList(
+                  Array.isArray(subRecord.children)
+                    ? (subRecord.children as Record<string, unknown>[])
+                    : []
                 );
                 break;
               case '方法':
-                this.mooFuncList = Object.freeze(
-                  this.handleMooFuncList(
-                    Array.isArray(subRecord.children)
-                      ? (subRecord.children as Record<string, unknown>[])
-                      : []
-                  )
+                this.mooFuncList = this.handleMooFuncList(
+                  Array.isArray(subRecord.children)
+                    ? (subRecord.children as Record<string, unknown>[])
+                    : []
                 );
                 break;
               case '样式':
-                this.mooClassList = Object.freeze(
-                  this.handleMooClassList(
-                    Array.isArray(subRecord.children)
-                      ? (subRecord.children as Record<string, unknown>[])
-                      : []
-                  )
+                this.mooClassList = this.handleMooClassList(
+                  Array.isArray(subRecord.children)
+                    ? (subRecord.children as Record<string, unknown>[])
+                    : []
                 );
                 break;
               default:
@@ -441,3 +433,36 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.m-moo {
+  display: grid;
+  gap: var(--spacing-sm);
+  width: 100%;
+  min-width: 0;
+}
+
+.m-moo .reference-tool__search input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
+}
+
+.m-moo .reference-tool__list {
+  min-width: 0;
+  margin-top: var(--spacing-sm);
+}
+
+.m-moo .reference-tool__result {
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: 8px 12px;
+  line-height: var(--line-height-normal);
+}
+
+.m-moo .reference-tool__result span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+</style>

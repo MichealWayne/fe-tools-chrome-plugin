@@ -1,7 +1,14 @@
 <template>
   <div>
     <!-- 简易PostMan -->
-    <v-postman v-if="type === 'postman'" />
+    <tool-workspace
+      v-if="type === 'postman'"
+      class="postman-tool-workspace"
+      :title="t(postmanTool.nameKey)"
+      :wide="postmanTool.workspaceSize === 'wide'"
+    >
+      <v-postman />
+    </tool-workspace>
 
     <!-- 翻译 -->
     <v-translate v-else-if="type === 'translate'" />
@@ -15,7 +22,10 @@
 import { defineComponent } from 'vue';
 
 import { getUrlParam } from '@/utils';
+import { langManager } from '@/utils/i18n';
 import Translate from '@/components/LangTranslator/index.vue';
+import ToolWorkspace from '@/components/Experience/ToolWorkspace.vue';
+import { TOOL_CARDS } from './main/tool-cards';
 
 import Main from './main.vue';
 import PostMan from '../components/PostMan/PostManMain.vue';
@@ -27,6 +37,15 @@ export default defineComponent({
     'v-main': Main,
     'v-postman': PostMan,
     'v-translate': Translate,
+    ToolWorkspace,
+  },
+  setup() {
+    const postmanTool = TOOL_CARDS.find(tool => tool.key === 'postman');
+    if (!postmanTool) throw new Error('PostMan tool metadata is missing');
+    return {
+      postmanTool,
+      t: (key: string) => langManager.t(key),
+    };
   },
   data() {
     return {
@@ -35,3 +54,10 @@ export default defineComponent({
   },
 });
 </script>
+
+<style>
+.postman-tool-workspace.tool-workspace--wide {
+  width: min(1200px, calc(100vw - 48px));
+  margin: 24px auto;
+}
+</style>

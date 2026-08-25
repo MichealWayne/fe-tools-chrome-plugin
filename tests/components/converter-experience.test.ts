@@ -75,6 +75,21 @@ describe('converter and editor experience', () => {
     expect(wrapper.get('[role="status"]').text()).toContain('成功');
   });
 
+  it('keeps expression compatibility but blocks direct browser capability access', async () => {
+    const wrapper = mount(JsonCtn);
+    await wrapper.findAll('textarea')[0].setValue('{ answer: (() => 40 + 2)() }');
+    await wrapper.get('button.action-icon.to-json').trigger('click');
+    expect(wrapper.findAll('textarea')[1].element.value).toContain('"answer": 42');
+
+    await wrapper.findAll('textarea')[0].setValue('{ label: `window status` }');
+    await wrapper.get('button.action-icon.to-json').trigger('click');
+    expect(wrapper.findAll('textarea')[1].element.value).toContain('"window status"');
+
+    await wrapper.findAll('textarea')[0].setValue('{ value: window.location.href }');
+    await wrapper.get('button.action-icon.to-json').trigger('click');
+    expect(wrapper.get('[role="alert"]').text()).toContain('不允许');
+  });
+
   it('confirms SVG reset and reports optimization inline', async () => {
     const wrapper = mount(SvgEditor);
     await wrapper.findAll('.svg-editor__btn-link')[0].trigger('click');

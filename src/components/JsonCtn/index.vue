@@ -118,7 +118,6 @@ import { ref, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
 
 const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
-import DOMPurify from 'dompurify';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 
 defineOptions({
@@ -135,6 +134,26 @@ const error = ref('');
 const successVisible = ref(false);
 const successMessage = ref('');
 const indentLevel = ref(2);
+
+const BLOCKED_EXPRESSION_TOKENS =
+  /\b(?:chrome|browser|window|document|globalThis|location|history|navigator|localStorage|sessionStorage|indexedDB|caches|fetch|XMLHttpRequest|WebSocket|importScripts|eval|Function|constructor|prototype|__proto__)\b/;
+
+const getExecutableSource = (value: string) => {
+  const withoutQuotedStrings = value.replace(/(['"])(?:\\.|(?!\1)[^\\])*\1/g, "''");
+  return withoutQuotedStrings.replace(/`(?:\\.|[^`])*`/g, template => {
+    return Array.from(template.matchAll(/\$\{([^{}]*)\}/g), match => match[1]).join(' ');
+  });
+};
+
+/**
+ * Keep the legacy JavaScript-expression compatibility while rejecting direct access to
+ * browser and extension capabilities. This is a guardrail, not a replacement for a parser.
+ */
+const assertSafeExpression = (value: string) => {
+  if (BLOCKED_EXPRESSION_TOKENS.test(getExecutableSource(value))) {
+    throw new Error('输入包含不允许的运行时访问标识符');
+  }
+};
 
 /**
  * Debounced handler to avoid over-processing input changes.
@@ -248,20 +267,17 @@ const handleReverse = () => {
 };
 
 /**
- * Safely evaluate JS-like object input by sanitizing first.
+ * Evaluate JS-like object input after blocking direct browser/extension capability access.
  * @param jsStr - Input text to evaluate.
  */
 const safeEval = (jsStr: string) => {
-  /**
-   * Sanitize input to reduce risky constructs.
-   */
-  const sanitizedStr = DOMPurify.sanitize(jsStr);
+  assertSafeExpression(jsStr);
 
   try {
     /**
      * Use Function constructor instead of eval to reduce scope exposure.
      */
-    return Function(`"use strict"; return (${sanitizedStr})`)();
+    return Function(`"use strict"; return (${jsStr})`)();
   } catch (e) {
     console.error('Safe eval failed:', e);
     throw e;
@@ -347,7 +363,7 @@ const formatJson = (spaces: number | null) => {
   try {
     const obj = JSON.parse(jsonValue.value);
     indentLevel.value = spaces ?? 2;
-    jsonValue.value = JSON.stringify(obj, null, spaces);
+    jsonValue.value = JSON.stringify(obj, null, spaces ?? 2);
   } catch (e) {
     console.error(e);
     error.value = t('jsonCtn.messages.formatFailed', { message: (e as Error).message });

@@ -14,16 +14,9 @@
  * getUrlParam('fundCode'); // '000697'
  */
 export function getUrlParam(name: string, decode?: (s: string) => string) {
-  const reg = new RegExp(`(^|&)${name}=([^&]*)(&|$)`);
-  const res = window.location.search.substring(1).match(reg);
-  if (res) {
-    if (!decode) {
-      return decodeURI(res[2]);
-    }
-    // eslint-disable-next-line no-eval
-    return decode(res[2]);
-  }
-  return null;
+  const value = new URLSearchParams(window.location.search).get(name);
+  if (value === null) return null;
+  return decode ? decode(value) : value;
 }
 
 /**
@@ -56,10 +49,9 @@ export function handleQRCode(url: string, type = 'canvas') {
       const ctn = document.createElement('div');
       ctn.appendChild(qrnode);
 
-      const blobType = renderType === 'svg' ? 'application/svg' : `image/${renderType}`;
-      alert(blobType);
+      const blobType = renderType === 'svg' ? 'image/svg+xml' : `image/${renderType}`;
       const blobContent = new Blob([ctn.innerHTML], {
-        type: `application/${blobType}`,
+        type: blobType,
       });
       const blobUrl = window.URL.createObjectURL(blobContent);
       const eleLink = document.createElement('a');
@@ -72,6 +64,7 @@ export function handleQRCode(url: string, type = 'canvas') {
       eleLink.click();
 
       document.body.removeChild(eleLink);
+      window.URL.revokeObjectURL(blobUrl);
     },
   };
 }

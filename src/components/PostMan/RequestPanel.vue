@@ -169,14 +169,7 @@ const emit = defineEmits<{
 /**
  * Local draft copy of the request configuration.
  */
-const localRequest = reactive<PostmanRequestConfig>({
-  method: 'GET',
-  url: '',
-  headers: [],
-  body: { type: 'none' },
-  auth: { type: 'none' },
-  ...props.request,
-});
+const localRequest = reactive<PostmanRequestConfig>({ ...props.request });
 
 /**
  * Active request tab (headers/body/auth).
@@ -218,99 +211,99 @@ defineExpose({
 
 <style scoped>
 .request-section {
-  background: white;
-  border: 1px solid #e8e8e8;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
+  background: var(--color-background-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 .request-line {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
   align-items: center;
 }
 
 .method-select {
   padding: 10px 15px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  font-size: 14px;
-  font-weight: bold;
-  color: #333;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  background: var(--color-background-light);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
   cursor: pointer;
   min-width: 100px;
 }
 
 .method-select:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-shadow-dark);
 }
 
 .url-input {
   flex: 1;
   padding: 10px 15px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
 }
 
 .url-input:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-shadow-dark);
 }
 
 .send-btn {
   padding: 10px 20px;
-  background: #007bff;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--border-radius-md);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
   min-width: 100px;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-normal);
 }
 
 .send-btn:hover:not(:disabled) {
-  background: #0056b3;
+  background: var(--color-primary-dark);
 }
 
 .send-btn:disabled {
-  background: #6c757d;
+  background: var(--color-text-tertiary);
   cursor: not-allowed;
 }
 
 .request-tabs {
   display: flex;
-  border-bottom: 1px solid #e8e8e8;
-  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-border-light);
+  margin-bottom: var(--spacing-lg);
 }
 
 .tab-btn {
-  padding: 12px 20px;
+  padding: var(--padding-md);
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 14px;
-  color: #666;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
   border-bottom: 2px solid transparent;
-  transition: all 0.2s;
+  transition: var(--transition-normal);
 }
 
 .tab-btn:hover {
-  color: #007bff;
+  color: var(--color-primary);
 }
 
 .tab-btn.active {
-  color: #007bff;
-  border-bottom-color: #007bff;
-  font-weight: bold;
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
 }
 
 .request-tab-content {
@@ -318,59 +311,59 @@ defineExpose({
 }
 
 .auth-section {
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 6px;
+  padding: var(--spacing-lg);
+  background: var(--color-background);
+  border-radius: var(--border-radius-md);
 }
 
 .auth-type {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
 }
 
 .auth-type label {
-  font-weight: 500;
-  color: #333;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
   min-width: 80px;
 }
 
 .auth-select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  font-size: 14px;
+  padding: var(--padding-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-background-light);
+  font-size: var(--font-size-sm);
   cursor: pointer;
 }
 
 .auth-select:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--color-primary);
 }
 
 .auth-config {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: var(--spacing-md);
 }
 
 .auth-input {
   padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: border-color 0.2s;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  transition: border-color var(--transition-normal);
 }
 
 .auth-input:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-shadow-dark);
 }
 
 .auth-input::placeholder {
-  color: #999;
+  color: var(--color-text-tertiary);
 }
 </style>

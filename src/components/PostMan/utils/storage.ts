@@ -7,13 +7,30 @@ export type PostmanStorageState = {
 };
 
 export const POSTMAN_STORAGE_KEY = 'postman-data';
+const SENSITIVE_HEADER_NAMES = new Set([
+  'authorization',
+  'cookie',
+  'set-cookie',
+  'proxy-authorization',
+]);
+
+const sanitizeHistory = (history: PostmanHistoryItem[]): PostmanHistoryItem[] =>
+  history.map(item => ({
+    ...item,
+    headers: Object.fromEntries(
+      Object.entries(item.headers).filter(([key]) => !SENSITIVE_HEADER_NAMES.has(key.toLowerCase()))
+    ),
+  }));
 
 /**
  * Persist Postman state to localStorage.
  * @param state - Storage payload for environments and history.
  */
 export const savePostmanStorage = (state: PostmanStorageState) => {
-  localStorage.setItem(POSTMAN_STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(
+    POSTMAN_STORAGE_KEY,
+    JSON.stringify({ ...state, requestHistory: sanitizeHistory(state.requestHistory) })
+  );
 };
 
 /**

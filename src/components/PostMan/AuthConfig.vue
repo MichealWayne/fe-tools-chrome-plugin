@@ -92,10 +92,7 @@ const emit = defineEmits<{
 /**
  * Local auth draft state mirrored from props.
  */
-const localAuth = reactive<AuthConfig>({
-  type: 'none',
-  ...props.modelValue,
-});
+const localAuth = reactive<AuthConfig>({ ...props.modelValue });
 
 /**
  * Sync incoming modelValue updates into local state.
@@ -119,7 +116,7 @@ const updateAuth = () => {
 <style scoped>
 .auth-section {
   padding: 20px;
-  background: #f8f9fa;
+  background: var(--color-background);
   border-radius: 6px;
 }
 
@@ -132,22 +129,22 @@ const updateAuth = () => {
 
 .auth-type label {
   font-weight: 500;
-  color: #333;
+  color: var(--color-text-primary);
   min-width: 80px;
 }
 
 .auth-select {
   padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  font-size: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-background-light);
+  font-size: var(--font-size-sm);
   cursor: pointer;
 }
 
 .auth-select:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--color-primary);
 }
 
 .auth-config {
@@ -158,33 +155,33 @@ const updateAuth = () => {
 
 .auth-input {
   padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: border-color 0.2s;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  transition: border-color var(--transition-normal);
 }
 
 .auth-input:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-shadow-dark);
 }
 
 .auth-input::placeholder {
-  color: #999;
+  color: var(--color-text-tertiary);
 }
 
 .auth-info {
   padding: 15px;
-  background: #e9ecef;
-  border-radius: 4px;
+  background: var(--color-background-dark);
+  border-radius: var(--border-radius-sm);
   margin-top: 15px;
 }
 
 .auth-info p {
   margin: 0;
-  color: #6c757d;
-  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
   text-align: center;
 }
 </style>

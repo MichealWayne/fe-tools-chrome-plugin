@@ -138,15 +138,15 @@ const getStatusClass = (status?: number) => {
 
 <style scoped>
 .request-history {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 .history-header {
-  background: #f8f9fa;
+  background: var(--color-background);
   padding: 15px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -154,31 +154,31 @@ const getStatusClass = (status?: number) => {
 
 .history-header h3 {
   margin: 0;
-  color: #333;
+  color: var(--color-text-primary);
 }
 
 .history-actions {
   display: flex;
-  gap: 10px;
+  gap: var(--spacing-sm);
 }
 
 .clear-btn,
 .toggle-btn {
   padding: 5px 10px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background-light);
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
   font-size: 12px;
 }
 
 .clear-btn:hover,
 .toggle-btn:hover {
-  background: #f8f9fa;
+  background: var(--color-background);
 }
 
 .clear-btn {
-  color: #dc3545;
+  color: var(--color-error);
 }
 
 .history-content {
@@ -197,7 +197,7 @@ const getStatusClass = (status?: number) => {
 .no-history {
   padding: 40px;
   text-align: center;
-  color: #6c757d;
+  color: var(--color-text-secondary);
 }
 
 .no-history i {
@@ -215,13 +215,13 @@ const getStatusClass = (status?: number) => {
   display: flex;
   align-items: center;
   padding: 12px 15px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border-light);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-normal);
 }
 
 .history-item:hover {
-  background: #f8f9fa;
+  background: var(--color-background);
 }
 
 .history-item:last-child {
@@ -239,34 +239,34 @@ const getStatusClass = (status?: number) => {
 }
 
 .history-method.get {
-  background: #d4edda;
-  color: #155724;
+  background: var(--color-success-surface);
+  color: var(--color-success-foreground);
 }
 
 .history-method.post {
-  background: #fff3cd;
-  color: #856404;
+  background: var(--color-warning-surface);
+  color: var(--color-warning-foreground);
 }
 
 .history-method.put {
-  background: #cce5ff;
-  color: #004085;
+  background: var(--color-info-surface);
+  color: var(--color-info-foreground);
 }
 
 .history-method.delete {
-  background: #f8d7da;
-  color: #721c24;
+  background: var(--color-error-surface);
+  color: var(--color-error-foreground);
 }
 
 .history-method.patch {
-  background: #e2e3e5;
-  color: #383d41;
+  background: var(--color-neutral-surface);
+  color: var(--color-neutral-foreground);
 }
 
 .history-url {
   flex: 1;
   font-size: 14px;
-  color: #495057;
+  color: var(--color-text-secondary);
   margin-right: 15px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -275,7 +275,7 @@ const getStatusClass = (status?: number) => {
 
 .history-time {
   font-size: 12px;
-  color: #6c757d;
+  color: var(--color-text-secondary);
   margin-right: 15px;
   min-width: 80px;
 }
@@ -291,32 +291,32 @@ const getStatusClass = (status?: number) => {
 }
 
 .history-status.success {
-  background: #d4edda;
-  color: #155724;
+  background: var(--color-success-surface);
+  color: var(--color-success-foreground);
 }
 
 .history-status.redirect {
-  background: #fff3cd;
-  color: #856404;
+  background: var(--color-warning-surface);
+  color: var(--color-warning-foreground);
 }
 
 .history-status.client-error {
-  background: #f8d7da;
-  color: #721c24;
+  background: var(--color-error-surface);
+  color: var(--color-error-foreground);
 }
 
 .history-status.server-error {
-  background: #f5c6cb;
-  color: #721c24;
+  background: var(--color-error-surface-strong);
+  color: var(--color-error-foreground);
 }
 
 .remove-btn {
   background: none;
   border: none;
-  color: #6c757d;
+  color: var(--color-text-secondary);
   cursor: pointer;
   padding: 4px;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   width: 24px;
   height: 24px;
   display: flex;
@@ -325,7 +325,7 @@ const getStatusClass = (status?: number) => {
 }
 
 .remove-btn:hover {
-  background: #f8f9fa;
-  color: #dc3545;
+  background: var(--color-background);
+  color: var(--color-error);
 }
 </style>

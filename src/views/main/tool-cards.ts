@@ -1,5 +1,6 @@
 export type ToolCategory = 'transform' | 'inspect' | 'reference' | 'network';
 export type ToolDestination = 'embedded' | 'standalone' | 'external';
+export type ToolWorkspaceSize = 'default' | 'wide';
 
 export type ToolCard = {
   key: string;
@@ -8,6 +9,7 @@ export type ToolCard = {
   iconClass: string;
   category: ToolCategory;
   destination: ToolDestination;
+  workspaceSize?: ToolWorkspaceSize;
   componentName?: string;
   url?: string;
 };
@@ -47,6 +49,7 @@ export const TOOL_CARDS: ToolCard[] = [
     iconClass: 'u-icon icon-postman g-center g-fs36',
     category: 'network',
     destination: 'standalone',
+    workspaceSize: 'wide',
     url: 'index.html?type=postman',
   },
   {
@@ -110,6 +113,7 @@ export const TOOL_CARDS: ToolCard[] = [
     iconClass: 'u-icon iconfont icon-compress-file g-center g-fs36',
     category: 'transform',
     destination: 'embedded',
+    workspaceSize: 'wide',
     componentName: 'SvgEditor',
   },
   {
@@ -119,6 +123,7 @@ export const TOOL_CARDS: ToolCard[] = [
     iconClass: 'u-icon iconfont icon-calc g-center g-fs36',
     category: 'transform',
     destination: 'embedded',
+    workspaceSize: 'wide',
     componentName: 'DateConverter',
   },
   {

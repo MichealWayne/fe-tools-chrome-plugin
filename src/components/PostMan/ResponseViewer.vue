@@ -255,25 +255,8 @@ const jsonFormat = async (source: string) => {
        * Parse JSON once any JSONP wrapper is removed.
        */
       jsonObj = JSON.parse(source);
-    } catch (ex) {
-      /**
-       * Fallback: attempt evaluation for JS-like objects without strict JSON.
-       */
-      try {
-        jsonObj = new Function('return ' + source)();
-      } catch (exx) {
-        try {
-          /**
-           * Retry when payload is a stringified JSON string.
-           */
-          jsonObj = new Function(`return '${source}'`)();
-          if (typeof jsonObj === 'string') {
-            jsonObj = new Function('return ' + jsonObj)();
-          }
-        } catch (err) {
-          errorMsgForJson.value = (err as Error).message;
-        }
-      }
+    } catch (error) {
+      errorMsgForJson.value = (error as Error).message;
     }
 
     /**

@@ -5,7 +5,7 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { ApiResponse, ApiError, RequestConfig, ErrorType } from '@/types/api';
+import { ApiResponse, RequestConfig } from '@/types/api';
 
 /**
  * Default API configuration for timeouts and retries.
@@ -31,8 +31,8 @@ const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(r
  * @param error - Axios error object.
  * @returns Whether the request is retryable.
  */
-function shouldRetry(error: any): boolean {
-  const { response } = error;
+function shouldRetry(error: unknown): boolean {
+  const response = (error as { response?: { status?: number } })?.response;
   /**
    * Retry on network failures when no response is available.
    */
@@ -42,7 +42,7 @@ function shouldRetry(error: any): boolean {
   /**
    * Retry on server errors or gateway timeouts.
    */
-  return status >= 500 || status === 408;
+  return (status ?? 0) >= 500 || status === 408;
 }
 
 /**
@@ -52,15 +52,16 @@ function shouldRetry(error: any): boolean {
  */
 function createRetryableRequest<T>(
   requestFn: () => Promise<T>,
-  maxRetries: number = API_CONFIG.retryTimes
+  maxRetries: number = API_CONFIG.retryTimes,
+  retryDelay: number = API_CONFIG.retryDelay
 ): Promise<T> {
   /**
    * Retry recursively until all attempts are exhausted.
    */
   return requestFn().catch(async error => {
     if (maxRetries > 0 && shouldRetry(error)) {
-      await delay(API_CONFIG.retryDelay);
-      return createRetryableRequest(requestFn, maxRetries - 1);
+      await delay(retryDelay);
+      return createRetryableRequest(requestFn, maxRetries - 1, retryDelay);
     }
     throw error;
   });
@@ -81,28 +82,13 @@ export class ApiClient {
   }
 
   private setupInterceptors(): void {
-    /**
-     * Inject common request/response handling across all requests.
-     */
+    /** Inject common request handling across all requests. */
     this.instance.interceptors.request.use(
       config => {
         const modifiedConfig = this.handleRequest(config);
         return modifiedConfig as any;
       },
-      error => Promise.reject(this.handleError(error, ''))
-    );
-
-    /**
-     * Normalize Axios responses and errors for the caller.
-     */
-    this.instance.interceptors.response.use(
-      response => {
-        /**
-         * Return raw Axios response for downstream processing.
-         */
-        return response;
-      },
-      error => Promise.reject(this.handleError(error, error.config?.url || ''))
+      error => Promise.reject(error)
     );
   }
 
@@ -165,48 +151,6 @@ export class ApiClient {
     return result;
   }
 
-  private handleError(error: any, url: string): ApiError {
-    /**
-     * Map Axios errors into the shared ApiError structure.
-     */
-    const { response, code, message, config } = error;
-
-    let errorType: ErrorType;
-    let statusCode: number;
-    let errorMessage: string;
-
-    if (code === 'ECONNABORTED') {
-      errorType = ErrorType.TIMEOUT_ERROR;
-      statusCode = 408;
-      errorMessage = '请求超时';
-    } else if (response) {
-      const { status, data, statusText } = response;
-      statusCode = status;
-
-      if (status >= 500) {
-        errorType = ErrorType.SERVER_ERROR;
-      } else if (status >= 400) {
-        errorType = ErrorType.CLIENT_ERROR;
-      } else {
-        errorType = ErrorType.NETWORK_ERROR;
-      }
-
-      errorMessage = data?.message || statusText || '请求失败';
-    } else {
-      errorType = ErrorType.NETWORK_ERROR;
-      statusCode = 0;
-      errorMessage = message || '网络错误';
-    }
-
-    return {
-      success: false,
-      statusCode,
-      message: errorMessage,
-      type: errorType,
-      url: config?.url || url,
-    };
-  }
-
   /**
    * Perform a GET request with retry logic enabled by default.
    * @param url - Endpoint URL.
@@ -227,7 +171,8 @@ export class ApiClient {
     if (config.retry !== false) {
       return createRetryableRequest(
         () => this.instance.get(url, requestConfig).then(res => this.handleSuccess(res)),
-        config.retryTimes
+        config.retryTimes,
+        config.retryDelay
       );
     }
 
@@ -236,7 +181,7 @@ export class ApiClient {
   }
 
   /**
-   * Perform a POST request with retry logic enabled by default.
+   * Perform a POST request. Retrying is opt-in because POST requests may not be idempotent.
    * @param url - Endpoint URL.
    * @param data - Request payload.
    * @param config - Optional request overrides.
@@ -251,10 +196,11 @@ export class ApiClient {
       ...config,
     };
 
-    if (config.retry !== false) {
+    if (config.retry === true) {
       return createRetryableRequest(
         () => this.instance.post(url, data, requestConfig).then(res => this.handleSuccess(res)),
-        config.retryTimes
+        config.retryTimes,
+        config.retryDelay
       );
     }
 

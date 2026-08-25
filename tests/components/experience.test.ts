@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 import ToolState from '@/components/Experience/ToolState.vue';
 import ToolWorkspace from '@/components/Experience/ToolWorkspace.vue';
+import { TOOL_CARDS } from '@/views/main/tool-cards';
 import { getFocusableElements, restoreFocus, trapFocus } from '@/utils/focus';
 
 describe('experience primitives', () => {
@@ -45,5 +46,10 @@ describe('experience primitives', () => {
     restoreFocus(last, first);
     expect(document.activeElement).toBe(last);
     container.remove();
+  });
+
+  it('declares wide workspaces for the selected complex tools', () => {
+    const wideTools = TOOL_CARDS.filter(tool => tool.workspaceSize === 'wide').map(tool => tool.key);
+    expect(wideTools).toEqual(['postman', 'svg-editor', 'date-converter']);
   });
 });

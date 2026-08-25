@@ -1,9 +1,5 @@
 <template>
   <section class="m-screenshot" @click.stop="handleStop">
-    <header class="m-screenshot_head">
-      <h2 class="g-fs18">{{ t('pageScreenshot.title') }}</h2>
-    </header>
-
     <tool-state
       v-if="errorMessage"
       state="error"
@@ -95,6 +91,9 @@ import { langManager } from '@/utils/i18n';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 import ToolState from '@/components/Experience/ToolState.vue';
 import type { InlineFeedbackMessage } from '@/types/experience';
+
+const MAX_CAPTURE_SEGMENTS = 40;
+const MAX_CAPTURE_PIXELS = 25_000_000;
 
 const t = (key: string) => langManager.t(key);
 
@@ -277,6 +276,7 @@ const captureFullPage = async (cropRect?: CropRect) => {
   errorMessage.value = '';
   previewUrl.value = '';
   isCapturing.value = true;
+  let restoreScroll: (() => Promise<unknown>) | undefined;
 
   try {
     const tab = await getActiveTab();
@@ -287,7 +287,8 @@ const captureFullPage = async (cropRect?: CropRect) => {
       throw new Error(t('pageScreenshot.errorUnavailable'));
     }
 
-    const { totalHeight, viewportHeight, viewportWidth, scrollY } = metrics;
+    const { totalHeight, viewportHeight, viewportWidth, devicePixelRatio, scrollY } = metrics;
+    restoreScroll = () => scrollToPosition(tabId, scrollY);
 
     const maxScroll = Math.max(0, totalHeight - viewportHeight);
     const positions: number[] = [];
@@ -298,6 +299,12 @@ const captureFullPage = async (cropRect?: CropRect) => {
     }
     if (positions[positions.length - 1] !== maxScroll) {
       positions.push(maxScroll);
+    }
+
+    const estimatedPixels =
+      totalHeight * viewportWidth * Math.max(1, devicePixelRatio) * Math.max(1, devicePixelRatio);
+    if (positions.length > MAX_CAPTURE_SEGMENTS || estimatedPixels > MAX_CAPTURE_PIXELS) {
+      throw new Error(t('pageScreenshot.errorTooLarge'));
     }
 
     const captures: Array<{ y: number; dataUrl: string }> = [];
@@ -316,23 +323,32 @@ const captureFullPage = async (cropRect?: CropRect) => {
       captures.push({ y, dataUrl: captureResponse.dataUrl });
     }
 
-    await scrollToPosition(tabId, scrollY);
+    await restoreScroll();
+    restoreScroll = undefined;
 
-    const images = await Promise.all(captures.map(item => loadImage(item.dataUrl)));
-    const scale = images[0].width / viewportWidth;
+    const firstImage = await loadImage(captures[0].dataUrl);
+    captures[0].dataUrl = '';
+    const scale = firstImage.width / viewportWidth;
+    const canvasHeight = Math.round(totalHeight * scale);
+    if (firstImage.width * canvasHeight > MAX_CAPTURE_PIXELS) {
+      throw new Error(t('pageScreenshot.errorTooLarge'));
+    }
     const canvas = document.createElement('canvas');
-    canvas.width = images[0].width;
-    canvas.height = Math.round(totalHeight * scale);
+    canvas.width = firstImage.width;
+    canvas.height = canvasHeight;
     const ctx = canvas.getContext('2d');
 
     if (!ctx) {
       throw new Error(t('pageScreenshot.errorCapture'));
     }
 
-    images.forEach((img, index) => {
-      const offsetY = Math.round(captures[index].y * scale);
+    for (const [index, capture] of captures.entries()) {
+      const img = index === 0 ? firstImage : await loadImage(capture.dataUrl);
+      capture.dataUrl = '';
+      const offsetY = Math.round(capture.y * scale);
       ctx.drawImage(img, 0, offsetY);
-    });
+      img.src = '';
+    }
 
     if (cropRect) {
       const sx = Math.max(0, Math.round(cropRect.left * scale));
@@ -371,6 +387,13 @@ const captureFullPage = async (cropRect?: CropRect) => {
   } catch (error) {
     errorMessage.value = (error as Error)?.message || t('pageScreenshot.errorCapture');
   } finally {
+    if (restoreScroll) {
+      try {
+        await restoreScroll();
+      } catch {
+        // Preserve the original screenshot failure; restoring the page is best effort.
+      }
+    }
     isCapturing.value = false;
   }
 };

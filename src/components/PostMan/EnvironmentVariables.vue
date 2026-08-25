@@ -180,6 +180,7 @@ export default {
 import { ref, computed, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
 import type { PostmanEnvironment } from './types';
+import { replaceEnvironmentVariables } from './utils/environment';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 import type { InlineFeedbackMessage } from '@/types/experience';
 
@@ -347,15 +348,7 @@ const replaceVariables = (text: string): string => {
   const env = props.environments.find(e => e.name === currentEnv.value);
   if (!env) return text;
 
-  let result = text;
-  env.variables.forEach(variable => {
-    if (variable.key && variable.value) {
-      const regex = new RegExp(`{{\\s*${variable.key}\\s*}}`, 'g');
-      result = result.replace(regex, variable.value);
-    }
-  });
-
-  return result;
+  return replaceEnvironmentVariables(text, env.variables);
 };
 
 defineExpose({

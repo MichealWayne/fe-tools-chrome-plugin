@@ -142,6 +142,7 @@ export default {
     saveToLocal: '保存到本地',
     retake: '重新截图',
     errorCapture: '截图失败，请重试',
+    errorTooLarge: '页面尺寸超过截图限制，请缩小页面或改用节点截图',
     errorUnavailable: '当前页面无法截图',
     errorSelection: '未能选择元素',
     saveSuccess: '截图已提交保存',

@@ -2,7 +2,6 @@
   <section class="svg-editor" @click="stopPropagation">
     <div class="svg-editor__header">
       <div class="svg-editor__header-content">
-        <h4 class="svg-editor__title">{{ t('svgEditor.title') }}</h4>
         <p>{{ t('svgEditor.description') }}</p>
       </div>
     </div>
