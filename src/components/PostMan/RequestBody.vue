@@ -179,26 +179,26 @@ const removeUrlencodedItem = (index: number) => {
 
 <style scoped>
 .request-body {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: var(--spacing-md);
 }
 
 .section-header h3 {
   margin: 0;
-  color: #333;
+  color: var(--color-text-primary);
 }
 
 .body-type-select {
   padding: 5px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-background-light);
 }
 
 .json-textarea,
@@ -206,73 +206,73 @@ const removeUrlencodedItem = (index: number) => {
   width: 100%;
   min-height: 200px;
   padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
   font-family: 'Courier New', monospace;
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   resize: vertical;
 }
 
 .json-textarea:focus,
 .raw-textarea:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--color-primary);
 }
 
 .format-btn {
   margin-top: 10px;
-  background: #28a745;
-  color: white;
+  background: var(--color-success);
+  color: var(--color-text-inverse);
   border: none;
   padding: 5px 15px;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
 }
 
 .format-btn:hover {
-  background: #218838;
+  background: var(--color-success-dark);
 }
 
 .form-item {
   display: flex;
-  gap: 10px;
+  gap: var(--spacing-sm);
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .form-input {
   flex: 1;
   padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--color-primary);
 }
 
 .add-btn {
-  background: #007bff;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
   border: none;
   padding: 8px 15px;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
   margin-top: 10px;
 }
 
 .add-btn:hover {
-  background: #0056b3;
+  background: var(--color-primary-dark);
 }
 
 .remove-btn {
-  background: #dc3545;
-  color: white;
+  background: var(--color-error);
+  color: var(--color-text-inverse);
   border: none;
   padding: 8px;
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
   width: 32px;
   height: 32px;
@@ -282,6 +282,6 @@ const removeUrlencodedItem = (index: number) => {
 }
 
 .remove-btn:hover {
-  background: #c82333;
+  background: var(--color-error-dark);
 }
 </style>

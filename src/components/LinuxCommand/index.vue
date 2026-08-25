@@ -156,19 +156,23 @@ onMounted(loadCommands);
 .example {
   padding: 10px;
   overflow: auto;
-  background: #f6f8ff;
-  border-radius: 8px;
+  background: var(--color-background);
+  border-radius: var(--border-radius-lg);
 }
 .example {
-  color: #fff;
-  background: #1f2a44;
+  color: var(--color-text-inverse);
+  background: var(--color-text-primary);
 }
 </style>
 
 <style scoped>
 .m-linux {
-  max-height: 500px;
-  overflow: auto;
+  overflow: visible;
+}
+.m-linux pre {
+  overflow: visible;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 .m-quick_commands {
   display: flex;
@@ -178,13 +182,13 @@ onMounted(loadCommands);
 }
 .u-btn_quick {
   padding: 4px 8px;
-  border: 1px solid #dbe3f9;
+  border: 1px solid var(--color-border);
   border-radius: 999px;
-  background: #fff;
+  background: var(--color-background-light);
 }
 .m-command_item {
   padding: 12px;
-  border: 1px solid #e4e9f7;
+  border: 1px solid var(--color-border-light);
   border-radius: 10px;
 }
 .command-details h3 {

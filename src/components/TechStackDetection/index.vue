@@ -1,7 +1,6 @@
 <template>
   <section class="m-tech-stack" @click.stop="handleStop">
     <header class="m-tech-stack__header">
-      <h2 class="g-fs18">{{ t('techStack.title') }}</h2>
       <p class="g-fs12 m-tech-stack__desc">{{ t('techStack.description') }}</p>
     </header>
 
@@ -350,91 +349,91 @@ const startDetect = async () => {
   width: 480px;
   max-height: 420px;
   overflow-y: auto;
-  background: #fff;
-  border-radius: 12px;
-  padding: 16px;
+  background: var(--color-background-light);
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-md);
   box-sizing: border-box;
 }
 
 .m-tech-stack__header {
-  margin-bottom: 10px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .m-tech-stack__desc {
-  color: #6b778c;
-  margin-top: 4px;
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
 }
 
 .m-tech-stack__actions {
-  margin-bottom: 10px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .m-tech-stack__error {
-  color: #d93025;
-  margin-bottom: 8px;
+  color: var(--color-error-dark);
+  margin-bottom: var(--spacing-sm);
 }
 
 .m-tech-stack__summary {
   margin-bottom: 8px;
-  color: #4d5a70;
+  color: var(--color-text-secondary);
 }
 
 .m-tech-stack__group {
-  margin-bottom: 10px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .m-tech-stack__group-title {
-  margin: 0 0 6px;
-  color: #5c6f8a;
+  margin: 0 0 var(--spacing-xs);
+  color: var(--color-text-secondary);
 }
 
 .m-tech-stack__list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--spacing-sm);
   padding: 0;
   margin: 0;
   list-style: none;
 }
 
 .m-tech-stack__item {
-  border: 1px solid #d8e2ff;
-  border-radius: 8px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--border-radius-lg);
   padding: 10px;
-  background: #f8fbff;
+  background: var(--color-background);
 }
 
 .m-tech-stack__item-head {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-xs);
   flex-wrap: wrap;
-  margin-bottom: 6px;
+  margin-bottom: var(--spacing-xs);
 }
 
 .m-tech-stack__tag {
   font-size: 11px;
   line-height: 1;
-  color: #1e63ff;
-  background: #eaf1ff;
-  border-radius: 999px;
+  color: var(--color-primary);
+  background: var(--color-background-dark);
+  border-radius: var(--border-radius-pill);
   padding: 4px 6px;
 }
 
 .m-tech-stack__tag--muted {
-  color: #5c6f8a;
-  background: #edf2fa;
+  color: var(--color-text-secondary);
+  background: var(--color-background-dark);
 }
 
 .m-tech-stack__evidence {
   margin: 0;
   padding-left: 18px;
-  color: #5c6f8a;
+  color: var(--color-text-secondary);
   font-size: 12px;
   line-height: 1.5;
 }
 
 .m-tech-stack__empty {
-  color: #6b778c;
+  color: var(--color-text-secondary);
 }
 </style>

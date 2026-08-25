@@ -142,6 +142,8 @@ export default {
     saveToLocal: 'Save to Local',
     retake: 'Retake',
     errorCapture: 'Capture failed, please retry',
+    errorTooLarge:
+      'This page is too large to capture. Reduce the page size or capture a selected node.',
     errorUnavailable: 'Capture is unavailable on this page',
     errorSelection: 'Failed to select element',
     saveSuccess: 'Screenshot submitted for saving',

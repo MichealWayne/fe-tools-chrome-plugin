@@ -11,27 +11,22 @@ import ajax from '@/api';
  * @returns Promise resolving to the translated string.
  */
 export default function handleTxtTranslate(txt: string): Promise<string> {
-  return new Promise(resolve => {
-    ajax
-      .handleTranslate({
-        doctype: 'json',
-        type: 'AUTO',
-        i: txt,
-      })
-      .then((data: any) => {
-        let resultTxt = '';
-        if (data.translateResult?.length) {
-          const resultArr = data.translateResult || [];
+  return ajax
+    .handleTranslate({
+      doctype: 'json',
+      type: 'AUTO',
+      i: txt,
+    })
+    .then(data => {
+      const payload = data.data || data;
+      const translateResult = (payload as { translateResult?: Array<Array<{ tgt?: string }>> })
+        .translateResult;
 
-          resultArr.forEach((itemArr: any[]) => {
-            if (itemArr?.length) {
-              itemArr.forEach(item => {
-                resultTxt += item.tgt;
-              });
-            }
-          });
-        }
-        resolve(resultTxt || '');
-      });
-  });
+      return (
+        translateResult
+          ?.flat()
+          .map(item => item.tgt || '')
+          .join('') || ''
+      );
+    });
 }

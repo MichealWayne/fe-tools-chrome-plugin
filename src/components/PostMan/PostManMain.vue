@@ -1,7 +1,6 @@
 <template>
   <div class="postman-container">
     <div class="postman-header">
-      <h1>{{ t('postman.title') }}</h1>
       <div class="header-actions">
         <button class="save-btn" @click="saveRequest">
           <i class="fas fa-save" aria-hidden="true"></i> {{ t('postman.saveRequest') }}

@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { buildRequestPayload } from '@/components/PostMan/utils/request-builder';
+import { replaceEnvironmentVariables } from '@/components/PostMan/utils/environment';
 import { loadPostmanStorage, savePostmanStorage } from '@/components/PostMan/utils/storage';
 import type { PostmanRequestConfig } from '@/components/PostMan/types';
 
@@ -55,6 +56,23 @@ describe('postman request utilities', () => {
   });
 });
 
+describe('postman environment variable replacement', () => {
+  it('treats variable names and values as literal text', () => {
+    const result = replaceEnvironmentVariables('https://api.test/{{api.v1}}/{{token}}', [
+      { key: 'api.v1', value: 'v1' },
+      { key: 'token', value: 'a$&b' },
+    ]);
+
+    expect(result).toBe('https://api.test/v1/a$&b');
+  });
+
+  it('does not throw when a variable name includes regexp syntax', () => {
+    expect(replaceEnvironmentVariables('{{[token]}}', [{ key: '[token]', value: 'abc' }])).toBe(
+      'abc'
+    );
+  });
+});
+
 describe('postman storage utilities', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -70,6 +88,24 @@ describe('postman storage utilities', () => {
     const loaded = loadPostmanStorage();
     expect(loaded.currentEnvironment).toBe('Prod');
     expect(loaded.environments[0].name).toBe('Prod');
+  });
+
+  it('does not persist sensitive request headers in history', () => {
+    savePostmanStorage({
+      environments: [],
+      currentEnvironment: '',
+      requestHistory: [
+        {
+          method: 'GET',
+          url: 'https://api.test',
+          headers: { Authorization: 'Bearer secret', Accept: 'application/json' },
+          timestamp: Date.now(),
+        },
+      ],
+    });
+
+    expect(localStorage.getItem('postman-data')).not.toContain('Bearer secret');
+    expect(loadPostmanStorage().requestHistory[0].headers).toEqual({ Accept: 'application/json' });
   });
 
   it('handles invalid storage data', () => {

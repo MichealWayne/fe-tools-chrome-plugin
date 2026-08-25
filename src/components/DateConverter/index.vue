@@ -2,9 +2,6 @@
   <section class="date-converter" @click="stopPropagation">
     <div class="date-converter__header">
       <div class="date-converter__header-content">
-        <h4 class="date-converter__title">
-          {{ t('dateConverter.title') }}
-        </h4>
         <p>{{ t('dateConverter.description') }}</p>
       </div>
     </div>

@@ -1,6 +1,12 @@
 <template>
   <section class="media-tool image-compressor">
-    <input ref="fileInput" class="z-hide" type="file" accept="image/*" @change="onFileChange" />
+    <input
+      ref="fileInput"
+      class="z-hide"
+      type="file"
+      accept="image/jpeg,image/png,image/gif"
+      @change="onFileChange"
+    />
     <button
       v-if="!imgUrl"
       type="button"
@@ -74,6 +80,10 @@ const processing = ref(false);
 const error = ref('');
 const feedback = ref<InlineFeedbackMessage | null>(null);
 
+const releasePreviewUrl = () => {
+  if (imgUrl.value.startsWith('blob:')) URL.revokeObjectURL(imgUrl.value);
+};
+
 const validRate = () => {
   const value = Number(compressRate.value);
   if (!Number.isFinite(value) || value <= 0 || value > 1)
@@ -95,6 +105,7 @@ const handleFiles = async (files?: FileList | null) => {
   });
   try {
     const result = await handleInputUploadImageFile(files || undefined, validRate());
+    releasePreviewUrl();
     imgUrl.value = result.imgUrl;
     base64Result.value = result.base64result;
     feedback.value = { message: t('imageCompressor.messages.ready'), tone: 'success' };
@@ -136,6 +147,7 @@ const downloadResult = () => {
 };
 
 const reset = () => {
+  releasePreviewUrl();
   imgUrl.value = '';
   base64Result.value = '';
   originalBase64.value = '';

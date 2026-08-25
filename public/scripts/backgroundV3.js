@@ -58,7 +58,7 @@ chrome.runtime.onInstalled.addListener(() => {
  */
 chrome.contextMenus.onClicked.addListener((data, tab) => {
   if (data.menuItemId === 'qrCode') {
-      handleTabCreate('index.html?search=qrcode&message=' + tab.url);
+      handleTabCreate('index.html?search=qrcode&message=' + encodeURIComponent(tab.url || ''));
   } else if (data.menuItemId === 'translate') {
     // 发送消息给 content script 执行脚本
     chrome.tabs.sendMessage(tab.id, {

@@ -112,6 +112,35 @@ describe('PostMan workflow experience', () => {
     expect(wrapper.get('[role="alert"]').text()).toContain('JSON');
   });
 
+  it('does not execute JavaScript-like JSON responses as a parsing fallback', async () => {
+    const wrapper = mount(ResponseViewer, {
+      props: {
+        response: {
+          status: 200,
+          statusText: 'OK',
+          headers: { 'content-type': 'application/json' },
+          data: '{unquoted: true}',
+          responseTime: 12,
+          size: 16,
+        },
+      },
+    });
+
+    await wrapper.setProps({
+      response: {
+        status: 200,
+        statusText: 'OK',
+        headers: { 'content-type': 'application/json' },
+        data: '{unquoted: true}',
+        responseTime: 12,
+        size: 16,
+      },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).toMatch(/JSON/);
+  });
+
   it('requires in-context confirmation before clearing history', async () => {
     const wrapper = mount(RequestHistory, {
       props: {

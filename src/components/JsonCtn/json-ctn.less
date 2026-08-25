@@ -1,13 +1,22 @@
 .json-converter {
+  --json-surface: #fff;
+  --json-surface-muted: #f6f8ff;
+  --json-border: #e2e9ff;
+  --json-border-panel: #e4e9f7;
+  --json-text: #1f2a44;
+  --json-text-secondary: #6b7a99;
+  --json-text-body: #2b3a55;
+  --json-primary: var(--color-primary);
+  --json-primary-hover: #1f55d1;
   padding: 18px 20px;
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
-  border: 1px solid #e2e9ff;
+  background: linear-gradient(180deg, var(--json-surface) 0%, #f5f8ff 100%);
+  border: 1px solid var(--json-border);
   border-radius: 12px;
   box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
   height: calc(100vh - 40px);
-  overflow-y: auto;
+  overflow: visible;
   box-sizing: border-box;
 
   &__header {
@@ -24,11 +33,11 @@
       font-size: 16px;
       font-weight: 600;
       margin-bottom: 4px;
-      color: #1f2a44;
+      color: var(--json-text);
     }
 
     p {
-      color: #6b7a99;
+      color: var(--json-text-secondary);
       margin: 0;
       font-size: 12px;
       line-height: 1.4;
@@ -48,6 +57,8 @@
 
   &__content {
     display: flex;
+    min-width: 0;
+    width: 100%;
     gap: 16px;
     margin-bottom: 16px;
 
@@ -57,12 +68,13 @@
   }
 
   &__panel {
+    min-width: 0;
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: #fff;
+    background-color: var(--json-surface);
     border-radius: 12px;
-    border: 1px solid #e4e9f7;
+    border: 1px solid var(--json-border-panel);
     box-shadow: 0 6px 14px rgba(28, 63, 124, 0.06);
     overflow: hidden;
     transition: box-shadow 0.3s ease;
@@ -77,24 +89,31 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background-color: #f6f8ff;
-    border-bottom: 1px solid #e2e9ff;
+    background-color: var(--json-surface-muted);
+    border-bottom: 1px solid var(--json-border);
+
+    :deep(button),
+    button {
+      min-height: 28px;
+      padding: 4px 8px;
+      line-height: 20px;
+    }
 
     span {
       font-weight: 600;
       font-size: 13px;
-      color: #1f2a44;
+      color: var(--json-text);
     }
 
     .clear-btn,
     .copy-btn,
     .format-btn {
-      color: #2969f7;
+      color: var(--json-primary);
       padding: 0 4px;
       font-size: 12px;
 
       &:hover {
-        color: #1f55d1;
+        color: var(--json-primary-hover);
       }
 
       &:disabled {
@@ -117,19 +136,19 @@
     font-family: 'Fira Code', 'Courier New', monospace;
     font-size: 14px;
     line-height: 1.6;
-    color: #2b3a55;
+    color: var(--json-text-body);
     resize: vertical;
-    background-color: #fff;
+    background-color: var(--json-surface);
     transition: background-color 0.2s ease;
 
     &:focus {
       outline: none;
-      background-color: #f6f8ff;
+      background-color: var(--json-surface-muted);
     }
 
     &:disabled {
       background-color: #f5f7fb;
-      color: #6b7a99;
+      color: var(--json-text-secondary);
       cursor: default;
     }
 
@@ -167,41 +186,41 @@
       text-align: center;
       border-radius: 50%;
       transition: all 0.2s ease;
-      color: #6b7a99;
+      color: var(--json-text-secondary);
       user-select: none;
 
       &:hover {
-        color: #2969f7;
+        color: var(--json-primary);
         background-color: rgba(41, 105, 247, 0.12);
       }
 
       &.to-json {
-        color: #2969f7;
+        color: var(--json-primary);
       }
     }
   }
 
   &__error {
     padding: 4px 10px;
-    background-color: #fff2f0;
-    border-top: 1px solid #ffccc7;
-    color: #f5222d;
+    background-color: var(--color-error-surface);
+    border-top: 1px solid var(--color-error-light);
+    color: var(--color-error);
     font-size: 12px;
   }
 
   &__tips {
-    background-color: #f6f8ff;
+    background-color: var(--json-surface-muted);
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid #e2e9f7;
-    border-left: 3px solid #2969f7;
+    border: 1px solid var(--json-border);
+    border-left: 3px solid var(--json-primary);
     margin-top: 12px;
     font-size: 12px;
 
     h4 {
       margin-top: 0;
       margin-bottom: 6px;
-      color: #1f2a44;
+      color: var(--json-text);
       font-weight: 600;
       font-size: 13px;
     }
@@ -212,7 +231,7 @@
 
       li {
         margin-bottom: 3px;
-        color: #6b7a99;
+        color: var(--json-text-secondary);
         font-size: 12px;
 
         &:last-child {

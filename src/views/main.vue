@@ -1,5 +1,12 @@
 <template>
-  <section class="m-ctn m-ctn--scrollable u-pt20" :class="{ 'm-ctn--home': !showCompName }">
+  <section
+    class="m-ctn m-ctn--scrollable u-pt20"
+    :class="{
+      'm-ctn--home': !showCompName,
+      'm-ctn--wide':
+        activeTool?.workspaceSize === 'wide' && activeTool.destination === 'standalone',
+    }"
+  >
     <div class="settings-header">
       <button
         ref="settingsEntry"
@@ -172,6 +179,7 @@
         ref="activeWorkspace"
         :title="activeTool ? t(activeTool.nameKey) : t('title')"
         :description="activeTool ? t(activeTool.descriptionKey) : ''"
+        :wide="activeTool?.workspaceSize === 'wide' && activeTool.destination === 'standalone'"
       >
         <component :is="showCompName" :keywords="keywords" :back="handleBackHome" />
       </tool-workspace>
