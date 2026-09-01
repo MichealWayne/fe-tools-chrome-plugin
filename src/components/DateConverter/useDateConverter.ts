@@ -1,10 +1,12 @@
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import DOMPurify from 'dompurify';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/zh-cn';
+import 'dayjs/locale/en';
+import { langManager } from '@/utils/i18n';
 
 const setupDayjs = (() => {
   let initialized = false;
@@ -13,15 +15,19 @@ const setupDayjs = (() => {
     dayjs.extend(utc);
     dayjs.extend(timezone);
     dayjs.extend(relativeTime);
-    dayjs.locale('zh-cn');
     initialized = true;
   };
 })();
+
+export const syncDayjsLocale = (language: string) => {
+  dayjs.locale(language === 'en' ? 'en' : 'zh-cn');
+};
 
 export const useDateConverter = (
   t: (key: string, params?: Record<string, string | number>) => string
 ) => {
   setupDayjs();
+  watch(langManager.languageRef, syncDayjsLocale, { immediate: true });
 
   const inputType = ref('timestamp');
   const inputTimestamp = ref<number | null>(null);

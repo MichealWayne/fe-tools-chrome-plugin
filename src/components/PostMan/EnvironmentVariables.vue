@@ -37,33 +37,13 @@
         </div>
 
         <div class="variables-list">
-          <div v-for="(variable, index) in currentVariables" :key="index" class="variable-item">
-            <input
-              v-model="variable.key"
-              :placeholder="t('postman.environments.variableName')"
-              class="var-input"
-              @input="updateVariables"
-            />
-            <input
-              v-model="variable.value"
-              :placeholder="t('postman.environments.variableValue')"
-              class="var-input"
-              @input="updateVariables"
-            />
-            <input
-              v-model="variable.description"
-              :placeholder="t('postman.environments.variableDesc')"
-              class="var-input description"
-              @input="updateVariables"
-            />
-            <button
-              class="remove-btn"
-              :aria-label="t('postman.actions.remove')"
-              @click="removeVariable(index)"
-            >
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
+          <KeyValueEditor
+            :model-value="currentVariables"
+            :key-placeholder="t('postman.environments.variableName')"
+            :value-placeholder="t('postman.environments.variableValue')"
+            allow-secret
+            @update:model-value="updateCurrentVariables"
+          />
         </div>
 
         <div class="env-actions-bottom">
@@ -183,6 +163,8 @@ import type { PostmanEnvironment } from './types';
 import { replaceEnvironmentVariables } from './utils/environment';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 import type { InlineFeedbackMessage } from '@/types/experience';
+import KeyValueEditor from './KeyValueEditor.vue';
+import { normalizeEnvironment } from './utils/request-model';
 
 const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 
@@ -236,15 +218,15 @@ const switchEnvironment = () => {
 const addVariable = () => {
   const env = props.environments.find(e => e.name === currentEnv.value);
   if (env) {
-    env.variables.push({ key: '', value: '', description: '' });
+    env.variables.push({ key: '', value: '', description: '', enabled: true, secret: false });
     updateVariables();
   }
 };
 
-const removeVariable = (index: number) => {
+const updateCurrentVariables = (variables: PostmanEnvironment['variables']) => {
   const env = props.environments.find(e => e.name === currentEnv.value);
   if (env) {
-    env.variables.splice(index, 1);
+    env.variables = variables;
     updateVariables();
   }
 };
@@ -290,7 +272,14 @@ const exportEnvironment = () => {
   const env = props.environments.find(e => e.name === currentEnv.value);
   if (!env) return;
 
-  const dataStr = JSON.stringify(env, null, 2);
+  const safeEnvironment = {
+    ...env,
+    variables: env.variables.map(variable => ({
+      ...variable,
+      value: variable.secret ? '' : variable.value,
+    })),
+  };
+  const dataStr = JSON.stringify(safeEnvironment, null, 2);
   const dataBlob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(dataBlob);
 
@@ -304,6 +293,7 @@ const exportEnvironment = () => {
 };
 
 const applyImportedEnvironment = (envData: PostmanEnvironment) => {
+  envData = normalizeEnvironment(envData);
   const existingIndex = props.environments.findIndex(e => e.name === envData.name);
   const updatedEnvs = [...props.environments];
   if (existingIndex >= 0) updatedEnvs[existingIndex] = envData;

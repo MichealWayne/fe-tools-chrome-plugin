@@ -1,4 +1,11 @@
-import { vi } from 'vitest';
+import { beforeEach, vi } from 'vitest';
+import { langManager } from '@/utils/i18n';
+
+// Existing component fixtures are authored in Chinese; each test opts into
+// English explicitly when it is testing locale behavior.
+beforeEach(() => {
+  langManager.setLanguage('zh');
+});
 
 // Mock Chrome APIs
 Object.defineProperty(window, 'chrome', {

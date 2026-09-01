@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildSearchResults, normalizeFeToolsList } from '@/views/main/search-utils';
 import type { BookmarkItem, FeToolListItem } from '@/views/main/types';
+import { getDefaultSearchList } from '@/constant';
 
 describe('search-utils', () => {
   const translate = (key: string, params?: Record<string, string | number>) => {
@@ -164,5 +165,14 @@ describe('search-utils', () => {
 
     expect(results[0].label).toBe('tools');
     expect(results[1].label).toBe('mark');
+  });
+
+  it('selects localized external search destinations', () => {
+    expect(getDefaultSearchList('en')[0]).toEqual({
+      name: 'MDN',
+      link: 'https://developer.mozilla.org/en-US/search?q=',
+    });
+    expect(getDefaultSearchList('zh').some(item => item.name === '百度')).toBe(true);
+    expect(getDefaultSearchList('zh')[0].link).toContain('/zh-CN/');
   });
 });

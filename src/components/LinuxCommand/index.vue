@@ -14,7 +14,7 @@
         v-for="quickCmd in quickCommands"
         :key="quickCmd"
         type="button"
-        class="u-btn_quick"
+        class="u-btn u-btn_quick"
         @click="filterTxt = quickCmd"
       >
         {{ quickCmd }}
@@ -44,8 +44,11 @@
             ><strong>{{ item.name }}</strong> {{ item.description }}</span
           >
           <span class="reference-tool__actions">
-            <button type="button" @click="copyCommand(item.syntax)">{{ t('common.copy') }}</button>
+            <button class="u-btn" type="button" @click="copyCommand(item.syntax)">
+              {{ t('common.copy') }}
+            </button>
             <button
+              class="u-btn"
               type="button"
               :aria-expanded="item.isOpened"
               @click="item.isOpened = !item.isOpened"
@@ -181,10 +184,17 @@ onMounted(loadCommands);
   margin: 10px 0;
 }
 .u-btn_quick {
+  min-height: 0;
   padding: 4px 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-primary-light);
   border-radius: 999px;
-  background: var(--color-background-light);
+}
+
+.u-btn_quick:hover {
+  color: var(--color-text-inverse);
+  background: var(--color-primary);
+  box-shadow: 0 3px 8px var(--color-primary-shadow);
+  transform: translateY(-1px);
 }
 .m-command_item {
   padding: 12px;

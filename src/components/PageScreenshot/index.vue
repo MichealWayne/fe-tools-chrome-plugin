@@ -90,6 +90,16 @@ import { ref } from 'vue';
 import { langManager } from '@/utils/i18n';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 import ToolState from '@/components/Experience/ToolState.vue';
+import { sendRuntimeMessage, sendTabMessage } from '@/extension/chrome-client';
+import {
+  isCaptureResponse,
+  isPageMetrics,
+  isScrollResponse,
+  isSelectionResponse,
+  type CaptureResponse,
+  type PageMetrics,
+  type SelectionResponse,
+} from '@/extension/messages';
 import type { InlineFeedbackMessage } from '@/types/experience';
 
 const MAX_CAPTURE_SEGMENTS = 40;
@@ -126,48 +136,6 @@ const getActiveTab = () =>
         return;
       }
       resolve(tab);
-    });
-  });
-
-type PageMetrics = {
-  totalWidth: number;
-  totalHeight: number;
-  viewportWidth: number;
-  viewportHeight: number;
-  devicePixelRatio: number;
-  scrollY: number;
-};
-
-type CaptureResponse = {
-  success: boolean;
-  dataUrl?: string;
-  error?: string;
-};
-
-type SelectionResponse = {
-  success: boolean;
-  error?: string;
-};
-
-type TabMessage =
-  | { action: 'getPageMetrics' }
-  | { action: 'scrollTo'; y: number; delay?: number }
-  | { action: 'startElementSelectAndCapture'; filename: string };
-
-type BackgroundMessage = {
-  action: 'captureVisibleTab';
-  windowId: number;
-};
-
-const sendMessageToTab = <T,>(tabId: number, message: TabMessage) =>
-  new Promise<T>((resolve, reject) => {
-    chrome.tabs.sendMessage(tabId, message, response => {
-      const err = chrome.runtime.lastError;
-      if (err) {
-        reject(new Error(err.message));
-        return;
-      }
-      resolve(response as T);
     });
   });
 
@@ -208,18 +176,6 @@ const executeScriptFiles = (tabId: number, files: string[]) =>
     );
   });
 
-const sendMessageToBackground = <T,>(message: BackgroundMessage) =>
-  new Promise<T>((resolve, reject) => {
-    chrome.runtime.sendMessage(message, response => {
-      const err = chrome.runtime.lastError;
-      if (err) {
-        reject(new Error(err.message));
-        return;
-      }
-      resolve(response as T);
-    });
-  });
-
 const loadImage = (src: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const img = new Image();
@@ -230,7 +186,7 @@ const loadImage = (src: string) =>
 
 const getPageMetrics = async (tabId: number) => {
   try {
-    return await sendMessageToTab<PageMetrics>(tabId, { action: 'getPageMetrics' });
+    return await sendTabMessage<PageMetrics>(tabId, { action: 'getPageMetrics' }, isPageMetrics);
   } catch {
     return executeScript(tabId, () => {
       const doc = document.documentElement;
@@ -249,7 +205,11 @@ const getPageMetrics = async (tabId: number) => {
 
 const scrollToPosition = async (tabId: number, y: number) => {
   try {
-    return await sendMessageToTab<{ scrollY: number }>(tabId, { action: 'scrollTo', y, delay: 0 });
+    return await sendTabMessage<{ scrollY: number }>(
+      tabId,
+      { action: 'scrollTo', y, delay: 0 },
+      isScrollResponse
+    );
   } catch {
     return executeScript(
       tabId,
@@ -311,10 +271,13 @@ const captureFullPage = async (cropRect?: CropRect) => {
     for (const y of positions) {
       await scrollToPosition(tabId, y);
       await delay(200);
-      const captureResponse = await sendMessageToBackground<CaptureResponse>({
-        action: 'captureVisibleTab',
-        windowId: tab.windowId,
-      });
+      const captureResponse = await sendRuntimeMessage<CaptureResponse>(
+        {
+          action: 'captureVisibleTab',
+          windowId: tab.windowId,
+        },
+        isCaptureResponse
+      );
 
       if (!captureResponse?.success || !captureResponse.dataUrl) {
         throw new Error(captureResponse?.error || t('pageScreenshot.errorCapture'));
@@ -421,20 +384,25 @@ const startNodeSelect = async () => {
     )}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
     let selection: SelectionResponse | undefined;
     try {
-      selection = await sendMessageToTab<SelectionResponse>(tabId, {
-        action: 'startElementSelectAndCapture',
-        filename,
-      });
+      selection = await sendTabMessage<SelectionResponse>(
+        tabId,
+        { action: 'startElementSelectAndCapture', filename },
+        isSelectionResponse
+      );
     } catch (error) {
       const message = (error as Error)?.message || '';
       if (!message.includes('Receiving end does not exist')) {
         throw error;
       }
-      await executeScriptFiles(tabId, ['scripts/content-script-v3.js']);
-      selection = await sendMessageToTab<SelectionResponse>(tabId, {
-        action: 'startElementSelectAndCapture',
-        filename,
-      });
+      await executeScriptFiles(tabId, [
+        'scripts/message-contract.js',
+        'scripts/content-script-v3.js',
+      ]);
+      selection = await sendTabMessage<SelectionResponse>(
+        tabId,
+        { action: 'startElementSelectAndCapture', filename },
+        isSelectionResponse
+      );
     }
 
     if (!selection?.success) {

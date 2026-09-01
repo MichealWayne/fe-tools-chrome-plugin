@@ -1,9 +1,12 @@
 import './prototypes';
 import { createJsonFormatDealer } from './dealer';
 import { escapeHtml, formatJsonString } from './format-utils';
+import { langManager } from '@/utils/i18n';
 
 let JsonFormatEntrance = (function () {
   'use strict';
+
+  const t = (key, params) => langManager.t(key, params);
 
   let jfContent, jfPre, jfStyleEl, jfOptEl, jfPathEl, formattingMsg;
 
@@ -30,14 +33,20 @@ let JsonFormatEntrance = (function () {
     formattingMsg = $('#formattingMsg');
     if (!formattingMsg[0]) {
       formattingMsg = $(
-        '<div id="formattingMsg"><span class="x-loading"></span>格式化中...</div>'
+        '<div id="formattingMsg"><span class="x-loading"></span>' +
+          t('jsonFormat.formatting') +
+          '</div>'
       ).appendTo('body');
     }
 
     jfOptEl = $('#boxOpt');
     if (!jfOptEl.length) {
       jfOptEl = $(
-        '<div id="boxOpt"><a class="opt-copy">复制</a>|<a class="opt-del">删除</a></div>'
+        '<div id="boxOpt"><a class="opt-copy">' +
+          t('jsonFormat.copy') +
+          '</a>|<a class="opt-del">' +
+          t('jsonFormat.delete') +
+          '</a></div>'
       ).appendTo('body');
     }
 
@@ -57,7 +66,7 @@ let JsonFormatEntrance = (function () {
     switch (msg[0]) {
       case 'NOT JSON':
         jfPre.show();
-        jfContent.html('<span class="x-json-tips">JSON不合法，请检查：</span>');
+        jfContent.html('<span class="x-json-tips">' + t('jsonFormat.invalidJson') + '</span>');
         break;
 
       case 'FORMATTING':
@@ -116,7 +125,7 @@ let JsonFormatEntrance = (function () {
     document.execCommand('Copy');
     document.body.removeChild(input);
 
-    alert('Json片段复制成功，随处粘贴可用！');
+    alert(t('jsonFormat.copySuccess'));
   };
 
   /**
@@ -171,7 +180,7 @@ let JsonFormatEntrance = (function () {
                 filename: 'FeHelper-' + dt + '.json',
               });
             } else {
-              alert('必须接受授权，才能正常下载！');
+              alert(t('jsonFormat.permissionRequired'));
             }
           }
         );
@@ -186,10 +195,10 @@ let JsonFormatEntrance = (function () {
     // 删除json片段
     let fnDel = function () {
       if (el.parent().is('#formattedJson')) {
-        alert('如果连最外层的Json也删掉的话，就没啥意义了哦！');
+        alert(t('jsonFormat.rootCannotDelete'));
         return false;
       }
-      alert('节点已删除成功！');
+      alert(t('jsonFormat.deleteSuccess'));
       el.remove();
       jfOptEl.css('top', -1000).hide();
       jfPathEl && jfPathEl.hide();
@@ -250,10 +259,12 @@ let JsonFormatEntrance = (function () {
     }
     optionBar = $('<div id="optionBar" />').appendTo(jfContent.parent());
 
-    let buttonFormatted = $('<button id="buttonFormatted">元数据</button>').appendTo(optionBar);
-    let buttonCollapseAll = $('<button id="buttonCollapseAll">折叠所有</button>').appendTo(
-      optionBar
-    );
+    let buttonFormatted = $(
+      '<button id="buttonFormatted">' + t('jsonFormat.metadata') + '</button>'
+    ).appendTo(optionBar);
+    let buttonCollapseAll = $(
+      '<button id="buttonCollapseAll">' + t('jsonFormat.collapseAll') + '</button>'
+    ).appendTo(optionBar);
     let plainOn = false;
 
     buttonFormatted.bind('click', function () {
@@ -261,12 +272,12 @@ let JsonFormatEntrance = (function () {
         plainOn = false;
         jfPre.hide();
         jfContent.show();
-        buttonFormatted.text('元数据');
+        buttonFormatted.text(t('jsonFormat.metadata'));
       } else {
         plainOn = true;
         jfPre.show();
         jfContent.hide();
-        buttonFormatted.text('格式化');
+        buttonFormatted.text(t('jsonFormat.formatted'));
       }
 
       jfOptEl && jfOptEl.hide();
@@ -279,11 +290,11 @@ let JsonFormatEntrance = (function () {
         buttonFormatted.trigger('click');
       }
 
-      if (buttonCollapseAll.text() === '折叠所有') {
-        buttonCollapseAll.text('展开所有');
+      if (buttonCollapseAll.text() === t('jsonFormat.collapseAll')) {
+        buttonCollapseAll.text(t('jsonFormat.expandAll'));
         collapse($('.objProp,.arrElem'));
       } else {
-        buttonCollapseAll.text('折叠所有');
+        buttonCollapseAll.text(t('jsonFormat.collapseAll'));
         $('.objProp,.arrElem').removeClass('collapsed');
       }
       jfOptEl && jfOptEl.hide();
@@ -325,7 +336,7 @@ let JsonFormatEntrance = (function () {
         })
         .appendTo('body');
     }
-    jfPathEl.html('当前路径：' + path).show();
+    jfPathEl.html(t('jsonFormat.currentPath', { path })).show();
   };
 
   // 附加操作

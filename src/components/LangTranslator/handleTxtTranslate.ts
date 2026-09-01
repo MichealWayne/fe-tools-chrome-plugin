@@ -18,9 +18,7 @@ export default function handleTxtTranslate(txt: string): Promise<string> {
       i: txt,
     })
     .then(data => {
-      const payload = data.data || data;
-      const translateResult = (payload as { translateResult?: Array<Array<{ tgt?: string }>> })
-        .translateResult;
+      const translateResult = data.data.translateResult;
 
       return (
         translateResult

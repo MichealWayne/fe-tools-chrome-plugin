@@ -1,4 +1,5 @@
 import type { PostmanRequestConfig } from '../types';
+import { serializeRequestUrl } from './url-params';
 
 export type EnvValueResolver = (value: string) => string;
 
@@ -19,10 +20,13 @@ export const buildRequestPayload = (
 ): RequestPayload => {
   const headers: Record<string, string> = {};
 
-  const processedUrl = resolveValue(request.url);
+  const requestUrl = request.queryParams?.length
+    ? serializeRequestUrl(request.url, request.queryParams) || request.url
+    : request.url;
+  const processedUrl = resolveValue(requestUrl);
 
   request.headers.forEach(header => {
-    if (header.key && header.value) {
+    if (header.enabled !== false && header.key && header.value) {
       const processedValue = resolveValue(header.value);
       headers[header.key] = processedValue;
     }
@@ -51,7 +55,7 @@ export const buildRequestPayload = (
     } else if (request.body.type === 'form-data' && request.body.formData) {
       const formData = new FormData();
       request.body.formData.forEach(item => {
-        if (item.key && item.value) {
+        if (item.enabled !== false && item.key && item.value) {
           const processedValue = resolveValue(item.value);
           formData.append(item.key, processedValue);
         }
@@ -60,7 +64,7 @@ export const buildRequestPayload = (
     } else if (request.body.type === 'x-www-form-urlencoded' && request.body.urlencoded) {
       const params = new URLSearchParams();
       request.body.urlencoded.forEach(item => {
-        if (item.key && item.value) {
+        if (item.enabled !== false && item.key && item.value) {
           const processedValue = resolveValue(item.value);
           params.append(item.key, processedValue);
         }

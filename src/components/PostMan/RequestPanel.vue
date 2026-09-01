@@ -19,11 +19,24 @@
         class="url-input"
         :aria-label="t('postman.urlPlaceholder')"
         @keyup.enter="$emit('send-request')"
-        @input="updateRequest"
+        @input="handleUrlInput"
       />
 
+      <label class="timeout-control" :title="t('postman.request.timeoutLabel')">
+        <span class="z-hide">{{ t('postman.request.timeoutLabel') }}</span>
+        <input
+          v-model.number="localRequest.settings!.timeout"
+          type="number"
+          min="100"
+          step="100"
+          :aria-label="t('postman.request.timeoutLabel')"
+          @change="updateRequest"
+        />
+        <span>ms</span>
+      </label>
+
       <button
-        :disabled="loading || !localRequest.url"
+        :disabled="!loading && !localRequest.url"
         :title="
           loading
             ? t('postman.feedback.requestPending')
@@ -32,13 +45,14 @@
               : ''
         "
         class="send-btn"
-        @click="$emit('send-request')"
+        @click="loading ? $emit('cancel-request') : $emit('send-request')"
       >
-        <i v-if="loading" class="fas fa-spinner fa-spin"></i>
+        <i v-if="loading" class="fas fa-stop"></i>
         <i v-else class="fas fa-paper-plane"></i>
-        {{ loading ? t('postman.actions.sending') : t('postman.actions.send') }}
+        {{ loading ? t('postman.actions.cancel') : t('postman.actions.send') }}
       </button>
     </div>
+    <p v-if="validationMessage" class="request-validation" role="alert">{{ validationMessage }}</p>
 
     <!-- 请求配置标签页 -->
     <div class="request-tabs">
@@ -46,6 +60,8 @@
         v-for="tab in requestTabs"
         :key="tab.key"
         :class="['tab-btn', { active: activeTab === tab.key }]"
+        role="tab"
+        :aria-selected="activeTab === tab.key"
         @click="activeTab = tab.key"
       >
         {{ tab.label }}
@@ -53,6 +69,13 @@
     </div>
 
     <div class="request-tab-content">
+      <KeyValueEditor
+        v-if="activeTab === 'params'"
+        v-model="queryParams"
+        :key-placeholder="t('postman.editor.key')"
+        :value-placeholder="t('postman.editor.value')"
+        @update:model-value="handleParamsUpdate"
+      />
       <!-- 请求头 -->
       <RequestHeaders
         v-if="activeTab === 'headers'"
@@ -66,6 +89,9 @@
         v-model="localRequest.body"
         @update:model-value="updateRequest"
       />
+      <p v-if="activeTab === 'body' && bodyOmitted" class="method-notice" role="note">
+        {{ t('postman.body.omittedForMethod', { method: localRequest.method }) }}
+      </p>
 
       <!-- 认证 -->
       <div v-if="activeTab === 'auth'" class="auth-section">
@@ -139,12 +165,11 @@ import { langManager } from '@/utils/i18n';
 import type { PostmanRequestConfig } from './types';
 import RequestHeaders from './RequestHeaders.vue';
 import RequestBody from './RequestBody.vue';
-/**
- * Optional AuthConfig import placeholder for future expansion.
- * import AuthConfig from './AuthConfig.vue';
- */
-
-const t = (key: string) => langManager.t(key);
+import KeyValueEditor from './KeyValueEditor.vue';
+import type { QueryParameterEntry } from './types';
+import { normalizeRequest } from './utils/request-model';
+import { parseRequestUrl, serializeRequestUrl } from './utils/url-params';
+const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 
 /**
  * Props for the request editor panel.
@@ -152,10 +177,14 @@ const t = (key: string) => langManager.t(key);
 interface Props {
   request: PostmanRequestConfig;
   loading?: boolean;
+  validationMessage?: string;
+  validationField?: 'url' | 'body' | 'environment' | '';
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
+  validationMessage: '',
+  validationField: '',
 });
 
 /**
@@ -164,12 +193,15 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:request': [request: PostmanRequestConfig];
   'send-request': [];
+  'cancel-request': [];
 }>();
 
 /**
  * Local draft copy of the request configuration.
  */
-const localRequest = reactive<PostmanRequestConfig>({ ...props.request });
+const localRequest = reactive<PostmanRequestConfig>(normalizeRequest(props.request));
+const queryParams = ref<QueryParameterEntry[]>(localRequest.queryParams || []);
+let syncingParams = false;
 
 /**
  * Active request tab (headers/body/auth).
@@ -181,10 +213,12 @@ const urlInput = ref<HTMLInputElement | null>(null);
  * Tab metadata for the request editor.
  */
 const requestTabs = computed(() => [
-  { key: 'headers', label: t('postman.requestTabs.headers') },
+  { key: 'params', label: tabLabel('postman.requestTabs.params', queryParams.value) },
+  { key: 'headers', label: tabLabel('postman.requestTabs.headers', localRequest.headers) },
   { key: 'body', label: t('postman.requestTabs.body') },
   { key: 'auth', label: t('postman.requestTabs.auth') },
 ]);
+const bodyOmitted = computed(() => localRequest.method === 'GET' || localRequest.method === 'HEAD');
 
 /**
  * Keep local state in sync with incoming props.
@@ -192,16 +226,48 @@ const requestTabs = computed(() => [
 watch(
   () => props.request,
   newRequest => {
-    Object.assign(localRequest, newRequest);
+    const normalized = normalizeRequest(newRequest);
+    Object.assign(localRequest, normalized);
+    queryParams.value = normalized.queryParams || [];
   },
   { deep: true }
+);
+
+watch(
+  () => props.validationField,
+  field => {
+    if (field === 'body') activeTab.value = 'body';
+  }
 );
 
 /**
  * Emit the updated request to the parent.
  */
 const updateRequest = () => {
-  emit('update:request', { ...localRequest });
+  emit('update:request', normalizeRequest({ ...localRequest, queryParams: queryParams.value }));
+};
+
+function tabLabel(key: string, entries: QueryParameterEntry[]) {
+  const count = entries.filter(entry => entry.enabled !== false && entry.key).length;
+  return `${t(key)}${count ? ` (${count})` : ''}`;
+}
+
+const handleUrlInput = () => {
+  if (!syncingParams) {
+    const parsed = parseRequestUrl(localRequest.url);
+    if (parsed) queryParams.value = parsed.params;
+  }
+  updateRequest();
+};
+
+const handleParamsUpdate = () => {
+  const next = serializeRequestUrl(localRequest.url, queryParams.value);
+  if (next) {
+    syncingParams = true;
+    localRequest.url = next;
+    syncingParams = false;
+  }
+  updateRequest();
 };
 
 defineExpose({
@@ -255,6 +321,19 @@ defineExpose({
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px var(--color-shadow-dark);
+}
+
+.timeout-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-tertiary);
+}
+.timeout-control input {
+  width: 78px;
+  padding: 10px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
 }
 
 .send-btn {
@@ -365,5 +444,20 @@ defineExpose({
 
 .auth-input::placeholder {
   color: var(--color-text-tertiary);
+}
+
+.request-validation,
+.method-notice {
+  margin: calc(var(--spacing-md) * -1) 0 var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-error-surface);
+  color: var(--color-error-foreground);
+}
+
+.method-notice {
+  margin: var(--spacing-sm) 0;
+  background: var(--color-info-surface);
+  color: var(--color-info-foreground);
 }
 </style>

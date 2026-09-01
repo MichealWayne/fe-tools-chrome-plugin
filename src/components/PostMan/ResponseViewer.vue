@@ -1,5 +1,15 @@
 <template>
-  <div v-if="response" class="response-viewer" :class="{ fullscreen: isFullscreen }">
+  <div
+    v-if="executionState && executionState.type !== 'received'"
+    class="response-state"
+    :data-state="executionState.type"
+    role="status"
+  >
+    <i :class="stateIcon" aria-hidden="true"></i>
+    <strong>{{ stateTitle }}</strong>
+    <span v-if="executionState.type === 'network-error'">{{ executionState.message }}</span>
+  </div>
+  <div v-else-if="response" class="response-viewer" :class="{ fullscreen: isFullscreen }">
     <div class="response-header">
       <div class="status-info">
         <span class="status" :class="getStatusClass(response.status)">
@@ -8,46 +18,52 @@
         <span class="time">{{ response.responseTime }}ms</span>
         <span class="size">{{ formatSize(response.size) }}</span>
       </div>
-      <button class="copy-btn" @click="copyResponse">
-        {{ t('postman.actions.copyResponse') }}
-      </button>
-      <button
-        class="fullscreen-btn"
-        :aria-label="
-          isFullscreen ? t('postman.actions.exitFullscreen') : t('postman.actions.fullscreen')
-        "
-        :title="
-          isFullscreen ? t('postman.actions.exitFullscreen') : t('postman.actions.fullscreen')
-        "
-        @click="toggleFullscreen"
-      >
-        <svg
-          v-if="!isFullscreen"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
+      <div class="response-actions">
+        <button class="copy-btn" @click="copyResponse">
+          {{ t('postman.actions.copyResponse') }}
+        </button>
+        <button class="utility-btn" @click="downloadResponse">
+          {{ t('postman.actions.download') }}
+        </button>
+        <button
+          ref="fullscreenButton"
+          class="fullscreen-btn"
+          :aria-label="
+            isFullscreen ? t('postman.actions.exitFullscreen') : t('postman.actions.fullscreen')
+          "
+          :title="
+            isFullscreen ? t('postman.actions.exitFullscreen') : t('postman.actions.fullscreen')
+          "
+          @click="toggleFullscreen"
         >
-          <path
-            d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"
-          />
-        </svg>
-        <svg
-          v-else
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"
-          />
-        </svg>
-      </button>
+          <svg
+            v-if="!isFullscreen"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"
+            />
+          </svg>
+          <svg
+            v-else
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"
+            />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <div class="response-tabs">
@@ -66,7 +82,44 @@
     <div class="response-content">
       <!-- 响应体 -->
       <div :class="{ 'z-hide': activeTab !== 'body' }" class="response-body">
-        <div v-if="isJsonResponse" class="json-viewer">
+        <div class="response-tools">
+          <div class="view-modes" role="tablist" :aria-label="t('postman.response.viewMode')">
+            <button
+              v-for="mode in availableModes"
+              :key="mode"
+              :class="{ active: bodyMode === mode }"
+              role="tab"
+              :aria-selected="bodyMode === mode"
+              @click="bodyMode = mode"
+            >
+              {{ t(`postman.response.modes.${mode}`) }}
+            </button>
+          </div>
+          <label class="response-search">
+            <span class="z-hide">{{ t('postman.response.search') }}</span>
+            <input v-model="searchQuery" :placeholder="t('postman.response.search')" />
+            <span v-if="searchQuery">{{
+              searchCount ? `${searchIndex + 1}/${searchCount}` : '0/0'
+            }}</span>
+            <button
+              type="button"
+              :disabled="!searchCount"
+              :aria-label="t('postman.response.previousMatch')"
+              @click="moveSearch(-1)"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              :disabled="!searchCount"
+              :aria-label="t('postman.response.nextMatch')"
+              @click="moveSearch(1)"
+            >
+              ↓
+            </button>
+          </label>
+        </div>
+        <div v-if="bodyMode === 'pretty' && isJsonResponse" class="json-viewer">
           <div v-show="isFormatting" id="formattingMsg">
             <span class="x-loading"></span>{{ t('postman.response.formatting') }}
           </div>
@@ -75,7 +128,7 @@
           <pre id="jfContent_pre" ref="jsonContentRef"></pre>
           <div id="jfCallbackNameEnd" class="callback-name" v-html="safeCallbackNameEnd"></div>
         </div>
-        <div v-else-if="isHtmlResponse" class="html-viewer">
+        <div v-else-if="bodyMode === 'preview' && isHtmlResponse" class="html-viewer">
           <div class="html-preview" v-html="sanitizedHtml"></div>
         </div>
         <div v-else class="text-viewer">
@@ -88,6 +141,13 @@
         <div v-for="(value, key) in response.headers" :key="key" class="header-item">
           <span class="header-key">{{ key }}:</span>
           <span class="header-value">{{ value }}</span>
+          <button
+            type="button"
+            :aria-label="`${t('common.copy')} ${key}`"
+            @click="copyText(String(value))"
+          >
+            <i class="fas fa-copy" aria-hidden="true"></i>
+          </button>
         </div>
       </div>
 
@@ -120,15 +180,16 @@ import { langManager } from '@/utils/i18n';
 
 import JsonFormatEntrance from '@/utils/json-format.js';
 import { sanitizeHtml, sanitizeInlineMarkup } from '@/utils/sanitize';
-import type { PostmanResponseData } from './types';
+import type { PostmanResponseData, RequestExecutionState } from './types';
 
 const t = (key: string) => langManager.t(key);
 
 interface Props {
-  response: PostmanResponseData | null;
+  response?: PostmanResponseData | null;
+  executionState?: RequestExecutionState;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), { response: null, executionState: undefined });
 const emit = defineEmits<{
   feedback: [message: string, tone: 'success' | 'error'];
 }>();
@@ -140,12 +201,16 @@ const jfCallbackNameStart = ref('');
 const jfCallbackNameEnd = ref('');
 const jsonContentRef = ref<HTMLElement>();
 const isFullscreen = ref(false);
+const bodyMode = ref<'pretty' | 'raw' | 'preview'>('pretty');
+const searchQuery = ref('');
+const searchIndex = ref(0);
+const fullscreenButton = ref<HTMLButtonElement | null>(null);
 
 /**
  * Resolve response content-type for view selection.
  */
 const contentType = computed(() => {
-  return props.response?.headers?.['content-type'] || '';
+  return String(props.response?.headers?.['content-type'] || '');
 });
 
 const isJsonResponse = computed(() => {
@@ -154,6 +219,28 @@ const isJsonResponse = computed(() => {
 
 const isHtmlResponse = computed(() => {
   return contentType.value.includes('text/html') || contentType.value.includes('application/xhtml');
+});
+
+const availableModes = computed<Array<'pretty' | 'raw' | 'preview'>>(() =>
+  isHtmlResponse.value ? ['pretty', 'raw', 'preview'] : ['pretty', 'raw']
+);
+
+const searchCount = computed(() => {
+  if (!searchQuery.value) return 0;
+  return responseText.value.toLowerCase().split(searchQuery.value.toLowerCase()).length - 1;
+});
+
+const stateTitle = computed(() => {
+  const type = props.executionState?.type || 'idle';
+  return t(`postman.response.states.${type}`);
+});
+
+const stateIcon = computed(() =>
+  props.executionState?.type === 'pending' ? 'fas fa-spinner fa-spin' : 'fas fa-circle-exclamation'
+);
+
+watch(searchQuery, () => {
+  searchIndex.value = 0;
 });
 
 /**
@@ -312,6 +399,8 @@ watch(
   () => props.response,
   async () => {
     activeTab.value = 'body';
+    bodyMode.value = 'pretty';
+    searchQuery.value = '';
 
     /**
      * Auto-format JSON responses for the viewer.
@@ -353,12 +442,21 @@ const formatSize = (bytes?: number) => {
  * Copy the response body to the clipboard.
  */
 const copyResponse = async () => {
+  await copyText(responseText.value);
+};
+
+const copyText = async (value: string) => {
   try {
-    await navigator.clipboard.writeText(responseText.value);
+    await navigator.clipboard.writeText(value);
     emit('feedback', t('postman.feedback.responseCopied'), 'success');
   } catch (error) {
     emit('feedback', t('postman.feedback.copyFailed'), 'error');
   }
+};
+
+const moveSearch = (offset: number) => {
+  if (!searchCount.value) return;
+  searchIndex.value = (searchIndex.value + offset + searchCount.value) % searchCount.value;
 };
 
 /**
@@ -366,6 +464,18 @@ const copyResponse = async () => {
  */
 const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value;
+  if (!isFullscreen.value) nextTick(() => fullscreenButton.value?.focus());
+};
+
+const downloadResponse = () => {
+  const mime = contentType.value.split(';')[0] || 'text/plain';
+  const extension = mime.includes('json') ? 'json' : mime.includes('html') ? 'html' : 'txt';
+  const url = URL.createObjectURL(new Blob([responseText.value], { type: mime }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `api-response-${Date.now()}.${extension}`;
+  link.click();
+  URL.revokeObjectURL(url);
 };
 </script>
 

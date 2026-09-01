@@ -36,16 +36,24 @@
       />
     </label>
     <div class="converter-tool__actions">
-      <button type="button" :disabled="!imgUrl || processing" @click="compress">
+      <button
+        class="u-btn"
+        s-color="blue"
+        type="button"
+        :disabled="!imgUrl || processing"
+        @click="compress"
+      >
         {{ t('imageCompressor.compress') }}
       </button>
-      <button type="button" :disabled="!base64Result" @click="copyResult">
+      <button class="u-btn" type="button" :disabled="!base64Result" @click="copyResult">
         {{ t('common.copy') }}
       </button>
-      <button type="button" :disabled="!base64Result" @click="downloadResult">
+      <button class="u-btn" type="button" :disabled="!base64Result" @click="downloadResult">
         {{ t('imageCompressor.download') }}
       </button>
-      <button type="button" :disabled="!imgUrl" @click="reset">{{ t('common.clear') }}</button>
+      <button class="u-btn" type="button" :disabled="!imgUrl" @click="reset">
+        {{ t('common.clear') }}
+      </button>
     </div>
     <tool-state v-if="processing" state="loading" :message="t('imageCompressor.processing')" />
     <inline-feedback :feedback="error ? { message: error, tone: 'error' } : feedback" />

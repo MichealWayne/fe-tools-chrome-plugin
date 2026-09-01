@@ -16,6 +16,7 @@ vi.mock('axios', () => ({
 }));
 
 import { ApiClient } from '@/api/client';
+import api from '@/api';
 
 describe('ApiClient retry policy', () => {
   beforeEach(() => {
@@ -48,5 +49,153 @@ describe('ApiClient retry policy', () => {
 
     await expect(client.post('/submit')).rejects.toMatchObject({ message: 'Unavailable' });
     expect(axiosInstance.post).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('ApiClient response contract', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('normalizes array payloads into the list field', async () => {
+    axiosInstance.get.mockResolvedValue({
+      data: [{ id: 'tool-1' }],
+      status: 200,
+      statusText: 'OK',
+      config: { url: '/tools' },
+    });
+    const client = new ApiClient();
+
+    await expect(client.get('/tools')).resolves.toEqual({
+      success: true,
+      message: 'OK',
+      statusCode: 200,
+      url: '/tools',
+      list: [{ id: 'tool-1' }],
+    });
+  });
+
+  it('normalizes object payloads into the data field', async () => {
+    axiosInstance.get.mockResolvedValue({
+      data: { id: 'tool-1' },
+      status: 200,
+      statusText: 'OK',
+      config: { url: '/tool' },
+    });
+    const client = new ApiClient();
+
+    await expect(client.get('/tool')).resolves.toEqual({
+      success: true,
+      message: 'OK',
+      statusCode: 200,
+      url: '/tool',
+      data: { id: 'tool-1' },
+    });
+  });
+
+  it('normalizes primitive payloads into the data field', async () => {
+    axiosInstance.get.mockResolvedValue({
+      data: 'pong',
+      status: 200,
+      statusText: 'OK',
+      config: { url: '/ping' },
+    });
+    const client = new ApiClient();
+
+    await expect(client.get('/ping')).resolves.toEqual({
+      success: true,
+      message: 'OK',
+      statusCode: 200,
+      url: '/ping',
+      data: 'pong',
+    });
+  });
+
+  it('returns a typed list response when the endpoint payload is an array', async () => {
+    axiosInstance.get.mockResolvedValue({
+      data: [{ id: 'tool-1' }],
+      status: 200,
+      statusText: 'OK',
+      config: { url: '/tools' },
+    });
+    const client = new ApiClient();
+
+    await expect(client.getList<{ id: string }>('/tools')).resolves.toMatchObject({
+      list: [{ id: 'tool-1' }],
+    });
+  });
+
+  it('rejects a list contract when the endpoint payload is not an array', async () => {
+    axiosInstance.get.mockResolvedValue({
+      data: { id: 'tool-1' },
+      status: 200,
+      statusText: 'OK',
+      config: { url: '/tools' },
+    });
+    const client = new ApiClient();
+
+    await expect(client.getList('/tools')).rejects.toThrow(
+      'Expected a list response from /tools'
+    );
+  });
+
+  it('returns a typed item response when the endpoint payload is not an array', async () => {
+    axiosInstance.post.mockResolvedValue({
+      data: { translated: 'hello' },
+      status: 200,
+      statusText: 'OK',
+      config: { url: '/translate' },
+    });
+    const client = new ApiClient();
+
+    await expect(client.postItem<{ translated: string }>('/translate')).resolves.toMatchObject({
+      data: { translated: 'hello' },
+    });
+  });
+
+  it('rejects an item contract when the endpoint payload is an array', async () => {
+    axiosInstance.post.mockResolvedValue({
+      data: [{ translated: 'hello' }],
+      status: 200,
+      statusText: 'OK',
+      config: { url: '/translate' },
+    });
+    const client = new ApiClient();
+
+    await expect(client.postItem('/translate')).rejects.toThrow(
+      'Expected an item response from /translate'
+    );
+  });
+});
+
+describe('legacy API facade response contract', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('rejects a list endpoint that returns an object payload', async () => {
+    axiosInstance.get.mockResolvedValue({
+      data: { id: 'tool-1' },
+      status: 200,
+      statusText: 'OK',
+      config: { url: '/tools' },
+    });
+
+    await expect(api.getFeTools()).rejects.toThrow('Expected a list response from');
+  });
+
+  it('preserves the configured GET transport for translation and validates its item response', async () => {
+    axiosInstance.get.mockResolvedValue({
+      data: [{ tgt: 'hello' }],
+      status: 200,
+      statusText: 'OK',
+      config: { url: '/translate' },
+    });
+
+    await expect(api.handleTranslate({ doctype: 'json', type: 'AUTO', i: 'hello' })).rejects.toThrow(
+      'Expected an item response from'
+    );
+    expect(axiosInstance.get).toHaveBeenCalledTimes(1);
+    expect(axiosInstance.post).not.toHaveBeenCalled();
   });
 });

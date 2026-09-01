@@ -25,13 +25,39 @@
     </div>
 
     <div v-if="isExpanded" class="history-content">
+      <div class="history-filters">
+        <input v-model="query" :placeholder="t('postman.history.search')" />
+        <select v-model="methodFilter" :aria-label="t('postman.history.methodFilter')">
+          <option value="">{{ t('postman.history.allMethods') }}</option>
+          <option v-for="method in methods" :key="method" :value="method">{{ method }}</option>
+        </select>
+        <select v-model="statusFilter" :aria-label="t('postman.history.statusFilter')">
+          <option value="">{{ t('postman.history.allStatuses') }}</option>
+          <option value="success">2xx</option>
+          <option value="redirect">3xx</option>
+          <option value="client-error">4xx</option>
+          <option value="server-error">5xx</option>
+        </select>
+        <label
+          ><input v-model="favoritesOnly" type="checkbox" />
+          {{ t('postman.history.favorites') }}</label
+        >
+      </div>
       <div v-if="history.length === 0" class="no-history">
         <i class="fas fa-history"></i>
         <p>{{ t('postman.history.empty') }}</p>
       </div>
 
       <div v-else class="history-list">
-        <div v-for="(item, index) in history" :key="index" class="history-item">
+        <div v-for="item in filteredHistory" :key="item.id || item.timestamp" class="history-item">
+          <button
+            type="button"
+            class="favorite-btn"
+            :aria-label="t('postman.history.favorite')"
+            @click="$emit('toggle-favorite', item)"
+          >
+            <i :class="[item.favorite ? 'fas' : 'far', 'fa-star']"></i>
+          </button>
           <button type="button" class="history-select" @click="selectHistoryItem(item)">
             <span class="history-method" :class="item.method.toLowerCase()">{{ item.method }}</span>
             <span class="history-url">{{ item.url }}</span>
@@ -44,7 +70,7 @@
             class="remove-btn"
             type="button"
             :aria-label="t('postman.actions.remove')"
-            @click="removeHistoryItem(index)"
+            @click="removeHistoryItem(history.indexOf(item))"
           >
             <i class="fas fa-times"></i>
           </button>
@@ -61,13 +87,13 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { langManager } from '@/utils/i18n';
 import type { PostmanHistoryItem } from './types';
 
 const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 
-defineProps<{
+const props = defineProps<{
   history: PostmanHistoryItem[];
 }>();
 
@@ -75,10 +101,26 @@ const emit = defineEmits<{
   'select-item': [item: PostmanHistoryItem];
   'clear-history': [];
   'remove-item': [index: number];
+  'toggle-favorite': [item: PostmanHistoryItem];
 }>();
 
 const isExpanded = ref(true);
 const confirmingClear = ref(false);
+const query = ref('');
+const methodFilter = ref('');
+const favoritesOnly = ref(false);
+const statusFilter = ref('');
+const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
+const filteredHistory = computed(() => {
+  const text = query.value.trim().toLowerCase();
+  return props.history.filter(
+    item =>
+      (!text || item.url.toLowerCase().includes(text) || item.name?.toLowerCase().includes(text)) &&
+      (!methodFilter.value || item.method === methodFilter.value) &&
+      (!statusFilter.value || getStatusClass(item.status) === statusFilter.value) &&
+      (!favoritesOnly.value || item.favorite)
+  );
+});
 
 const toggleHistory = () => {
   isExpanded.value = !isExpanded.value;
@@ -184,6 +226,31 @@ const getStatusClass = (status?: number) => {
 .history-content {
   max-height: 300px;
   overflow-y: auto;
+}
+
+.history-filters {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+  padding: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border-light);
+}
+.history-filters input:not([type='checkbox']),
+.history-filters select {
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+}
+.history-filters > input {
+  flex: 1;
+}
+.favorite-btn {
+  border: 0;
+  background: transparent;
+  color: var(--color-warning-foreground);
+  cursor: pointer;
+  padding: 4px 8px;
 }
 
 .history-select {

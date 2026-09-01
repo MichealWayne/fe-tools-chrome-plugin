@@ -5,10 +5,16 @@ import RequestBody from '@/components/PostMan/RequestBody.vue';
 import RequestHistory from '@/components/PostMan/RequestHistory.vue';
 import EnvironmentVariables from '@/components/PostMan/EnvironmentVariables.vue';
 import ResponseViewer from '@/components/PostMan/ResponseViewer.vue';
+import { useRequestExecution } from '@/components/PostMan/composables/useRequestExecution';
+import type { PostmanRequestConfig } from '@/components/PostMan/types';
+import SavedRequests from '@/components/PostMan/SavedRequests.vue';
+import CurlTools from '@/components/PostMan/CurlTools.vue';
 
 const { axiosRequest } = vi.hoisted(() => ({ axiosRequest: vi.fn() }));
 vi.mock('axios', () => ({
-  default: Object.assign(axiosRequest, { isAxiosError: vi.fn(() => false) }),
+  default: Object.assign(axiosRequest, {
+    isAxiosError: vi.fn((error: { isAxiosError?: boolean }) => Boolean(error?.isAxiosError)),
+  }),
 }));
 
 describe('PostMan workflow experience', () => {
@@ -58,6 +64,18 @@ describe('PostMan workflow experience', () => {
     });
     await response.get('.copy-btn').trigger('click');
     expect(response.emitted('feedback')?.[0]).toEqual(['响应内容已复制', 'success']);
+  });
+
+  it('opens the drawer with focus and closes it with Escape', async () => {
+    const wrapper = mount(PostManMain, { attachTo: document.body });
+    await wrapper.get('.toolbar-btn').trigger('click');
+    await wrapper.vm.$nextTick();
+    const drawer = wrapper.get('.postman-drawer').element;
+    expect(document.activeElement).toBe(drawer);
+
+    await wrapper.get('.postman-drawer').trigger('keydown.esc');
+    expect(wrapper.find('.postman-drawer').exists()).toBe(false);
+    wrapper.unmount();
   });
 
   it('prevents duplicate requests while one is pending', async () => {
@@ -183,5 +201,148 @@ describe('PostMan workflow experience', () => {
     }>;
     expect(imported.at(-1)).toEqual({ name: 'Prod', variables: [] });
     expect(importer.emitted('feedback')?.at(-1)).toEqual(['环境已导入', 'success']);
+  });
+
+  it('shows explicit response lifecycle states', () => {
+    const pending = mount(ResponseViewer, {
+      props: { executionState: { type: 'pending', startedAt: Date.now() } },
+    });
+    expect(pending.get('[data-state="pending"]').text()).toContain('等待');
+
+    const failed = mount(ResponseViewer, {
+      props: { executionState: { type: 'network-error', message: 'offline' } },
+    });
+    expect(failed.text()).toContain('offline');
+  });
+
+  it('offers raw and sanitized preview modes for HTML responses', async () => {
+    const wrapper = mount(ResponseViewer, {
+      props: {
+        response: {
+          status: 200,
+          statusText: 'OK',
+          headers: { 'content-type': 'text/html' },
+          data: '<img src=x onerror=alert(1)><script>alert(1)</script><b>safe</b>',
+          responseTime: 10,
+          size: 50,
+        },
+      },
+    });
+    const preview = wrapper.findAll('.view-modes button').find(button => button.text() === '预览');
+    await preview?.trigger('click');
+    expect(wrapper.get('.html-preview').html()).toContain('<b>safe</b>');
+    expect(wrapper.get('.html-preview').html()).not.toContain('onerror');
+    expect(wrapper.get('.html-preview').html()).not.toContain('<script');
+  });
+
+  it('cancels an active request as a distinct lifecycle state', async () => {
+    axiosRequest.mockImplementation(
+      ({ signal }: { signal: AbortSignal }) =>
+        new Promise((_resolve, reject) =>
+          signal.addEventListener('abort', () => reject(new Error('aborted')))
+        )
+    );
+    const lifecycle = useRequestExecution();
+    const request: PostmanRequestConfig = {
+      method: 'GET',
+      url: 'https://api.test',
+      headers: [],
+      body: { type: 'none' },
+      auth: { type: 'none' },
+    };
+    const pending = lifecycle.execute(request, value => value);
+    lifecycle.cancel();
+    await pending;
+    expect(lifecycle.state.value.type).toBe('cancelled');
+  });
+
+  it('classifies timeout, network failure, and HTTP error responses', async () => {
+    const request: PostmanRequestConfig = {
+      method: 'GET',
+      url: 'https://api.test',
+      headers: [],
+      body: { type: 'none' },
+      auth: { type: 'none' },
+      settings: { timeout: 10 },
+    };
+    const timeout = useRequestExecution();
+    axiosRequest.mockRejectedValueOnce({ isAxiosError: true, code: 'ECONNABORTED' });
+    await timeout.execute(request, value => value);
+    expect(timeout.state.value.type).toBe('timeout');
+
+    const network = useRequestExecution();
+    axiosRequest.mockRejectedValueOnce({ isAxiosError: true, message: 'offline' });
+    await network.execute(request, value => value);
+    expect(network.state.value).toMatchObject({ type: 'network-error', message: 'offline' });
+
+    const httpError = useRequestExecution();
+    axiosRequest.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { status: 422, statusText: 'Invalid', headers: {}, data: { issue: true } },
+    });
+    await httpError.execute(request, value => value);
+    expect(httpError.state.value).toMatchObject({
+      type: 'received',
+      response: { status: 422, data: { issue: true } },
+    });
+  });
+
+  it('searches and downloads response content', async () => {
+    const wrapper = mount(ResponseViewer, {
+      props: {
+        response: {
+          status: 200,
+          statusText: 'OK',
+          headers: { 'content-type': 'text/plain', 'x-test': 'copy-me' },
+          data: 'hello hello',
+          responseTime: 1,
+          size: 11,
+        },
+      },
+    });
+    await wrapper.get('.response-search input').setValue('hello');
+    expect(wrapper.get('.response-search').text()).toContain('1/2');
+    await wrapper.get('.utility-btn').trigger('click');
+    expect(URL.createObjectURL).toHaveBeenCalled();
+  });
+
+  it('saves named requests with duplicate confirmation and redaction', async () => {
+    const request: PostmanRequestConfig = {
+      method: 'GET',
+      url: 'https://api.test',
+      headers: [],
+      body: { type: 'none' },
+      auth: { type: 'bearer', token: 'secret' },
+    };
+    const wrapper = mount(SavedRequests, { props: { items: [], request } });
+    await wrapper.get('.save-form input').setValue('Users');
+    await wrapper.get('.save-form').trigger('submit');
+    const saved = wrapper.emitted('update:items')?.[0]?.[0] as Array<{
+      request: PostmanRequestConfig;
+      redacted: boolean;
+    }>;
+    expect(saved[0].redacted).toBe(true);
+    expect(saved[0].request.auth.token).toBe('');
+
+    await wrapper.setProps({ items: saved as never });
+    await wrapper.get('.save-form input').setValue('Users');
+    await wrapper.get('.save-form').trigger('submit');
+    expect(wrapper.get('[role="alertdialog"]').exists()).toBe(true);
+  });
+
+  it('previews cURL imports before applying them', async () => {
+    const request: PostmanRequestConfig = {
+      method: 'GET',
+      url: 'https://current.test',
+      headers: [],
+      body: { type: 'none' },
+      auth: { type: 'none' },
+    };
+    const wrapper = mount(CurlTools, { props: { request } });
+    await wrapper.get('#curl-import').setValue('curl https://api.test');
+    await wrapper.findAll('button')[0].trigger('click');
+    expect(wrapper.get('.curl-preview').text()).toContain('https://api.test');
+    await wrapper.get('.curl-preview button').trigger('click');
+    expect(wrapper.emitted('apply')?.[0]?.[0]).toMatchObject({ url: 'https://api.test' });
   });
 });

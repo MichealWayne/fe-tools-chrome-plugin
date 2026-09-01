@@ -7,8 +7,9 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
-    AuthConfig: typeof import('./src/components/PostMan/AuthConfig.vue')['default']
+    CodexQuota: typeof import('./src/components/CodexQuota/index.vue')['default']
     ColorPass: typeof import('./src/components/ColorPass/index.vue')['default']
+    CurlTools: typeof import('./src/components/PostMan/CurlTools.vue')['default']
     DateConverter: typeof import('./src/components/DateConverter/index.vue')['default']
     EnvironmentVariables: typeof import('./src/components/PostMan/EnvironmentVariables.vue')['default']
     IconInbox: typeof import('./src/components/ImageCompressor/IconInbox.vue')['default']
@@ -16,6 +17,7 @@ declare module 'vue' {
     ImageCompressor: typeof import('./src/components/ImageCompressor/index.vue')['default']
     InlineFeedback: typeof import('./src/components/Experience/InlineFeedback.vue')['default']
     JsonCtn: typeof import('./src/components/JsonCtn/index.vue')['default']
+    KeyValueEditor: typeof import('./src/components/PostMan/KeyValueEditor.vue')['default']
     LangTranslator: typeof import('./src/components/LangTranslator/index.vue')['default']
     LinuxCommand: typeof import('./src/components/LinuxCommand/index.vue')['default']
     PageScreenshot: typeof import('./src/components/PageScreenshot/index.vue')['default']
@@ -29,6 +31,7 @@ declare module 'vue' {
     ResponseViewer: typeof import('./src/components/PostMan/ResponseViewer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SavedRequests: typeof import('./src/components/PostMan/SavedRequests.vue')['default']
     SvgEditor: typeof import('./src/components/SvgEditor/index.vue')['default']
     TechStackDetection: typeof import('./src/components/TechStackDetection/index.vue')['default']
     ToolState: typeof import('./src/components/Experience/ToolState.vue')['default']

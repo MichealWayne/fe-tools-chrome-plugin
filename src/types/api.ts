@@ -34,24 +34,40 @@ export interface RequestConfig {
 /**
  * Normalized API response envelope.
  */
-export interface ApiResponse<T = unknown> {
+export interface ApiResponseBase {
   success: boolean;
   message: string;
   statusCode: number;
   url: string;
-  data?: T;
-  list?: T[];
 }
+
+/** Response envelope for endpoints that return one value. */
+export interface ApiItemResponse<T = unknown> extends ApiResponseBase {
+  data: T;
+  list?: never;
+}
+
+/** Response envelope for endpoints that return a list of values. */
+export interface ApiListResponse<T = unknown> extends ApiResponseBase {
+  data?: never;
+  list: T[];
+}
+
+/** Runtime response variants supported by the shared API client. */
+export type ApiResponse<T = unknown> = ApiItemResponse<T> | ApiListResponse<T>;
+
+export const isApiListResponse = <T>(response: ApiResponse<T>): response is ApiListResponse<T> =>
+  Array.isArray(response.list);
+
+export const isApiItemResponse = <T>(response: ApiResponse<T>): response is ApiItemResponse<T> =>
+  Object.prototype.hasOwnProperty.call(response, 'data');
 
 /**
  * Normalized API error payload.
  */
-export interface ApiError {
+export interface ApiError extends ApiResponseBase {
   success: false;
-  statusCode: number;
-  message: string;
   type: ErrorType;
-  url: string;
 }
 
 /**
@@ -69,18 +85,16 @@ export interface ToolsData {
  * Translation request payload.
  */
 export interface TranslateRequest {
-  text: string;
-  from: string;
-  to: string;
+  doctype: 'json';
+  type: 'AUTO';
+  i: string;
 }
 
 /**
  * Translation response payload.
  */
 export interface TranslateResponse {
-  translatedText: string;
-  sourceLanguage: string;
-  targetLanguage: string;
+  translateResult?: Array<Array<{ tgt?: string }>>;
 }
 
 /**
@@ -97,12 +111,9 @@ export interface MooCSSData {
  * Regex catalog entry for the regex tool.
  */
 export interface RegexData {
-  id: string;
   name: string;
-  pattern: string;
-  description: string;
-  example: string;
-  flags?: string;
+  description?: string;
+  regexStr: string;
 }
 
 /**
@@ -151,10 +162,10 @@ export interface UtilFunction {
  * API service method signatures for typed clients.
  */
 export interface ApiEndpoints {
-  getFeTools: () => Promise<ApiResponse<ToolsData[]>>;
-  handleTranslate: (data: TranslateRequest) => Promise<ApiResponse<TranslateResponse>>;
-  getMooCSS: () => Promise<ApiResponse<MooCSSData[]>>;
-  getRegex: () => Promise<ApiResponse<RegexData[]>>;
-  getLinuxCommands: () => Promise<ApiResponse<LinuxCommand[]>>;
-  getUtilFuncs: () => Promise<ApiResponse<UtilFunction[]>>;
+  getFeTools: () => Promise<ApiListResponse<ToolsData>>;
+  handleTranslate: (data: TranslateRequest) => Promise<ApiItemResponse<TranslateResponse>>;
+  getMooCSS: () => Promise<ApiListResponse<MooCSSData>>;
+  getRegex: () => Promise<ApiListResponse<RegexData>>;
+  getLinuxCommands: () => Promise<ApiListResponse<LinuxCommand>>;
+  getUtilFuncs: () => Promise<ApiListResponse<UtilFunction>>;
 }

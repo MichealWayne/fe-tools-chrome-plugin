@@ -17,14 +17,15 @@ A Chrome extension toolbox for frontend developers, built with Manifest V3, Vue 
 - px/rem/vw unit calculator.
 - RGB/HSB/HSL/HEX/CMYK color conversion.
 - Quick translation.
-- Lightweight Postman: supports request headers, request body, authentication, environment variables, request history, and response viewing.
+- Lightweight Postman: supports request headers, request body, authentication, environments, saved requests, cURL import/export, history filtering, cancellation/timeouts, validation, and response search.
 - Common regex lookup and testing.
 - JSON formatting and validation.
 - Online SVG editor and optimizer.
 - Date and timestamp conversion.
 - Linux command lookup.
 - Page screenshots: capture full pages or specific nodes and save the result.
-- Tech stack detection: analyze scripts, DOM, global variables, meta tags, and other signals on the current page to identify common frameworks, build tools, and frontend libraries.
+- Tech stack detection: combine scripts, resources, DOM, globals, runtime signals, and meta tags to identify common frameworks, build tools, and frontend libraries, with versions, evidence, and confidence levels.
+- Codex quota: view ChatGPT Codex allowance windows, remaining quota, and reset times with caching, auto-refresh, and low-quota/reset notifications.
 - Utility function library search.
 - Chinese and English UI switching.
 
@@ -42,6 +43,7 @@ Detection results are grouped by `framework`, `bundler`, and `library`, and disp
 
 - Language: supports switching between Chinese and English.
 - Pinyin search: enabled by default. When disabled, search only matches literal Chinese text, English text, URLs, and similar original content.
+- Codex quota: requires a signed-in ChatGPT account. Quota data is cached locally, with links to the Codex usage dashboard and reset tracker.
 
 ## Installation
 
@@ -64,7 +66,7 @@ You can also refer to the legacy installation guide: [Install >>](https://github
 
 Requirements:
 
-- Node.js 14 or later.
+- Node.js 20 or later.
 - pnpm is recommended. This repository includes `pnpm-lock.yaml`.
 
 Install dependencies:
@@ -118,6 +120,7 @@ src/
   api/                       Remote data API wrappers
   assets/                    Static assets such as tool entry icons
   components/                Tool components
+  extension/                 Chrome message types and API client
   styles/                    Global styles and design system
   utils/                     Shared utilities, Chrome APIs, i18n, JSON formatting, and more
   views/                     Main page, Moo-CSS, regex, and utility function pages
@@ -126,5 +129,6 @@ tests/                       Vitest unit tests
 
 ## Milestones
 
+- 2026: Codex quota monitoring, Postman workspace improvements, enhanced tech-stack detection, and extension localization.
 - 2025: Manifest V3, page screenshots, bilingual support.
 - 2019: Extension v1.
