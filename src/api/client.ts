@@ -5,7 +5,14 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { ApiResponse, RequestConfig } from '@/types/api';
+import {
+  ApiItemResponse,
+  ApiListResponse,
+  ApiResponse,
+  isApiItemResponse,
+  isApiListResponse,
+  RequestConfig,
+} from '@/types/api';
 
 /**
  * Default API configuration for timeouts and retries.
@@ -181,6 +188,20 @@ export class ApiClient {
   }
 
   /**
+   * Perform a GET request for an endpoint whose runtime payload is an array.
+   * This preserves the shared runtime normalization while exposing the item type to callers.
+   */
+  async getList<T = unknown>(
+    url: string,
+    params?: Record<string, unknown>,
+    config: RequestConfig = {}
+  ): Promise<ApiListResponse<T>> {
+    const response = await this.get<T>(url, params, config);
+    if (isApiListResponse(response)) return response;
+    throw new TypeError(`Expected a list response from ${url}`);
+  }
+
+  /**
    * Perform a POST request. Retrying is opt-in because POST requests may not be idempotent.
    * @param url - Endpoint URL.
    * @param data - Request payload.
@@ -206,6 +227,19 @@ export class ApiClient {
 
     const response = await this.instance.post(url, data, requestConfig);
     return this.handleSuccess(response);
+  }
+
+  /**
+   * Perform a POST request for an endpoint whose runtime payload is a single value.
+   */
+  async postItem<T = unknown>(
+    url: string,
+    data?: unknown,
+    config: RequestConfig = {}
+  ): Promise<ApiItemResponse<T>> {
+    const response = await this.post<T>(url, data, config);
+    if (isApiItemResponse(response)) return response;
+    throw new TypeError(`Expected an item response from ${url}`);
   }
 
   async put<T = unknown>(

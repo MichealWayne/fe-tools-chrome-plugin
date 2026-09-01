@@ -29,8 +29,11 @@
             <span v-if="item.description">（{{ item.description }}）</span>
           </span>
           <span class="reference-tool__actions">
-            <button type="button" @click="copyRegex(item)">{{ t('common.copy') }}</button>
+            <button class="u-btn" type="button" @click="copyRegex(item)">
+              {{ t('common.copy') }}
+            </button>
             <button
+              class="u-btn"
               type="button"
               :aria-expanded="Boolean(item.isOpened)"
               @click="item.isOpened = !item.isOpened"

@@ -1,59 +1,123 @@
-import type { PostmanEnvironment, PostmanHistoryItem } from '../types';
+import type {
+  PostmanEnvironment,
+  PostmanHistoryItem,
+  PostmanPreferences,
+  SavedRequest,
+} from '../types';
+import { DEFAULT_POSTMAN_PREFERENCES } from '../types';
+import { normalizeEnvironment, normalizeRequest } from './request-model';
+import { redactHeaderRecord, redactRequest } from './redaction';
+
+export const POSTMAN_STORAGE_KEY = 'postman-data';
+export const POSTMAN_STORAGE_VERSION = 2;
 
 export type PostmanStorageState = {
   environments: PostmanEnvironment[];
   currentEnvironment: string;
   requestHistory: PostmanHistoryItem[];
+  savedRequests?: SavedRequest[];
+  preferences?: PostmanPreferences;
+  storageError?: 'newer-version';
 };
 
-export const POSTMAN_STORAGE_KEY = 'postman-data';
-const SENSITIVE_HEADER_NAMES = new Set([
-  'authorization',
-  'cookie',
-  'set-cookie',
-  'proxy-authorization',
-]);
+type PostmanStorageEnvelope = Required<Omit<PostmanStorageState, 'storageError'>> & {
+  version: number;
+};
+
+const emptyState = (): PostmanStorageState => ({
+  environments: [],
+  currentEnvironment: '',
+  requestHistory: [],
+  savedRequests: [],
+  preferences: { ...DEFAULT_POSTMAN_PREFERENCES },
+});
+
+const capHistory = (history: PostmanHistoryItem[], limit: number): PostmanHistoryItem[] => {
+  const favorites = history.filter(item => item.favorite);
+  const regular = history
+    .filter(item => !item.favorite)
+    .slice(0, Math.max(0, limit - favorites.length));
+  return [...favorites, ...regular].sort((a, b) => b.timestamp - a.timestamp);
+};
 
 const sanitizeHistory = (history: PostmanHistoryItem[]): PostmanHistoryItem[] =>
-  history.map(item => ({
-    ...item,
-    headers: Object.fromEntries(
-      Object.entries(item.headers).filter(([key]) => !SENSITIVE_HEADER_NAMES.has(key.toLowerCase()))
-    ),
-  }));
+  history.map(item => {
+    const redactedRequest = item.request ? redactRequest(item.request) : null;
+    return {
+      ...item,
+      headers: redactHeaderRecord(item.headers || {}),
+      request: redactedRequest?.request,
+      redacted: Boolean(item.redacted || redactedRequest?.redacted),
+    };
+  });
 
-/**
- * Persist Postman state to localStorage.
- * @param state - Storage payload for environments and history.
- */
-export const savePostmanStorage = (state: PostmanStorageState) => {
-  localStorage.setItem(
-    POSTMAN_STORAGE_KEY,
-    JSON.stringify({ ...state, requestHistory: sanitizeHistory(state.requestHistory) })
-  );
+const sanitizeSavedRequests = (saved: SavedRequest[]): SavedRequest[] =>
+  saved.map(item => {
+    const redacted = redactRequest(item.request);
+    return { ...item, request: redacted.request, redacted: item.redacted || redacted.redacted };
+  });
+
+const toEnvelope = (state: PostmanStorageState): PostmanStorageEnvelope => {
+  const preferences = { ...DEFAULT_POSTMAN_PREFERENCES, ...state.preferences };
+  return {
+    version: POSTMAN_STORAGE_VERSION,
+    environments: (state.environments || []).map(normalizeEnvironment),
+    currentEnvironment: state.currentEnvironment || '',
+    requestHistory: capHistory(
+      sanitizeHistory(state.requestHistory || []),
+      preferences.historyLimit
+    ),
+    savedRequests: sanitizeSavedRequests(state.savedRequests || []),
+    preferences,
+  };
 };
 
-/**
- * Restore Postman state from localStorage.
- */
-export const loadPostmanStorage = (): PostmanStorageState => {
+export const savePostmanStorage = (state: PostmanStorageState): boolean => {
+  const current = localStorage.getItem(POSTMAN_STORAGE_KEY);
   try {
-    const data = localStorage.getItem(POSTMAN_STORAGE_KEY);
-    if (data) {
-      const parsed = JSON.parse(data) as Partial<PostmanStorageState>;
-      return {
-        environments: parsed.environments || [],
-        currentEnvironment: parsed.currentEnvironment || '',
-        requestHistory: parsed.requestHistory || [],
-      };
+    const parsed = current ? JSON.parse(current) : null;
+    if (parsed?.version > POSTMAN_STORAGE_VERSION) return false;
+  } catch {
+    // Invalid legacy storage is discarded rather than copied into the new envelope.
+  }
+  localStorage.setItem(POSTMAN_STORAGE_KEY, JSON.stringify(toEnvelope(state)));
+  return true;
+};
+
+export const loadPostmanStorage = (): PostmanStorageState => {
+  const raw = localStorage.getItem(POSTMAN_STORAGE_KEY);
+  if (!raw) return emptyState();
+  try {
+    const parsed = JSON.parse(raw) as Partial<PostmanStorageEnvelope> & { version?: number };
+    if (typeof parsed.version === 'number' && parsed.version > POSTMAN_STORAGE_VERSION) {
+      return { ...emptyState(), storageError: 'newer-version' };
     }
+    const migrated = toEnvelope({
+      environments: Array.isArray(parsed.environments)
+        ? parsed.environments.filter(item => item && typeof item.name === 'string')
+        : [],
+      currentEnvironment:
+        typeof parsed.currentEnvironment === 'string' ? parsed.currentEnvironment : '',
+      requestHistory: Array.isArray(parsed.requestHistory)
+        ? parsed.requestHistory
+            .filter(
+              item => item && typeof item.url === 'string' && typeof item.timestamp === 'number'
+            )
+            .map(item => ({
+              ...item,
+              request: item.request ? normalizeRequest(item.request) : undefined,
+              headers: item.headers || {},
+            }))
+        : [],
+      savedRequests: Array.isArray(parsed.savedRequests)
+        ? parsed.savedRequests.filter(item => item && item.request && typeof item.name === 'string')
+        : [],
+      preferences: { ...DEFAULT_POSTMAN_PREFERENCES, ...parsed.preferences },
+    });
+    if (!parsed.version) localStorage.setItem(POSTMAN_STORAGE_KEY, JSON.stringify(migrated));
+    return migrated;
   } catch (error) {
     console.error('加载本地数据失败:', error);
+    return emptyState();
   }
-
-  return {
-    environments: [],
-    currentEnvironment: '',
-    requestHistory: [],
-  };
 };

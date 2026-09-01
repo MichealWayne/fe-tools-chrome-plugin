@@ -10,6 +10,11 @@ import { AJAX_INTERFACE } from '@/constant';
 import { API_HOST } from '@/constant';
 import {
   ApiResponse,
+  ApiItemResponse,
+  ApiListResponse,
+  ApiEndpoints,
+  isApiItemResponse,
+  isApiListResponse,
   ToolsData,
   TranslateRequest,
   TranslateResponse,
@@ -30,44 +35,44 @@ class FeToolsService extends ApiClient {
   /**
    * Fetch the tool list used by the main dashboard.
    */
-  async getFeTools(): Promise<ApiResponse<ToolsData[]>> {
-    return this.get<ToolsData[]>('/fe-tools/datas/tools.json');
+  async getFeTools(): Promise<ApiListResponse<ToolsData>> {
+    return this.getList<ToolsData>('/fe-tools/datas/tools.json');
   }
 
   /**
    * Submit a translation request to the backend proxy.
    * @param data - Translation input payload.
    */
-  async handleTranslate(data: TranslateRequest): Promise<ApiResponse<TranslateResponse>> {
-    return this.post<TranslateResponse>('/translate', data);
+  async handleTranslate(data: TranslateRequest): Promise<ApiItemResponse<TranslateResponse>> {
+    return this.postItem<TranslateResponse>('/translate', data);
   }
 
   /**
    * Load MooCSS reference data.
    */
-  async getMooCSS(): Promise<ApiResponse<MooCSSData[]>> {
-    return this.get<MooCSSData[]>('/fe-tools/datas/moo-css.json');
+  async getMooCSS(): Promise<ApiListResponse<MooCSSData>> {
+    return this.getList<MooCSSData>('/fe-tools/datas/moo-css.json');
   }
 
   /**
    * Fetch the regex catalog used by the regex tool.
    */
-  async getRegex(): Promise<ApiResponse<RegexData[]>> {
-    return this.get<RegexData[]>('/fe-tools/datas/regex.json');
+  async getRegex(): Promise<ApiListResponse<RegexData>> {
+    return this.getList<RegexData>('/fe-tools/datas/regex.json');
   }
 
   /**
    * Load the Linux command reference list.
    */
-  async getLinuxCommands(): Promise<ApiResponse<LinuxCommand[]>> {
-    return this.get<LinuxCommand[]>('/fe-tools/datas/linux-commands.json');
+  async getLinuxCommands(): Promise<ApiListResponse<LinuxCommand>> {
+    return this.getList<LinuxCommand>('/fe-tools/datas/linux-commands.json');
   }
 
   /**
    * Fetch metadata for the utils catalog.
    */
-  async getUtilFuncs(): Promise<ApiResponse<UtilFunction[]>> {
-    return this.get<UtilFunction[]>('/fe-tools/stable/data/yafReflectionMap.json');
+  async getUtilFuncs(): Promise<ApiListResponse<UtilFunction>> {
+    return this.getList<UtilFunction>('/fe-tools/stable/data/yafReflectionMap.json');
   }
 }
 
@@ -98,44 +103,50 @@ export function post<T = unknown>(url: string, data?: unknown): Promise<ApiRespo
 }
 
 /**
- * Type contract for dynamically generated API methods.
- */
-interface ApiMethods {
-  [key: string]: (data?: unknown) => Promise<ApiResponse<unknown>>;
-}
-
-/**
- * Dynamic API container that mirrors AJAX_INTERFACE.
- */
-const api: ApiMethods = {};
-
-/**
  * Parse "METHOD /path" strings into callable API functions.
  * @param info - "METHOD /path" string from AJAX_INTERFACE.
  * @returns A function that issues the request with optional payload.
  */
-function handleAjax(info: string) {
+function handleAjax<T>(
+  info: string,
+  expectedShape: 'list'
+): (data?: unknown) => Promise<ApiListResponse<T>>;
+function handleAjax<T>(
+  info: string,
+  expectedShape: 'item'
+): (data?: unknown) => Promise<ApiItemResponse<T>>;
+function handleAjax<T>(info: string, expectedShape: 'list' | 'item') {
   const [method, url] = info.split(' ');
-  return function (data?: unknown) {
+  return async function (data?: unknown) {
     if (!method || !url) {
       throw new Error(`Invalid API configuration: ${info}`);
     }
+    let response: ApiResponse<T>;
     if (method.toLowerCase() === 'get') {
-      return feToolsService.get(url, data as Record<string, unknown>);
+      response = await feToolsService.get<T>(url, data as Record<string, unknown>);
     } else if (method.toLowerCase() === 'post') {
-      return feToolsService.post(url, data);
+      response = await feToolsService.post<T>(url, data);
+    } else {
+      throw new Error(`Unsupported HTTP method: ${method}`);
     }
-    throw new Error(`Unsupported HTTP method: ${method}`);
+
+    if (expectedShape === 'list' && isApiListResponse(response)) return response;
+    if (expectedShape === 'item' && isApiItemResponse(response)) return response;
+    const article = expectedShape === 'item' ? 'an' : 'a';
+    throw new TypeError(`Expected ${article} ${expectedShape} response from ${url}`);
   };
 }
 
 /**
- * Generate API methods from the static interface map for legacy usage.
+ * Legacy API facade. The explicit mapping keeps AJAX_INTERFACE and ApiEndpoints exhaustive.
  */
-for (const key in AJAX_INTERFACE) {
-  if (Object.prototype.hasOwnProperty.call(AJAX_INTERFACE, key)) {
-    api[key] = handleAjax(AJAX_INTERFACE[key as keyof typeof AJAX_INTERFACE]);
-  }
-}
+const api: ApiEndpoints = {
+  getFeTools: handleAjax<ToolsData>(AJAX_INTERFACE.getFeTools, 'list'),
+  handleTranslate: handleAjax<TranslateResponse>(AJAX_INTERFACE.handleTranslate, 'item'),
+  getMooCSS: handleAjax<MooCSSData>(AJAX_INTERFACE.getMooCSS, 'list'),
+  getRegex: handleAjax<RegexData>(AJAX_INTERFACE.getRegex, 'list'),
+  getLinuxCommands: handleAjax<LinuxCommand>(AJAX_INTERFACE.getLinuxCommands, 'list'),
+  getUtilFuncs: handleAjax<UtilFunction>(AJAX_INTERFACE.getUtilFuncs, 'list'),
+};
 
 export default api;

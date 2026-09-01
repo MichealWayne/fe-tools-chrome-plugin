@@ -6,6 +6,7 @@
 
 import { AnyObj } from '@/types';
 import { IS_DEV } from '@/constant';
+import { langManager } from './i18n';
 
 /**
  * Open a URL in a new browser tab (Chrome extension context).
@@ -75,7 +76,7 @@ export function getMarkTree<T extends AnyObj>(cb: (items: T[]) => void) {
 
         cb(result as T[]);
       } catch (e) {
-        alert((e as Error)?.message);
+        alert(langManager.t('errors.bookmarksLoadFailed'));
       }
     });
   } catch (e) {

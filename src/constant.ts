@@ -33,12 +33,25 @@ export const AJAX_INTERFACE = {
 /**
  * Default search providers used by the main search bar.
  */
-export const DEFAULT_SEARCH_LIST = [
-  { name: 'mdn', link: 'https://developer.mozilla.org/zh-CN/search?q=' },
-  { name: 'github', link: 'https://github.com/search?q=' },
-  { name: 'npmjs', link: 'https://www.npmjs.com/search?q=' },
-  { name: 'caniuse', link: 'https://caniuse.com/#search=' },
-  { name: 'stackoverflow', link: 'https://stackoverflow.com/search?q=' },
-  { name: 'google', link: 'https://www.google.com/search?q=' },
-  { name: 'baidu', link: 'https://www.baidu.com/s?ie=UTF-8&wd=' },
-];
+export const DEFAULT_SEARCH_LIST_BY_LANGUAGE = {
+  en: [
+    { name: 'MDN', link: 'https://developer.mozilla.org/en-US/search?q=' },
+    { name: 'GitHub', link: 'https://github.com/search?q=' },
+    { name: 'npm', link: 'https://www.npmjs.com/search?q=' },
+    { name: 'Can I Use', link: 'https://caniuse.com/#search=' },
+    { name: 'Stack Overflow', link: 'https://stackoverflow.com/search?q=' },
+    { name: 'Google', link: 'https://www.google.com/search?q=' },
+  ],
+  zh: [
+    { name: 'MDN', link: 'https://developer.mozilla.org/zh-CN/search?q=' },
+    { name: 'GitHub', link: 'https://github.com/search?q=' },
+    { name: 'npm', link: 'https://www.npmjs.com/search?q=' },
+    { name: 'Can I Use', link: 'https://caniuse.com/#search=' },
+    { name: 'Stack Overflow', link: 'https://stackoverflow.com/search?q=' },
+    { name: 'Google', link: 'https://www.google.com/search?q=' },
+    { name: '百度', link: 'https://www.baidu.com/s?ie=UTF-8&wd=' },
+  ],
+} as const;
+
+export const getDefaultSearchList = (language: 'zh' | 'en') =>
+  DEFAULT_SEARCH_LIST_BY_LANGUAGE[language];

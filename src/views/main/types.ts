@@ -36,7 +36,6 @@ export type ComponentDataTypes = {
   enablePinyinSearch: boolean;
   languageChangeHandler?: (lang: string) => void;
   feToolsLoading: boolean;
-  feToolsError: string;
   activeResultIndex: number;
   resultsDismissed: boolean;
   lastToolTrigger?: HTMLElement | null;

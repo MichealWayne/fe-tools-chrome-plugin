@@ -10,12 +10,17 @@
         aria-describedby="color-feedback"
         @input="convert(field.key)"
       />
-      <button type="button" :disabled="!values[field.key]" @click="copy(values[field.key])">
+      <button
+        class="u-btn"
+        type="button"
+        :disabled="!values[field.key]"
+        @click="copy(values[field.key])"
+      >
         {{ t('common.copy') }}
       </button>
     </div>
     <div class="converter-tool__actions">
-      <button type="button" @click="reset">{{ t('common.clear') }}</button>
+      <button class="u-btn" type="button" @click="reset">{{ t('common.clear') }}</button>
     </div>
     <inline-feedback
       :feedback="error ? { id: 'color-feedback', message: error, tone: 'validation' } : feedback"

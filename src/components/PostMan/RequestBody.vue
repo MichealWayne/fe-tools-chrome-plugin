@@ -25,57 +25,21 @@
     </div>
 
     <div v-else-if="bodyType === 'form-data'" class="form-data-body">
-      <div v-for="(item, index) in formData" :key="index" class="form-item">
-        <input
-          v-model="item.key"
-          :placeholder="t('postman.body.formKey')"
-          class="form-input"
-          @input="updateBody"
-        />
-        <input
-          v-model="item.value"
-          :placeholder="t('postman.body.formValue')"
-          class="form-input"
-          @input="updateBody"
-        />
-        <button
-          class="remove-btn"
-          :aria-label="t('postman.actions.remove')"
-          @click="removeFormItem(index)"
-        >
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-      <button class="add-btn" @click="addFormItem">
-        <i class="fas fa-plus"></i> {{ t('postman.actions.addField') }}
-      </button>
+      <KeyValueEditor
+        v-model="formData"
+        :key-placeholder="t('postman.body.formKey')"
+        :value-placeholder="t('postman.body.formValue')"
+        @update:model-value="updateBody"
+      />
     </div>
 
     <div v-else-if="bodyType === 'x-www-form-urlencoded'" class="urlencoded-body">
-      <div v-for="(item, index) in urlencodedData" :key="index" class="form-item">
-        <input
-          v-model="item.key"
-          :placeholder="t('postman.body.formKey')"
-          class="form-input"
-          @input="updateBody"
-        />
-        <input
-          v-model="item.value"
-          :placeholder="t('postman.body.formValue')"
-          class="form-input"
-          @input="updateBody"
-        />
-        <button
-          class="remove-btn"
-          :aria-label="t('postman.actions.remove')"
-          @click="removeUrlencodedItem(index)"
-        >
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-      <button class="add-btn" @click="addUrlencodedItem">
-        <i class="fas fa-plus"></i> {{ t('postman.actions.addField') }}
-      </button>
+      <KeyValueEditor
+        v-model="urlencodedData"
+        :key-placeholder="t('postman.body.formKey')"
+        :value-placeholder="t('postman.body.formValue')"
+        @update:model-value="updateBody"
+      />
     </div>
 
     <div v-else-if="bodyType === 'raw'" class="raw-body">
@@ -100,6 +64,8 @@ import { ref, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
 import type { FormDataEntry, RequestBodyData } from './types';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
+import KeyValueEditor from './KeyValueEditor.vue';
+import { normalizeEntries } from './utils/request-model';
 
 const t = (key: string) => langManager.t(key);
 
@@ -113,8 +79,8 @@ const emit = defineEmits<{
 
 const bodyType = ref(props.modelValue.type || 'none');
 const jsonBody = ref(props.modelValue.json || '');
-const formData = ref<FormDataEntry[]>(props.modelValue.formData || []);
-const urlencodedData = ref<FormDataEntry[]>(props.modelValue.urlencoded || []);
+const formData = ref<FormDataEntry[]>(normalizeEntries(props.modelValue.formData || []));
+const urlencodedData = ref<FormDataEntry[]>(normalizeEntries(props.modelValue.urlencoded || []));
 const rawBody = ref(props.modelValue.raw || '');
 const formatError = ref('');
 
@@ -123,8 +89,8 @@ watch(
   newValue => {
     bodyType.value = newValue.type || 'none';
     jsonBody.value = newValue.json || '';
-    formData.value = newValue.formData || [];
-    urlencodedData.value = newValue.urlencoded || [];
+    formData.value = normalizeEntries(newValue.formData || []);
+    urlencodedData.value = normalizeEntries(newValue.urlencoded || []);
     rawBody.value = newValue.raw || '';
   },
   { deep: true }
@@ -154,26 +120,6 @@ const formatJson = () => {
   } catch (error) {
     formatError.value = t('postman.body.jsonFormatError');
   }
-};
-
-const addFormItem = () => {
-  formData.value.push({ key: '', value: '' });
-  updateBody();
-};
-
-const removeFormItem = (index: number) => {
-  formData.value.splice(index, 1);
-  updateBody();
-};
-
-const addUrlencodedItem = () => {
-  urlencodedData.value.push({ key: '', value: '' });
-  updateBody();
-};
-
-const removeUrlencodedItem = (index: number) => {
-  urlencodedData.value.splice(index, 1);
-  updateBody();
 };
 </script>
 

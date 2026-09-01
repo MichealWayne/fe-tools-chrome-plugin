@@ -42,9 +42,13 @@ export default {
   },
   errors: {
     fetchLinksFailed: 'Failed to fetch link information',
+    fileReadFailed: 'Failed to read the file',
+    qrLibraryFailed: 'QR code library failed to load. Please try again.',
+    bookmarksLoadFailed: 'Failed to load bookmarks',
   },
   // Main interface
   title: 'FE Toolbox',
+  homeTitle: 'Back to home',
   language: 'Language',
   searchPlaceholder: 'Enter keywords or QR code generation address',
   toolsLabel: 'Tool categories',
@@ -66,6 +70,7 @@ export default {
     mooCtn: 'Moo Tools',
     linuxCommand: 'Linux Commands',
     techStack: 'Tech Stack',
+    codexQuota: 'Codex Quota',
   },
 
   // Tool descriptions
@@ -85,13 +90,14 @@ export default {
     mooCtn: 'Featured tools',
     linuxCommand: 'Linux command reference tool',
     techStack: 'Analyze current page tech-stack signals',
+    codexQuota: 'View remaining Codex quota and reset times',
   },
 
   // QRCode component
   qrcode: {
     title: 'QR Code Generator',
     inputPlaceholder: 'Enter address',
-    generate: 'Update',
+    generate: 'Generate',
     download: 'Download QR Code',
     downloadSvg: 'Download SVG File',
     clear: 'Clear',
@@ -139,7 +145,7 @@ export default {
     previewTip: 'Preview',
     previewEmptyTitle: 'No preview yet',
     previewEmptyDesc: 'Start a capture to see it here.',
-    saveToLocal: 'Save to Local',
+    saveToLocal: 'Save locally',
     retake: 'Retake',
     errorCapture: 'Capture failed, please retry',
     errorTooLarge:
@@ -167,6 +173,48 @@ export default {
       framework: 'Framework',
       bundler: 'Bundler',
       library: 'Library',
+    },
+  },
+
+  codexQuota: {
+    description:
+      'Shows Codex allowance windows reported for the signed-in ChatGPT account. Quota is not a fixed token count.',
+    loading: 'Reading Codex quota…',
+    refreshing: 'Refreshing…',
+    refresh: 'Refresh quota',
+    openDashboard: 'Open official usage',
+    openResetTracker: 'View reset tracker',
+    openSignIn: 'Open ChatGPT sign-in',
+    clearCache: 'Clear local cache',
+    stale: 'Data is stale',
+    windowsLabel: 'Codex quota windows',
+    fiveHour: '5-hour quota',
+    weekly: 'Weekly quota',
+    additional: 'Additional quota ({minutes}-minute window)',
+    remaining: '{percent}% remaining',
+    resetsAt: 'Resets: {time}',
+    updatedAt: 'Last updated: {time}',
+    autoRefreshIn: 'Auto-refresh in {time}',
+    privacy:
+      'Only quota percentages and times are stored locally. ChatGPT credentials and account details are never stored.',
+    debug: {
+      title: 'Diagnostic information (no account or credentials)',
+      summary: 'Background: {direct}; active tabs: {activeTabs}; ChatGPT candidates: {candidates}.',
+      world: {
+        isolated: 'Isolated world',
+        main: 'Page main world',
+      },
+    },
+    errors: {
+      signed_out: 'No authenticated quota was available. Sign in to ChatGPT and keep a page open.',
+      forbidden: 'This account or workspace cannot access Codex quota data.',
+      network: 'The network request failed. The last successful data is preserved.',
+      timeout: 'Reading quota timed out. Try again shortly.',
+      upstream_rejection: 'ChatGPT temporarily rejected the quota request.',
+      response_too_large: 'The quota response exceeded the safe size limit.',
+      incompatible_response: 'ChatGPT returned an unsupported quota format.',
+      empty_data: 'This account has no Codex quota windows to display.',
+      unavailable: 'Codex quota is unavailable in this environment.',
     },
   },
 
@@ -206,6 +254,7 @@ export default {
       copySuccess: 'Copied to clipboard!',
       copyFailed: 'Copy failed. Please copy manually.',
       formatFailed: 'Format failed: {message}',
+      unsafeExpression: 'Input contains a disallowed runtime access identifier',
     },
     modal: {
       successTitle: 'Success',
@@ -280,9 +329,9 @@ export default {
 
   // Date Converter
   dateConverter: {
-    title: 'Date Time Conversion Tool',
+    title: 'Date and Time Converter',
     description:
-      'Convert between Unix timestamp, ISO format, local time and other formats, supports timezone conversion and date calculation',
+      'Convert Unix timestamps, ISO dates, local time, and custom formats, including time zones and date calculations',
     inputTime: 'Input Time',
     useCurrentTime: 'Use Current Time',
     inputTypes: {
@@ -386,6 +435,8 @@ export default {
     searchLabel: 'Search CSS and Moo CSS dictionaries',
     searchPlaceholder: 'Enter module or style property',
     loadFailed: 'Failed to load the Moo CSS dictionary',
+    variable: 'variable',
+    method: 'method',
   },
 
   // Utils
@@ -456,6 +507,12 @@ export default {
       environmentDeleted: 'Environment deleted',
       environmentExported: 'Environment exported',
       environmentImported: 'Environment imported',
+      historyLoadedRedacted: 'History request loaded; enter sensitive fields again',
+      requestLoadedRedacted: 'Request loaded; enter sensitive fields again',
+      requestSavedRedacted: 'Request saved without sensitive fields',
+      storageNewerVersion: 'Local data is from a newer version; writes are disabled to protect it',
+      curlImported: 'cURL converted to a request draft',
+      curlCopied: 'cURL copied',
     },
     urlPlaceholder: 'Enter API URL',
     saveRequest: 'Save Request',
@@ -463,6 +520,8 @@ export default {
     actions: {
       send: 'Send',
       sending: 'Sending...',
+      cancel: 'Cancel Request',
+      download: 'Download',
       add: 'Add',
       remove: 'Remove',
       clear: 'Clear',
@@ -473,9 +532,18 @@ export default {
       addField: 'Add Field',
     },
     requestTabs: {
+      params: 'Params',
       headers: 'Headers',
       body: 'Body',
       auth: 'Auth',
+    },
+    editor: {
+      enabled: 'Enable entry',
+      key: 'Key',
+      value: 'Value',
+      description: 'Description',
+      secret: 'Secret variable',
+      toggleSecret: 'Show or hide secret value',
     },
     responseTabs: {
       body: 'Response Body',
@@ -517,6 +585,7 @@ export default {
       formKey: 'Key',
       formValue: 'Value',
       jsonFormatError: 'Invalid JSON format',
+      omittedForMethod: '{method} requests do not send a body; this draft is preserved',
     },
     history: {
       title: 'Request History',
@@ -525,11 +594,31 @@ export default {
       justNow: 'Just now',
       minutesAgo: '{minutes} min ago',
       hoursAgo: '{hours} hr ago',
+      search: 'Search request history',
+      methodFilter: 'Filter by method',
+      allMethods: 'All methods',
+      statusFilter: 'Filter by response status',
+      allStatuses: 'All statuses',
+      favorites: 'Favorites only',
+      favorite: 'Toggle favorite',
     },
     response: {
       noResponse: 'No response data',
       formatting: 'Formatting...',
-      noCookies: 'No Cookies',
+      noCookies: 'No cookie metadata is available',
+      viewMode: 'Response view mode',
+      search: 'Search response',
+      previousMatch: 'Previous match',
+      nextMatch: 'Next match',
+      modes: { pretty: 'Pretty', raw: 'Raw', preview: 'Preview' },
+      states: {
+        idle: 'Send a request to inspect its response here',
+        pending: 'Waiting for the server response…',
+        cancelled: 'Request cancelled',
+        timeout: 'Request timed out',
+        'network-error': 'Network connection failed',
+        received: 'Response received',
+      },
     },
     environments: {
       title: 'Environments',
@@ -555,13 +644,44 @@ export default {
       invalidEnvData: 'Invalid environment data format',
       envExistsConfirm: 'Environment \"{env}\" already exists. Overwrite?',
       importFailed: 'Import failed: {message}',
+      active: 'Environment',
+      noEnvironment: 'No Environment',
+      manage: 'Manage Environments',
     },
     request: {
       missingUrl: 'Please enter request URL',
+      invalidUrl: 'Enter a valid HTTP or HTTPS URL',
+      unresolvedVariables: 'Undefined environment variables: {variables}',
+      timeoutLabel: 'Request timeout in milliseconds',
       networkError: 'Network error: unable to reach server',
       requestError: 'Request error: {message}',
       unknownError: 'Unknown error: {message}',
       loadFailed: 'Load failed: invalid file format',
+    },
+    drawerLabel: 'API testing secondary panel',
+    saved: {
+      title: 'Saved Requests',
+      namePlaceholder: 'Request name',
+      saveCurrent: 'Save Current Request',
+      replaceConfirm: 'A request named “{name}” already exists. Replace it?',
+      empty: 'No saved requests',
+    },
+    curl: {
+      title: 'cURL Import and Generation',
+      import: 'Import cURL',
+      generate: 'Generate cURL (secrets redacted)',
+      placeholder: 'Paste one cURL command',
+      preview: 'Parse Preview',
+      apply: 'Apply to Request',
+      unsupported: 'These options will not be imported: {options}',
+      errors: {
+        'unsafe-shell-syntax': 'Shell operators are not allowed',
+        'unterminated-quote': 'A quote is not closed',
+        'not-curl': 'Enter a command beginning with curl',
+        'file-read': 'Reading request bodies from local files is not supported',
+        'multiple-commands': 'Only one request command is supported',
+        'missing-url': 'The cURL command has no URL',
+      },
     },
   },
 
@@ -590,7 +710,24 @@ export default {
     warning: 'Warning',
     info: 'Info',
     collapse: 'Collapse',
+    close: 'Close',
     back: 'Back',
     backHome: 'Back to Home',
+  },
+
+  jsonFormat: {
+    formatting: 'Formatting...',
+    copy: 'Copy',
+    delete: 'Delete',
+    invalidJson: 'Invalid JSON. Please check:',
+    copySuccess: 'JSON fragment copied successfully.',
+    permissionRequired: 'Permission is required to download the file.',
+    rootCannotDelete: 'The root JSON node cannot be deleted.',
+    deleteSuccess: 'Node deleted successfully.',
+    metadata: 'Metadata',
+    formatted: 'Formatted',
+    collapseAll: 'Collapse all',
+    expandAll: 'Expand all',
+    currentPath: 'Current path: {path}',
   },
 };

@@ -52,39 +52,21 @@ import { jumpAction } from '@/utils/chrome';
 import ajax from '@/api';
 import { sanitizeInlineMarkup } from '@/utils/sanitize';
 import ToolState from '@/components/Experience/ToolState.vue';
-
-type MooSearchResult = {
-  label: string;
-  color: string;
-  name: string;
-  link: string;
-};
-
-type MooStyleItem = {
-  type: string;
-  name: string;
-  desc: string;
-  ver: string;
-};
-
-type MooColorItem = {
-  name: string;
-  desc: string;
-  show: string;
-};
-
-type MooFuncItem = {
-  name: string;
-  desc: string;
-  place: string;
-};
-
-type MooClassItem = {
-  type: string;
-  name: string;
-  desc: string;
-  val: string;
-};
+import {
+  normalizeMooClassList,
+  normalizeMooColorList,
+  normalizeMooFuncList,
+  normalizeMooPayload,
+  normalizeStyleList,
+} from './moo/moo-data-adapter';
+import { searchMooIndex } from './moo/moo-search';
+import type {
+  MooClassItem,
+  MooColorItem,
+  MooFuncItem,
+  MooSearchResult,
+  MooStyleItem,
+} from './moo/types';
 
 export default defineComponent({
   name: 'MooCtn',
@@ -213,100 +195,16 @@ export default defineComponent({
     /**
      * Build search results for CSS, colors, functions, and classes.
      */
-    // eslint-disable-next-line complexity
     setSearchResult() {
-      const keywords = this.keywords.toLowerCase();
-
-      const resultList: MooSearchResult[] = [];
-      if (keywords?.length > 1) {
-        /**
-         * Match CSS properties from the Moo CSS dictionary.
-         */
-        const styleList = this.styleList || [];
-
-        for (let i = 0; i < styleList.length; i++) {
-          const item = styleList[i];
-          if (
-            item.name.includes(keywords) ||
-            item.desc.includes(keywords) ||
-            item.type.includes(keywords)
-          ) {
-            resultList.push({
-              label: `CSS ${item.ver}`,
-              color: 'orange',
-              name:
-                item.name.replace(keywords, `<strong>${keywords}</strong>`) +
-                `: <em s-ft_sub_>(${item.type})${item.desc}.</em>`,
-              link: `https://developer.mozilla.org/zh-CN/docs/Web/CSS/${item.name
-                .toLowerCase()
-                .replace(/\s/g, '')}`,
-            });
-          }
-        }
-
-        /**
-         * Match color variables from Moo CSS dictionary.
-         */
-        const mooColorList = this.mooColorList || [];
-
-        for (let i = 0; i < mooColorList.length; i++) {
-          const item = mooColorList[i];
-          if (item.name.includes(keywords) || item.desc.includes(keywords)) {
-            resultList.unshift({
-              label: 'moo',
-              color: 'red',
-              name:
-                item.show +
-                ' (变量)' +
-                item.name.replace(keywords, `<strong>${keywords}</strong>`) +
-                `: <em s-ft_sub_>${item.desc}</em>`,
-              link: 'https://blog.michealwayne.cn/Moo-CSS/docs/nameDictionary/#%E9%A2%9C%E8%89%B2',
-            });
-          }
-        }
-
-        /**
-         * Match function helpers from Moo CSS dictionary.
-         */
-        const mooFuncList = this.mooFuncList || [];
-        for (let i = 0; i < mooFuncList.length; i++) {
-          const item = mooFuncList[i];
-          if (item.name.includes(keywords) || item.desc.includes(keywords)) {
-            resultList.unshift({
-              label: 'moo-f',
-              color: 'blue',
-              name:
-                '(方法)' +
-                item.name.replace(keywords, `<strong>${keywords}</strong>`) +
-                `: <em s-ft_sub_>${item.place}, ${item.desc}</em>`,
-              link: 'https://blog.michealwayne.cn/Moo-CSS/docs/nameDictionary/#%E6%96%B9%E6%B3%95',
-            });
-          }
-        }
-
-        /**
-         * Match style classes from Moo CSS dictionary.
-         */
-        const mooClassList = this.mooClassList || [];
-        for (let i = 0; i < mooClassList.length; i++) {
-          const item = mooClassList[i];
-          if (
-            item.name.includes(keywords) ||
-            item.desc.includes(keywords) ||
-            item.val.includes(keywords)
-          ) {
-            resultList.push({
-              label: 'moo',
-              color: 'red',
-              name:
-                item.name.replace(keywords, `<strong>${keywords}</strong>`) +
-                `: <em s-ft_sub_>${item.desc}.(${item.val})</em>`,
-              link: 'https://blog.michealwayne.cn/Moo-CSS/docs/nameDictionary/#%E6%A0%B7%E5%BC%8F',
-            });
-          }
-        }
-      }
-      this.resultList = resultList;
+      this.resultList = searchMooIndex({
+        keywords: this.keywords,
+        language: langManager.getCurrentLanguage(),
+        translate: this.t,
+        styleList: this.styleList || [],
+        mooColorList: this.mooColorList || [],
+        mooFuncList: this.mooFuncList || [],
+        mooClassList: this.mooClassList || [],
+      });
     },
 
     /**
@@ -314,72 +212,28 @@ export default defineComponent({
      * @param list - Raw list from the API.
      */
     handleStyleList(list: Record<string, unknown>[]) {
-      const arr: MooStyleItem[] = [];
-
-      Object.values(list).forEach(item => {
-        const record = item as Record<string, unknown>;
-        const name = String(record.name || '');
-        const children = Array.isArray(record.children) ? record.children : [];
-
-        children.forEach(subItem => {
-          const child = subItem as Record<string, unknown>;
-          arr.push({
-            type: name,
-            name: String(child['属性'] || ''),
-            desc: String(child['说明'] || ''),
-            ver: String(child['CSS版本'] || ''),
-          });
-        });
-      });
-
-      return arr;
+      return normalizeStyleList(list, langManager.getCurrentLanguage());
     },
     /**
      * Normalize the MooCSS color dictionary payload.
      * @param list - Raw color list.
      */
     handleMooColorList(list: Record<string, unknown>[]) {
-      return list.map(item => ({
-        name: `${String(item['变量'] || '')} ${String(item['十六进制色值'] || '')}`.trim(),
-        desc: String(item['说明'] || ''),
-        show: String(item['效果'] || ''),
-      }));
+      return normalizeMooColorList(list, langManager.getCurrentLanguage());
     },
     /**
      * Normalize the MooCSS function dictionary payload.
      * @param list - Raw function list.
      */
     handleMooFuncList(list: Record<string, unknown>[]) {
-      return list.map(item => ({
-        name: `${String(item['方法名'] || '')}(${String(item['参数'] || '')})`,
-        desc: String(item['说明'] || ''),
-        place: String(item['平台'] || ''),
-      }));
+      return normalizeMooFuncList(list, langManager.getCurrentLanguage());
     },
     /**
      * Normalize the MooCSS class dictionary payload.
      * @param list - Raw class list.
      */
     handleMooClassList(list: Record<string, unknown>[]) {
-      const arr: MooClassItem[] = [];
-
-      Object.values(list).forEach(item => {
-        const record = item as Record<string, unknown>;
-        const name = String(record.name || '');
-        const children = Array.isArray(record.children) ? record.children : [];
-        children.forEach(subItem => {
-          const child = subItem as Record<string, unknown>;
-          if (!child['类/属性名'] || !child['属性']) return;
-
-          arr.push({
-            type: name,
-            name: String(child['类/属性名'] || ''),
-            desc: String(child['说明'] || ''),
-            val: String(child['属性'] || ''),
-          });
-        });
-      });
-      return arr;
+      return normalizeMooClassList(list, langManager.getCurrentLanguage());
     },
 
     /**
@@ -387,48 +241,11 @@ export default defineComponent({
      * @param data - Raw MooCSS payload.
      */
     handleList(data: unknown) {
-      if (!data || typeof data !== 'object') return;
-      Object.values(data as Record<string, unknown>).forEach(item => {
-        const record = item as Record<string, unknown>;
-        const name = String(record.name || '');
-        const children = Array.isArray(record.children) ? record.children : [];
-        if (name === '样式模块词典') {
-          this.styleList = this.handleStyleList(children as Record<string, unknown>[]);
-          return;
-        }
-        if (name === 'moo-css-base词典') {
-          children.forEach(subItem => {
-            const subRecord = subItem as Record<string, unknown>;
-            const subName = String(subRecord.name || '');
-            switch (subName) {
-              case '颜色':
-                this.mooColorList = this.handleMooColorList(
-                  Array.isArray(subRecord.children)
-                    ? (subRecord.children as Record<string, unknown>[])
-                    : []
-                );
-                break;
-              case '方法':
-                this.mooFuncList = this.handleMooFuncList(
-                  Array.isArray(subRecord.children)
-                    ? (subRecord.children as Record<string, unknown>[])
-                    : []
-                );
-                break;
-              case '样式':
-                this.mooClassList = this.handleMooClassList(
-                  Array.isArray(subRecord.children)
-                    ? (subRecord.children as Record<string, unknown>[])
-                    : []
-                );
-                break;
-              default:
-                // Ignore unrecognized dictionary sections.
-                break;
-            }
-          });
-        }
-      });
+      const normalized = normalizeMooPayload(data, langManager.getCurrentLanguage());
+      if (normalized.styleList) this.styleList = normalized.styleList;
+      if (normalized.mooColorList) this.mooColorList = normalized.mooColorList;
+      if (normalized.mooFuncList) this.mooFuncList = normalized.mooFuncList;
+      if (normalized.mooClassList) this.mooClassList = normalized.mooClassList;
     },
   },
 });

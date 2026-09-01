@@ -1,8 +1,26 @@
+import type { Component } from 'vue';
+
 export type ToolCategory = 'transform' | 'inspect' | 'reference' | 'network';
 export type ToolDestination = 'embedded' | 'standalone' | 'external';
 export type ToolWorkspaceSize = 'default' | 'wide';
+export type ToolComponentName =
+  | 'QRCode'
+  | 'ImageCompressor'
+  | 'ColorPass'
+  | 'UnitCalculator'
+  | 'MooCtn'
+  | 'LangTranslator'
+  | 'RegexCtn'
+  | 'UtilsCtn'
+  | 'JsonCtn'
+  | 'SvgEditor'
+  | 'DateConverter'
+  | 'LinuxCommand'
+  | 'PageScreenshot'
+  | 'TechStackDetection'
+  | 'CodexQuota';
 
-export type ToolCard = {
+export type ToolDefinition = {
   key: string;
   nameKey: string;
   descriptionKey: string;
@@ -10,11 +28,33 @@ export type ToolCard = {
   category: ToolCategory;
   destination: ToolDestination;
   workspaceSize?: ToolWorkspaceSize;
-  componentName?: string;
+  componentName?: ToolComponentName;
+  component?: Component;
   url?: string;
 };
 
-export const TOOL_CARDS: ToolCard[] = [
+/** Compatibility alias retained for existing view and test consumers. */
+export type ToolCard = ToolDefinition;
+
+export const TOOL_COMPONENT_NAMES: readonly ToolComponentName[] = [
+  'QRCode',
+  'ImageCompressor',
+  'ColorPass',
+  'UnitCalculator',
+  'MooCtn',
+  'LangTranslator',
+  'RegexCtn',
+  'UtilsCtn',
+  'JsonCtn',
+  'SvgEditor',
+  'DateConverter',
+  'LinuxCommand',
+  'PageScreenshot',
+  'TechStackDetection',
+  'CodexQuota',
+];
+
+export const TOOL_REGISTRY: ToolDefinition[] = [
   {
     key: 'qr-code',
     nameKey: 'tools.qrCode',
@@ -153,4 +193,16 @@ export const TOOL_CARDS: ToolCard[] = [
     destination: 'embedded',
     componentName: 'TechStackDetection',
   },
+  {
+    key: 'codex-quota',
+    nameKey: 'tools.codexQuota',
+    descriptionKey: 'descriptions.codexQuota',
+    iconClass: 'u-icon iconfont icon-calc g-center g-fs36',
+    category: 'network',
+    destination: 'embedded',
+    componentName: 'CodexQuota',
+  },
 ];
+
+/** Compatibility export retained while callers migrate to the registry name. */
+export const TOOL_CARDS = TOOL_REGISTRY;

@@ -53,6 +53,12 @@
   border-radius: 12px;
   box-shadow: 0 12px 28px var(--date-shadow-container);
 }
+
+.date-converter *,
+.date-converter *::before,
+.date-converter *::after {
+  box-sizing: border-box;
+}
 .date-converter::-webkit-scrollbar {
   width: 8px;
 }
@@ -75,7 +81,11 @@
   margin-bottom: 16px;
   position: sticky;
   top: 0;
-  background: linear-gradient(180deg, var(--date-surface-translucent), var(--date-background-translucent));
+  background: linear-gradient(
+    180deg,
+    var(--date-surface-translucent),
+    var(--date-background-translucent)
+  );
   padding: 6px 0;
   z-index: 10;
 }

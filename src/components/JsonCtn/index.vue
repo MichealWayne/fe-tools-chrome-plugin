@@ -151,7 +151,7 @@ const getExecutableSource = (value: string) => {
  */
 const assertSafeExpression = (value: string) => {
   if (BLOCKED_EXPRESSION_TOKENS.test(getExecutableSource(value))) {
-    throw new Error('输入包含不允许的运行时访问标识符');
+    throw new Error(t('jsonCtn.messages.unsafeExpression'));
   }
 };
 
@@ -348,7 +348,7 @@ const copyToClipboard = async () => {
     await navigator.clipboard.writeText(jsonValue.value);
     showSuccess(t('jsonCtn.messages.copySuccess'));
   } catch (err) {
-    console.error('复制失败:', err);
+    console.error('Clipboard copy failed:', err);
     error.value = t('jsonCtn.messages.copyFailed');
   }
 };

@@ -1,4 +1,5 @@
 /* eslint-disable no-magic-numbers */
+import { langManager } from './i18n';
 /**
  * utils
  * @author Wayne
@@ -27,7 +28,7 @@ export function getUrlParam(name: string, decode?: (s: string) => string) {
 export function handleQRCode(url: string, type = 'canvas') {
   const { AraleQRCode } = window;
   if (typeof AraleQRCode === 'undefined') {
-    alert('工具库加载失败，请重试');
+    alert(langManager.t('errors.qrLibraryFailed'));
     return null;
   }
 
@@ -87,7 +88,7 @@ export function getFileBase64(file: File, cb: (base64: string) => unknown) {
     if (cb) cb(base64 as string);
   };
   reader.onerror = function () {
-    alert('Read file fail.');
+    alert(langManager.t('errors.fileReadFailed'));
   };
   reader.readAsDataURL(file);
 }

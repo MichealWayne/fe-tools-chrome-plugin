@@ -25,7 +25,7 @@ import { getUrlParam } from '@/utils';
 import { langManager } from '@/utils/i18n';
 import Translate from '@/components/LangTranslator/index.vue';
 import ToolWorkspace from '@/components/Experience/ToolWorkspace.vue';
-import { TOOL_CARDS } from './main/tool-cards';
+import { TOOL_REGISTRY } from './main/tool-cards';
 
 import Main from './main.vue';
 import PostMan from '../components/PostMan/PostManMain.vue';
@@ -40,7 +40,7 @@ export default defineComponent({
     ToolWorkspace,
   },
   setup() {
-    const postmanTool = TOOL_CARDS.find(tool => tool.key === 'postman');
+    const postmanTool = TOOL_REGISTRY.find(tool => tool.key === 'postman');
     if (!postmanTool) throw new Error('PostMan tool metadata is missing');
     return {
       postmanTool,
@@ -57,7 +57,7 @@ export default defineComponent({
 
 <style>
 .postman-tool-workspace.tool-workspace--wide {
-  width: min(1200px, calc(100vw - 48px));
+  width: min(1500px, calc(100vw - 48px));
   margin: 24px auto;
 }
 </style>

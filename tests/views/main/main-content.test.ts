@@ -34,7 +34,8 @@ describe('MainContent settings window', () => {
     const wrapper = mount(MainContent);
     await flushPromises();
 
-    expect(wrapper.findAll('.tool-card')).toHaveLength(15);
+    expect(wrapper.get('.logo-button').attributes('title')).toBe('返回首页');
+    expect(wrapper.findAll('.tool-card')).toHaveLength(16);
     expect(wrapper.findAll('.tool-card__category')).toHaveLength(0);
     expect(wrapper.findAll('.tool-card__destination')).toHaveLength(0);
     expect(wrapper.get('.m-ctn').classes()).toContain('m-ctn--scrollable');
@@ -73,6 +74,26 @@ describe('MainContent settings window', () => {
     expect(wrapper.find('.m-searchList').exists()).toBe(false);
   });
 
+  it('marks bookmark results for constrained three-line display', async () => {
+    const wrapper = mount(MainContent);
+    await flushPromises();
+    await wrapper.setData({
+      keywords: 'docs',
+      resultList: [
+        {
+          link: 'https://example.test/docs',
+          name: 'A very long bookmark title that should remain within three lines in search results',
+          label: 'mark',
+        },
+      ],
+    });
+
+    expect(wrapper.get('.search-result--bookmark').exists()).toBe(true);
+    expect(wrapper.get('.search-result--bookmark > span').text()).toContain(
+      'A very long bookmark title'
+    );
+  });
+
   it('restores focus across settings and module transitions', async () => {
     const wrapper = mount(MainContent, { attachTo: document.body });
     await flushPromises();
@@ -96,16 +117,13 @@ describe('MainContent settings window', () => {
     wrapper.unmount();
   });
 
-  it('shows a retryable remote-source error without hiding local tools', async () => {
+  it('silently falls back to local tools when the remote source fails', async () => {
     vi.mocked(ajax.getFeTools).mockRejectedValueOnce(new Error('offline'));
     const wrapper = mount(MainContent);
     await flushPromises();
 
-    expect(wrapper.get('.tool-state--error').text()).toContain('offline');
+    expect(wrapper.find('.tool-state--error').exists()).toBe(false);
     expect(wrapper.find('[data-tool-key="qr-code"]').exists()).toBe(true);
-    await wrapper.get('.tool-state__action').trigger('click');
-    await flushPromises();
-    expect(ajax.getFeTools).toHaveBeenCalledTimes(2);
   });
 
   it('opens settings from the top-right entry and keeps language selection wired', async () => {
@@ -128,6 +146,24 @@ describe('MainContent settings window', () => {
     await wrapper.find('.settings-window__close').trigger('click');
 
     expect(wrapper.find('.settings-window').exists()).toBe(false);
+  });
+
+  it('renders representative accessible and workflow copy in English', async () => {
+    const wrapper = mount(MainContent);
+    await flushPromises();
+
+    await wrapper.find('.settings-entry').trigger('click');
+    await wrapper.find('.settings-select').setValue('en');
+
+    expect(wrapper.get('.settings-entry').attributes('aria-label')).toBeUndefined();
+    expect(wrapper.get('.settings-entry').attributes('title')).toBe('Open settings');
+    expect(wrapper.get('.settings-select').element).toHaveProperty('value', 'en');
+    expect(wrapper.get('[data-tool-key="qr-code"]').attributes('aria-label')).toContain(
+      'Convert & Generate'
+    );
+    expect(wrapper.get('[data-tool-key="lang-translator"]').attributes('aria-label')).toContain(
+      'External website'
+    );
   });
 
   it('persists pinyin search changes from settings and refreshes current results', async () => {

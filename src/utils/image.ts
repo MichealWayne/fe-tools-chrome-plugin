@@ -4,6 +4,7 @@
  * @LastEditTime 2024-03-04 15:40:34
  */
 import { compressImg, getFileBase64 } from './index';
+import { langManager } from './i18n';
 
 /**
  * Load an image URL and return a compressed Base64 string.
@@ -44,7 +45,7 @@ export function handleInputUploadImageFile(
     const len = fileList?.length;
 
     if (!fileList || !len || !/\/(?:jpeg|png|gif)/i.test(fileList[0].type)) {
-      reject('文件格式错误');
+      reject(new Error(langManager.t('imageCompressor.messages.invalidFile')));
       return;
     }
     const _imgUrl = window.URL.createObjectURL(fileList[0]);
@@ -58,7 +59,7 @@ export function handleInputUploadImageFile(
     };
     _img.onerror = function (e) {
       console.error(e);
-      reject('转换失败，请重试');
+      reject(new Error(langManager.t('imageCompressor.messages.convertFailed')));
     };
     _img.src = _imgUrl;
 

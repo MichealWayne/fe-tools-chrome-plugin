@@ -92,15 +92,64 @@
 .u-btn[s-color='blue'],
 .u-btn_il[s-color='blue'] {
   color: var(--color-text-inverse);
-  background-color: @blue;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  border-color: var(--color-primary);
+  box-shadow: 0 3px 8px var(--color-primary-shadow);
 }
 
 .u-btn,
 .u-btn_il {
   box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 32px;
   padding: 6px 12px;
+  color: var(--color-primary);
+  background: var(--color-background-light);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--border-radius-md);
+  font: inherit;
+  font-weight: 500;
   line-height: 1.4;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.u-btn:hover:not(:disabled),
+.u-btn_il:hover:not(:disabled) {
+  color: var(--color-primary-dark);
+  background: var(--color-primary-surface);
+  border-color: var(--color-primary-dark);
+  box-shadow: 0 4px 10px var(--color-primary-shadow);
+  transform: translateY(-1px);
+}
+
+.u-btn[s-color='blue']:hover:not(:disabled),
+.u-btn_il[s-color='blue']:hover:not(:disabled) {
+  color: var(--color-text-inverse);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  border-color: var(--color-primary-dark);
+  box-shadow: 0 5px 12px var(--color-primary-shadow-hover);
+}
+
+.u-btn:active:not(:disabled),
+.u-btn_il:active:not(:disabled) {
+  box-shadow: 0 2px 5px var(--color-primary-shadow);
+  transform: translateY(0);
+}
+
+.u-btn:disabled,
+.u-btn_il:disabled {
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.5;
 }
 
 .u-input {
@@ -224,8 +273,15 @@
 }
 
 .m-logo {
-  height: 100%;
+  display: block;
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
   border-radius: 50%;
+  box-shadow: 0 8px 18px rgba(43, 105, 247, 0.2);
+  transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
 }
 
 .m-ctn {
@@ -266,18 +322,23 @@
   height: 10px;
 }
 .m-ctn .u-btn_il {
-  width: 80px;
-  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 80px;
+  min-height: 40px;
   padding: 0 16px;
-  line-height: 40px;
+  line-height: 1.4;
   border-radius: 4px;
+  white-space: nowrap;
 }
 
 .m-others {
   color: var(--color-tool-icon);
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px 6px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px 6px;
   justify-items: center;
 
   li:hover {
@@ -342,11 +403,85 @@
 }
 
 .j-logo_ctn {
-  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96px;
   transition: height 0.6s ease;
+
+  .logo-button {
+    position: relative;
+    z-index: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    isolation: isolate;
+
+    &::before {
+      position: absolute;
+      z-index: -1;
+      inset: -8px;
+      border-radius: inherit;
+      background: conic-gradient(from 20deg, #4f8cff, #a855f7, #ec4899, #22d3ee, #4f8cff);
+      filter: blur(7px);
+      opacity: 0;
+      transform: scale(0.75) rotate(-25deg);
+      transition:
+        opacity 0.35s ease,
+        transform 0.5s ease;
+      content: '';
+    }
+
+    &:hover::before,
+    &:focus-visible::before {
+      opacity: 0.9;
+      transform: scale(1) rotate(120deg);
+    }
+
+    &:hover .m-logo,
+    &:focus-visible .m-logo {
+      transform: translateY(-2px) scale(1.06) rotate(3deg);
+      box-shadow: 0 12px 24px rgba(112, 68, 240, 0.4);
+    }
+  }
 
   &.z-fold {
     height: 0;
+    overflow: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m-logo,
+  .j-logo_ctn .logo-button::before,
+  .m-back-entry,
+  .u-btn,
+  .u-btn_il,
+  .tool-state__action,
+  .tool-card,
+  .search-result,
+  .reference-tool__actions button,
+  .reference-tool__result,
+  .settings-entry,
+  .settings-window__close,
+  .u-btn_quick,
+  .codex-quota__clear,
+  .codex-quota__hint button {
+    transition: none !important;
+  }
+
+  .m-back-entry:hover,
+  .u-btn:hover,
+  .u-btn_il:hover,
+  .tool-state__action:hover,
+  .tool-card:hover,
+  .reference-tool__actions button:hover,
+  .reference-tool__result:hover,
+  .settings-entry:hover,
+  .settings-window__close:hover,
+  .u-btn_quick:hover {
+    transform: none !important;
   }
 }
 

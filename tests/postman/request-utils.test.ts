@@ -1,8 +1,17 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { buildRequestPayload } from '@/components/PostMan/utils/request-builder';
 import { replaceEnvironmentVariables } from '@/components/PostMan/utils/environment';
-import { loadPostmanStorage, savePostmanStorage } from '@/components/PostMan/utils/storage';
+import {
+  loadPostmanStorage,
+  POSTMAN_STORAGE_VERSION,
+  savePostmanStorage,
+} from '@/components/PostMan/utils/storage';
+import { redactRequest } from '@/components/PostMan/utils/redaction';
 import type { PostmanRequestConfig } from '@/components/PostMan/types';
+import { normalizeEnvironment, normalizeRequest } from '@/components/PostMan/utils/request-model';
+import { parseRequestUrl, serializeRequestUrl } from '@/components/PostMan/utils/url-params';
+import { validateRequest } from '@/components/PostMan/utils/validation';
+import { generateCurl, parseCurl } from '@/components/PostMan/utils/curl';
 
 const createRequest = (overrides: Partial<PostmanRequestConfig> = {}): PostmanRequestConfig => ({
   method: 'POST',
@@ -54,6 +63,72 @@ describe('postman request utilities', () => {
 
     expect(payload.data).toBeUndefined();
   });
+
+  it('excludes disabled request entries', () => {
+    const request = createRequest({
+      headers: [{ key: 'x-disabled', value: 'secret', enabled: false }],
+      body: {
+        type: 'x-www-form-urlencoded',
+        urlencoded: [{ key: 'a', value: 'b', enabled: false }],
+      },
+    });
+    const payload = buildRequestPayload(request, resolveValue);
+    expect(payload.headers).not.toHaveProperty('x-disabled');
+    expect(String(payload.data)).toBe('');
+  });
+});
+
+describe('postman normalized request model', () => {
+  it('converts legacy entries without losing values', () => {
+    const request = normalizeRequest(createRequest());
+    expect(request.headers[0]).toMatchObject({ key: 'x-token', value: '{{token}}', enabled: true });
+    expect(request.headers[0].id).toBeTruthy();
+    expect(request.settings?.timeout).toBe(30000);
+
+    const environment = normalizeEnvironment({
+      name: 'Dev',
+      variables: [{ key: 'token', value: 'x' }],
+    });
+    expect(environment.variables[0]).toMatchObject({ enabled: true, secret: false });
+  });
+});
+
+describe('postman URL parameters', () => {
+  it('parses repeated query keys in order', () => {
+    const parsed = parseRequestUrl('https://api.test/items?a=1&a=2#result');
+    expect(parsed?.params.map(({ key, value }) => [key, value])).toEqual([
+      ['a', '1'],
+      ['a', '2'],
+    ]);
+  });
+
+  it('serializes enabled parameters and preserves fragments', () => {
+    expect(
+      serializeRequestUrl('https://api.test/items?old=1#result', [
+        { key: 'a', value: '1' },
+        { key: 'skip', value: '2', enabled: false },
+      ])
+    ).toBe('https://api.test/items?a=1#result');
+  });
+
+  it('does not rewrite incomplete input', () => {
+    expect(parseRequestUrl('https://')).toBeNull();
+    expect(serializeRequestUrl('api.test', [])).toBeNull();
+  });
+});
+
+describe('postman preflight validation', () => {
+  it('reports invalid URL, JSON, and missing environment variables', () => {
+    const issues = validateRequest(
+      createRequest({ url: 'not-a-url/{{host}}', body: { type: 'json', json: '{invalid' } }),
+      []
+    );
+    expect(issues.map(issue => issue.code)).toEqual([
+      'invalid-url',
+      'invalid-json',
+      'unresolved-variable',
+    ]);
+  });
 });
 
 describe('postman environment variable replacement', () => {
@@ -88,6 +163,9 @@ describe('postman storage utilities', () => {
     const loaded = loadPostmanStorage();
     expect(loaded.currentEnvironment).toBe('Prod');
     expect(loaded.environments[0].name).toBe('Prod');
+    expect(JSON.parse(localStorage.getItem('postman-data') || '{}').version).toBe(
+      POSTMAN_STORAGE_VERSION
+    );
   });
 
   it('does not persist sensitive request headers in history', () => {
@@ -114,5 +192,77 @@ describe('postman storage utilities', () => {
     const loaded = loadPostmanStorage();
     expect(loaded.environments).toEqual([]);
     expect(loaded.requestHistory).toEqual([]);
+  });
+
+  it('migrates valid legacy records without retaining a raw snapshot', () => {
+    localStorage.setItem(
+      'postman-data',
+      JSON.stringify({
+        environments: [{ name: 'Dev', variables: [{ key: 'host', value: 'api.test' }] }],
+        currentEnvironment: 'Dev',
+        requestHistory: [
+          {
+            method: 'GET',
+            url: 'https://api.test',
+            headers: { Authorization: 'Bearer legacy-secret' },
+            timestamp: 1,
+          },
+        ],
+      })
+    );
+    expect(loadPostmanStorage().requestHistory).toHaveLength(1);
+    const migrated = JSON.parse(localStorage.getItem('postman-data') || '{}');
+    expect(migrated.legacySnapshot).toBeUndefined();
+    expect(localStorage.getItem('postman-data')).not.toContain('legacy-secret');
+  });
+
+  it('does not overwrite unknown newer storage', () => {
+    const raw = JSON.stringify({ version: POSTMAN_STORAGE_VERSION + 1, future: true });
+    localStorage.setItem('postman-data', raw);
+    expect(loadPostmanStorage().storageError).toBe('newer-version');
+    expect(
+      savePostmanStorage({ environments: [], currentEnvironment: '', requestHistory: [] })
+    ).toBe(false);
+    expect(localStorage.getItem('postman-data')).toBe(raw);
+  });
+
+  it('redacts request authentication and credential headers', () => {
+    const safe = redactRequest(
+      createRequest({
+        headers: [{ key: 'Authorization', value: 'Bearer header-secret' }],
+        auth: { type: 'bearer', token: 'auth-secret' },
+      })
+    );
+    expect(safe.redacted).toBe(true);
+    expect(safe.request.headers).toEqual([]);
+    expect(safe.request.auth.token).toBe('');
+  });
+});
+
+describe('postman cURL interoperability', () => {
+  it('imports a supported single request without executing it', () => {
+    const result = parseCurl(
+      "curl -X POST 'https://api.test/items?a=1' -H 'Content-Type: application/json' --data-raw '{\"ok\":true}'"
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.request).toMatchObject({ method: 'POST', url: 'https://api.test/items?a=1' });
+    expect(result.request?.body).toEqual(expect.objectContaining({ type: 'json' }));
+  });
+
+  it('rejects shell operators and file reads', () => {
+    expect(parseCurl('curl https://api.test; whoami').error).toBe('unsafe-shell-syntax');
+    expect(parseCurl("curl https://api.test --data '@secret.txt'").error).toBe('file-read');
+  });
+
+  it('generates shell-safe cURL without secrets', () => {
+    const output = generateCurl(
+      createRequest({
+        url: "https://api.test/item's",
+        headers: [{ key: 'Authorization', value: 'Bearer secret' }],
+        auth: { type: 'bearer', token: 'secret' },
+      })
+    );
+    expect(output).toContain(`item'\"'\"'s`);
+    expect(output).not.toContain('secret');
   });
 });

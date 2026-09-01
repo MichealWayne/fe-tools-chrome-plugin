@@ -7,30 +7,12 @@
       </button>
     </div>
 
-    <div class="headers-list">
-      <div v-for="(header, index) in headers" :key="index" class="header-item">
-        <input
-          v-model="header.key"
-          :placeholder="t('postman.headers.headerKey')"
-          class="header-input"
-          @input="updateHeaders"
-        />
-        <input
-          v-model="header.value"
-          :placeholder="t('postman.headers.headerValue')"
-          class="header-input"
-          @input="updateHeaders"
-        />
-        <button
-          class="remove-btn"
-          :aria-label="t('postman.actions.remove')"
-          :title="t('postman.actions.remove')"
-          @click="removeHeader(index)"
-        >
-          ×
-        </button>
-      </div>
-    </div>
+    <KeyValueEditor
+      v-model="headers"
+      :key-placeholder="t('postman.headers.headerKey')"
+      :value-placeholder="t('postman.headers.headerValue')"
+      @update:model-value="updateHeaders"
+    />
   </div>
 </template>
 
@@ -44,6 +26,8 @@ export default {
 import { ref, watch } from 'vue';
 import { langManager } from '@/utils/i18n';
 import type { HeaderEntry } from './types';
+import KeyValueEditor from './KeyValueEditor.vue';
+import { createEntryId, normalizeEntries } from './utils/request-model';
 
 const t = (key: string) => langManager.t(key);
 
@@ -55,23 +39,18 @@ const emit = defineEmits<{
   'update:modelValue': [headers: HeaderEntry[]];
 }>();
 
-const headers = ref<HeaderEntry[]>([...props.modelValue]);
+const headers = ref<HeaderEntry[]>(normalizeEntries(props.modelValue));
 
 watch(
   () => props.modelValue,
   newHeaders => {
-    headers.value = [...newHeaders];
+    headers.value = normalizeEntries(newHeaders);
   },
   { deep: true }
 );
 
 const addHeader = () => {
-  headers.value.push({ key: '', value: '' });
-  updateHeaders();
-};
-
-const removeHeader = (index: number) => {
-  headers.value.splice(index, 1);
+  headers.value.push({ id: createEntryId(), enabled: true, key: '', value: '' });
   updateHeaders();
 };
 

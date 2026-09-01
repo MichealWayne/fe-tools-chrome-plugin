@@ -7,29 +7,15 @@
 }
 
 .settings-entry {
-  display: inline-flex;
-  align-items: center;
   gap: 6px;
   height: 34px;
   padding: 0 10px;
-  border: 1px solid #d8e0ea;
-  border-radius: 4px;
-  background: #fff;
-  color: #34495e;
   font-size: 13px;
-  cursor: pointer;
   outline: none;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-
-  &:hover {
-    border-color: #007bff;
-  }
 
   &:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.18);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-focus-ring);
   }
 }
 
@@ -91,6 +77,19 @@
   border-radius: 4px;
   background: transparent;
   cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.settings-window__close:hover {
+  background: var(--color-primary-surface-hover);
+  transform: rotate(4deg);
+}
+
+.settings-window__close:hover .icon-close::before,
+.settings-window__close:hover .icon-close::after {
+  background-color: var(--color-primary);
 }
 
 .settings-window__close .icon-close::before,

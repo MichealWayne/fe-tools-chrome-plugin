@@ -1,7 +1,33 @@
 <template>
   <div class="postman-container">
-    <div class="postman-header">
+    <div class="postman-toolbar">
+      <div class="environment-control">
+        <label for="postman-environment">{{ t('postman.environments.active') }}</label>
+        <select id="postman-environment" v-model="currentEnvironment" @change="saveToStorage">
+          <option value="">{{ t('postman.environments.noEnvironment') }}</option>
+          <option
+            v-for="environment in environments"
+            :key="environment.name"
+            :value="environment.name"
+          >
+            {{ environment.name }}
+          </option>
+        </select>
+      </div>
       <div class="header-actions">
+        <button class="toolbar-btn" @click="toggleDrawer('environments')">
+          <i class="fas fa-sliders" aria-hidden="true"></i> {{ t('postman.environments.manage') }}
+        </button>
+        <button class="toolbar-btn" @click="toggleDrawer('history')">
+          <i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
+          {{ t('postman.history.title') }}
+        </button>
+        <button class="toolbar-btn" @click="toggleDrawer('saved')">
+          <i class="fas fa-bookmark" aria-hidden="true"></i> {{ t('postman.saved.title') }}
+        </button>
+        <button class="toolbar-btn" @click="toggleDrawer('curl')">
+          <i class="fas fa-terminal" aria-hidden="true"></i> cURL
+        </button>
         <button class="save-btn" @click="saveRequest">
           <i class="fas fa-save" aria-hidden="true"></i> {{ t('postman.saveRequest') }}
         </button>
@@ -12,40 +38,63 @@
     </div>
     <inline-feedback :feedback="feedback" />
 
-    <!-- 环境变量组件 -->
-    <EnvironmentVariables
-      ref="envRef"
-      v-model:environments="environments"
-      v-model:current-environment="currentEnvironment"
-      @feedback="setFeedback"
-    />
+    <section
+      v-if="activeDrawer"
+      ref="drawerRef"
+      class="postman-drawer"
+      role="dialog"
+      tabindex="-1"
+      :aria-label="t('postman.drawerLabel')"
+      @keydown.esc="closeDrawer"
+      @keydown.tab="trapDrawerFocus"
+    >
+      <button class="drawer-close" :aria-label="t('common.close')" @click="closeDrawer">×</button>
+      <EnvironmentVariables
+        v-if="activeDrawer === 'environments'"
+        ref="envRef"
+        v-model:environments="environments"
+        v-model:current-environment="currentEnvironment"
+        @feedback="setFeedback"
+      />
+      <RequestHistory
+        v-else-if="activeDrawer === 'history'"
+        :history="requestHistory"
+        @select-item="loadHistoryItem"
+        @clear-history="clearHistory"
+        @remove-item="removeHistoryItem"
+        @toggle-favorite="toggleFavorite"
+      />
+      <SavedRequests
+        v-else-if="activeDrawer === 'saved'"
+        :items="savedRequests"
+        :request="request"
+        @update:items="
+          savedRequests = $event;
+          saveToStorage();
+        "
+        @load="loadSavedRequest"
+        @feedback="setFeedback"
+      />
+      <CurlTools v-else :request="request" @apply="applyImportedRequest" @feedback="setFeedback" />
+    </section>
 
-    <!-- 请求配置面板 -->
-    <RequestPanel
-      ref="requestPanelRef"
-      :request="request"
-      :loading="loading"
-      @send-request="sendRequest"
-      @update:request="handleRequestUpdate"
-    />
-
-    <!-- 响应区域 -->
-    <ResponseViewer
-      :response="response"
-      :loading="loading"
-      :error="error"
-      :response-time="responseTime"
-      :response-size="responseSize"
-      @feedback="setFeedback"
-    />
-
-    <!-- 请求历史 -->
-    <RequestHistory
-      :history="requestHistory"
-      @select-item="loadHistoryItem"
-      @clear-history="clearHistory"
-      @remove-item="removeHistoryItem"
-    />
+    <div class="postman-workbench">
+      <RequestPanel
+        ref="requestPanelRef"
+        :request="request"
+        :loading="loading"
+        :validation-message="validationMessage"
+        :validation-field="validationField"
+        @send-request="sendRequest"
+        @cancel-request="cancel"
+        @update:request="updateRequest"
+      />
+      <ResponseViewer
+        :response="response"
+        :execution-state="executionState"
+        @feedback="setFeedback"
+      />
+    </div>
   </div>
 </template>
 
@@ -56,43 +105,49 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue';
+import { computed, ref, reactive, onMounted, nextTick } from 'vue';
 import { langManager } from '@/utils/i18n';
 
-import axios, { AxiosResponse, Method } from 'axios';
 import RequestPanel from './RequestPanel.vue';
 import ResponseViewer from './ResponseViewer.vue';
 import RequestHistory from './RequestHistory.vue';
 import EnvironmentVariables from './EnvironmentVariables.vue';
-import { buildRequestPayload } from './utils/request-builder';
-import { loadPostmanStorage, savePostmanStorage } from './utils/storage';
 import type {
   PostmanRequestConfig,
   PostmanResponseData,
   PostmanHistoryItem,
   PostmanEnvironment,
+  SavedRequest,
 } from './types';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 import type { InlineFeedbackMessage } from '@/types/experience';
+import SavedRequests from './SavedRequests.vue';
+import CurlTools from './CurlTools.vue';
+import { useRequestExecution } from './composables/useRequestExecution';
+import { replaceEnvironmentVariables } from './utils/environment';
+import { validateRequest } from './utils/validation';
+import { redactRequest } from './utils/redaction';
+import { useRequestArchive } from './composables/useRequestArchive';
+import { usePostmanWorkspace } from './composables/usePostmanWorkspace';
+import { useDrawerFocus, type PostmanDrawer } from './composables/useDrawerFocus';
 
 const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 
-type EnvRef = {
-  replaceVariables: (value: string) => string;
-};
 type RequestPanelRef = { focusUrl: () => void };
 
 /**
  * Reactive state for request lifecycle and UI panels.
  */
-const loading = ref(false);
-const error = ref('');
-const response = ref<PostmanResponseData | null>(null);
-const responseTime = ref(0);
-const responseSize = ref(0);
-const envRef = ref<EnvRef | null>(null);
+const { state: executionState, loading, execute, cancel } = useRequestExecution();
+const response = computed<PostmanResponseData | null>(() =>
+  executionState.value.type === 'received' ? executionState.value.response : null
+);
 const requestPanelRef = ref<RequestPanelRef | null>(null);
 const feedback = ref<InlineFeedbackMessage | null>(null);
+const validationMessage = ref('');
+const validationField = ref<'url' | 'body' | 'environment' | ''>('');
+const activeDrawer = ref<PostmanDrawer>('');
+const drawerRef = ref<HTMLElement | null>(null);
 
 const setFeedback = (message: string, tone: 'success' | 'error') => {
   feedback.value = { message, tone };
@@ -104,6 +159,7 @@ const setFeedback = (message: string, tone: 'success' | 'error') => {
 const request = reactive<PostmanRequestConfig>({
   method: 'GET' as const,
   url: '',
+  queryParams: [],
   headers: [],
   body: {
     type: 'none',
@@ -111,6 +167,8 @@ const request = reactive<PostmanRequestConfig>({
   auth: {
     type: 'none',
   },
+  settings: { timeout: 30000 },
+  environment: '',
 });
 
 /**
@@ -123,264 +181,90 @@ const currentEnvironment = ref('');
  * Request history for quick replay and auditing.
  */
 const requestHistory = ref<PostmanHistoryItem[]>([]);
-
-/**
- * Load persisted request data on mount.
- */
-onMounted(() => {
-  loadFromStorage();
-});
+const savedRequests = ref<SavedRequest[]>([]);
 
 /**
  * Send the configured request and store the response.
  */
 const sendRequest = async () => {
   if (loading.value) return;
-  if (!request.url.trim()) {
-    error.value = t('postman.request.missingUrl');
-    setFeedback(error.value, 'error');
+  validationMessage.value = '';
+  validationField.value = '';
+  const activeEnvironment = environments.value.find(env => env.name === currentEnvironment.value);
+  const issues = validateRequest(request, activeEnvironment?.variables || []);
+  if (issues.length) {
+    const issue = issues[0];
+    validationMessage.value =
+      issue.code === 'invalid-json'
+        ? t('postman.body.jsonFormatError')
+        : issue.code === 'unresolved-variable'
+          ? t('postman.request.unresolvedVariables', { variables: issue.detail || '' })
+          : t('postman.request.invalidUrl');
+    setFeedback(validationMessage.value, 'error');
+    validationField.value = issue.field;
     await nextTick();
-    requestPanelRef.value?.focusUrl();
+    if (issue.field === 'url') requestPanelRef.value?.focusUrl();
     return;
   }
-
-  loading.value = true;
-  error.value = '';
-  response.value = null;
-
-  const startTime = Date.now();
-
-  try {
-    const resolveValue = (value: string) => envRef.value?.replaceVariables(value) || value;
-    const {
-      url: finalUrl,
-      headers,
-      data: requestData,
-    } = buildRequestPayload(request, resolveValue);
-
-    /**
-     * Dispatch the request via Axios and capture response metadata.
-     */
-    const axiosResponse: AxiosResponse = await axios({
-      method: request.method.toLowerCase() as Method,
-      url: finalUrl,
-      headers,
-      data: requestData,
-      timeout: 30000,
-    });
-
-    const endTime = Date.now();
-    responseTime.value = endTime - startTime;
-
-    /**
-     * Normalize response metadata for the viewer.
-     */
-    response.value = {
-      status: axiosResponse.status,
-      statusText: axiosResponse.statusText,
-      headers: axiosResponse.headers as Record<string, string>,
-      data: axiosResponse.data,
-      responseTime: responseTime.value,
-      size: JSON.stringify(axiosResponse.data).length,
-    };
-
-    /**
-     * Measure response size for display.
-     */
-    const responseStr = JSON.stringify(axiosResponse.data);
-    responseSize.value = new Blob([responseStr]).size;
-
-    /**
-     * Persist the request in history for quick reuse.
-     */
+  const resolveValue = (value: string) =>
+    replaceEnvironmentVariables(value, activeEnvironment?.variables || []);
+  const result = await execute(request, resolveValue);
+  if (result) {
+    const redacted = redactRequest(request);
     addToHistory({
+      id: `history-${Date.now()}`,
       method: request.method,
       url: request.url,
-      headers: headers,
-      body: requestData,
+      headers: {},
+      request: redacted.request,
+      environment: currentEnvironment.value,
       timestamp: Date.now(),
-      status: axiosResponse.status,
-      responseTime: responseTime.value,
+      status: result.status,
+      responseTime: result.responseTime,
+      redacted: redacted.redacted,
     });
     setFeedback(t('postman.feedback.requestComplete'), 'success');
-  } catch (err) {
-    const endTime = Date.now();
-    responseTime.value = endTime - startTime;
-
-    if (axios.isAxiosError(err)) {
-      if (err.response) {
-        /**
-         * Server responded with an error status code.
-         */
-        const responseStr = JSON.stringify(err.response.data);
-        responseSize.value = new Blob([responseStr]).size;
-        response.value = {
-          status: err.response.status,
-          statusText: err.response.statusText,
-          headers: err.response.headers as Record<string, string>,
-          data: err.response.data,
-          responseTime: responseTime.value,
-          size: responseSize.value,
-        };
-      } else if (err.request) {
-        /**
-         * Request was sent but no response was received.
-         */
-        error.value = t('postman.request.networkError');
-      } else {
-        /**
-         * Non-network errors raised during request setup.
-         */
-        error.value = t('postman.request.requestError', { message: err.message });
-      }
-    } else {
-      error.value = t('postman.request.unknownError', { message: (err as Error).message });
-    }
-    if (error.value) setFeedback(error.value, 'error');
-  } finally {
-    loading.value = false;
   }
 };
 
-/**
- * Insert a history entry and cap list length.
- * @param item - History record to insert.
- */
-const addToHistory = (item: PostmanHistoryItem) => {
-  requestHistory.value.unshift(item);
+const { toggleDrawer, closeDrawer, trapDrawerFocus } = useDrawerFocus({
+  activeDrawer,
+  drawerRef,
+});
 
-  /**
-   * Keep history bounded to reduce storage overhead.
-   */
-  if (requestHistory.value.length > 50) {
-    requestHistory.value = requestHistory.value.slice(0, 50);
-  }
+const { updateRequest, loadSavedRequest, applyImportedRequest } = usePostmanWorkspace({
+  request,
+  activeDrawer,
+  setFeedback,
+  translate: t,
+});
 
-  saveToStorage();
-};
+const {
+  saveToStorage,
+  loadFromStorage,
+  addToHistory,
+  loadHistoryItem,
+  clearHistory,
+  toggleFavorite,
+  removeHistoryItem,
+  saveRequest,
+  loadRequest,
+} = useRequestArchive({
+  request,
+  environments,
+  currentEnvironment,
+  requestHistory,
+  savedRequests,
+  setFeedback,
+  translate: t,
+  focusUrl: () => requestPanelRef.value?.focusUrl(),
+  closeDrawer,
+  clearValidation: () => {
+    validationMessage.value = '';
+  },
+});
 
-const loadHistoryItem = (item: PostmanHistoryItem) => {
-  request.method = item.method;
-  request.url = item.url;
-
-  /**
-   * Convert headers from object map into editable list entries.
-   */
-  request.headers = Object.entries(item.headers).map(([key, value]) => ({ key, value }));
-
-  /**
-   * Reset body and auth settings before loading stored payloads.
-   */
-  request.body = { type: 'none' };
-  request.auth = { type: 'none' };
-
-  if (item.body) {
-    if (typeof item.body === 'string') {
-      request.body = { type: 'raw', raw: item.body };
-    } else if (item.body instanceof FormData) {
-      request.body = { type: 'form-data', formData: [] };
-    } else {
-      request.body = { type: 'json', json: JSON.stringify(item.body, null, 2) };
-    }
-  }
-  setFeedback(t('postman.feedback.historyLoaded'), 'success');
-};
-
-const clearHistory = () => {
-  requestHistory.value = [];
-  saveToStorage();
-  setFeedback(t('postman.feedback.historyCleared'), 'success');
-};
-
-const removeHistoryItem = (index: number) => {
-  requestHistory.value.splice(index, 1);
-  saveToStorage();
-  setFeedback(t('postman.feedback.historyRemoved'), 'success');
-};
-
-/**
- * Export the current request configuration to a JSON file.
- */
-const saveRequest = () => {
-  const requestData = {
-    ...request,
-    timestamp: Date.now(),
-  };
-
-  const dataStr = JSON.stringify(requestData, null, 2);
-  const dataBlob = new Blob([dataStr], { type: 'application/json' });
-  const url = URL.createObjectURL(dataBlob);
-
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `postman-request-${Date.now()}.json`;
-  link.click();
-
-  URL.revokeObjectURL(url);
-  setFeedback(t('postman.feedback.requestSaved'), 'success');
-};
-
-/**
- * Import a request configuration from a JSON file.
- */
-const loadRequest = () => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json';
-
-  input.onchange = e => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const requestData = JSON.parse(e.target?.result as string);
-
-        /**
-         * Apply imported request configuration to the editor.
-         */
-        Object.assign(request, requestData);
-        setFeedback(t('postman.feedback.requestLoaded'), 'success');
-        nextTick(() => requestPanelRef.value?.focusUrl());
-      } catch (error) {
-        setFeedback(t('postman.request.loadFailed'), 'error');
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  input.click();
-};
-
-/**
- * Persist environment and history data to localStorage.
- */
-const saveToStorage = () => {
-  savePostmanStorage({
-    environments: environments.value,
-    currentEnvironment: currentEnvironment.value,
-    requestHistory: requestHistory.value,
-  });
-};
-
-/**
- * Restore environment and history data from localStorage.
- */
-const loadFromStorage = () => {
-  const data = loadPostmanStorage();
-  environments.value = data.environments;
-  currentEnvironment.value = data.currentEnvironment;
-  requestHistory.value = data.requestHistory;
-};
-
-/**
- * Apply request updates from child components.
- * @param newRequest - Partial request data.
- */
-const handleRequestUpdate = (newRequest: Partial<PostmanRequestConfig>) => {
-  Object.assign(request, newRequest);
-};
+onMounted(loadFromStorage);
 
 /**
  * Expose request actions for parent components.

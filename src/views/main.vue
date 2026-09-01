@@ -10,7 +10,7 @@
     <div class="settings-header">
       <button
         ref="settingsEntry"
-        class="settings-entry"
+        class="u-btn settings-entry"
         type="button"
         :title="t('settings.entryTitle')"
         @click="openSettings"
@@ -20,70 +20,30 @@
       </button>
     </div>
 
-    <div
+    <main-settings-dialog
       v-if="showSettings"
-      class="settings-window"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settings-title"
-      @keydown="handleSettingsKeydown"
-    >
-      <div ref="settingsPanel" class="settings-window__panel" tabindex="-1">
-        <header class="settings-window__header">
-          <strong id="settings-title">{{ t('settings.title') }}</strong>
-          <button
-            class="settings-window__close"
-            type="button"
-            :aria-label="t('settings.close')"
-            :title="t('settings.close')"
-            @click="closeSettings"
-          >
-            <i class="u-icon icon-close" aria-hidden="true"></i>
-          </button>
-        </header>
-        <div class="settings-window__body">
-          <label class="settings-field">
-            <span class="settings-field__label">{{ t('settings.language') }}</span>
-            <select
-              v-model="currentLang"
-              class="settings-select"
-              aria-describedby="settings-language-help"
-              @change="handleLanguageChange"
-            >
-              <option value="zh">{{ t('languageOptions.zh') }}</option>
-              <option value="en">{{ t('languageOptions.en') }}</option>
-            </select>
-            <span id="settings-language-help" class="settings-field__help">{{
-              t('settings.languageHelp')
-            }}</span>
-          </label>
-          <label class="settings-field settings-field--inline">
-            <span>
-              <span class="settings-field__label">{{ t('settings.pinyinSearch') }}</span>
-              <span id="settings-pinyin-help" class="settings-field__help">{{
-                t('settings.pinyinSearchHelp')
-              }}</span>
-            </span>
-            <input
-              v-model="enablePinyinSearch"
-              class="settings-checkbox"
-              type="checkbox"
-              aria-describedby="settings-pinyin-help"
-              @change="handlePinyinSearchToggle"
-            />
-          </label>
-        </div>
-      </div>
-    </div>
+      :current-lang="currentLang"
+      :enable-pinyin-search="enablePinyinSearch"
+      :translate="t"
+      @close="closeSettings"
+      @language-change="handleLanguageChange"
+      @pinyin-change="handlePinyinSearchToggle"
+    />
 
     <div v-show="!showCompName" class="m-main_ctn">
-      <h1 :class="{ 'z-fold': logoFold }" class="f-tc j-logo_ctn f-ovhidden">
-        <button type="button" class="logo-button" :aria-label="t('title')" @click="toHome">
+      <h1 :class="{ 'z-fold': logoFold }" class="f-tc j-logo_ctn">
+        <button
+          type="button"
+          class="logo-button"
+          :aria-label="t('title')"
+          :title="t('homeTitle')"
+          @click="toHome"
+        >
           <img class="m-logo" src="/icon.png" alt="" />
         </button>
       </h1>
       <section>
-        <p class="m-search_input u-c-middle g-mt40 g-pr">
+        <p class="m-search_input u-c-middle g-mt20 g-pr">
           <input
             id="search"
             v-model="keywords"
@@ -115,39 +75,14 @@
           state="loading"
           :message="t('experience.loading')"
         />
-        <tool-state
-          v-if="feToolsError"
-          state="error"
-          :message="feToolsError"
-          :action-label="t('experience.retry')"
-          @action="loadFeTools"
-        />
-        <ul
+        <search-results-list
           v-if="!resultsDismissed && resultList.length"
-          class="m-searchList u-w420 j-searchList g-center"
-          role="listbox"
-          :aria-label="t('search.resultsLabel')"
-        >
-          <li v-for="(item, index) in resultList" :key="`${item.link}-${index}`" role="none">
-            <button
-              type="button"
-              role="option"
-              class="search-result"
-              :class="{ 'z-selected': activeResultIndex === index }"
-              :aria-selected="activeResultIndex === index"
-              @mouseenter="activeResultIndex = index"
-              @click="handleResultClick(item)"
-            >
-              <em
-                v-if="item.label"
-                class="u-icon_il icon-label"
-                :class="getResultLabel(item.label)"
-                >{{ item.label }}</em
-              >
-              <span v-html="getResultText(item)"></span>
-            </button>
-          </li>
-        </ul>
+          :results="resultList"
+          :active-index="activeResultIndex"
+          :translate="t"
+          @hover="activeResultIndex = $event"
+          @select="handleResultClick"
+        />
         <tool-state
           v-else-if="keywords && !feToolsLoading && !resultsDismissed"
           state="empty"
@@ -155,23 +90,13 @@
         />
       </section>
 
-      <section v-show="!keywords" class="tool-groups g-center" :aria-label="t('toolsLabel')">
-        <ul class="m-others m-others--grid g-fs14">
-          <li v-for="tool in toolCards" :key="tool.key" class="f-tc">
-            <button
-              type="button"
-              class="tool-card"
-              :data-tool-key="tool.key"
-              :title="getToolTitle(tool)"
-              :aria-label="getToolAccessibleLabel(tool)"
-              @click="handleToolClick(tool, $event)"
-            >
-              <em :class="tool.iconClass" aria-hidden="true"></em>
-              <span class="tool-card__name g-fs12">{{ t(tool.nameKey) }}</span>
-            </button>
-          </li>
-        </ul>
-      </section>
+      <tool-launcher-grid
+        v-show="!keywords"
+        :tools="toolCards"
+        :language="currentLang"
+        :translate="t"
+        @tool-click="handleToolClick"
+      />
     </div>
 
     <div v-if="showCompName" class="module-host">
@@ -203,24 +128,40 @@ import { getUrlParam } from '@/utils';
 import { getMarkTree, jumpAction } from '@/utils/chrome';
 import ajax from '@/api';
 import { langManager } from '@/utils/i18n';
-import { TOOL_CARDS, type ToolCard } from './main/tool-cards';
+import { TOOL_REGISTRY, type ToolCard } from './main/tool-cards';
 import type { BookmarkItem, ComponentDataTypes, SearchResultItem } from './main/types';
-import { sanitizeInlineMarkup } from '@/utils/sanitize';
-import { buildSearchResults, normalizeFeToolsList } from './main/search-utils';
+import { normalizeFeToolsList } from './main/search-utils';
 import { getPinyinSearchPreference, setPinyinSearchPreference } from './main/preferences';
-import { restoreFocus, trapFocus } from '@/utils/focus';
+import { restoreFocus } from '@/utils/focus';
 import ToolState from '@/components/Experience/ToolState.vue';
 import ToolWorkspace from '@/components/Experience/ToolWorkspace.vue';
-import MooCtn from './MooCtn.vue';
-import RegexCtn from './RegexCtn.vue';
-import UtilsCtn from './UtilsCtn.vue';
-import { DEFAULT_SEARCH_LIST } from '@/constant';
+import { getDefaultSearchList } from '@/constant';
 import CompMap from '@/components/';
+import MainSettingsDialog from './main/MainSettingsDialog.vue';
+import SearchResultsList from './main/SearchResultsList.vue';
+import ToolLauncherGrid from './main/ToolLauncherGrid.vue';
+import { useToolNavigation } from './main/useToolNavigation';
+import { useToolSearch } from './main/useToolSearch';
+import {
+  getResultLabel,
+  getResultText,
+  getToolAccessibleLabel,
+  getToolTitle,
+} from './main/tool-presentation';
 
 const QR_CODE_TYPE = 'qr';
+const toolSearch = useToolSearch();
+const toolNavigation = useToolNavigation();
 export default defineComponent({
   name: 'MainContent',
-  components: { ...CompMap, MooCtn, RegexCtn, UtilsCtn, ToolState, ToolWorkspace },
+  components: {
+    ...CompMap,
+    MainSettingsDialog,
+    SearchResultsList,
+    ToolLauncherGrid,
+    ToolState,
+    ToolWorkspace,
+  },
 
   data(): ComponentDataTypes {
     return {
@@ -231,12 +172,11 @@ export default defineComponent({
       showCompName: getUrlParam('search') ? 'QRCode' : '',
       resultList: [],
       feToolsList: [],
-      toolCards: TOOL_CARDS,
+      toolCards: TOOL_REGISTRY,
       currentLang: langManager.getCurrentLanguage(),
       enablePinyinSearch: getPinyinSearchPreference(),
       languageChangeHandler: undefined,
       feToolsLoading: false,
-      feToolsError: '',
       activeResultIndex: -1,
       resultsDismissed: false,
       lastToolTrigger: null,
@@ -279,63 +219,37 @@ export default defineComponent({
       return langManager.t(key, params);
     },
     getToolTitle(tool: ToolCard): string {
-      const parts = [this.t(tool.descriptionKey)];
-      if (tool.destination !== 'embedded') {
-        parts.push(this.t(`experience.${tool.destination}`));
-      }
-      return parts.join(' · ');
+      return getToolTitle(tool, this.t);
     },
     getToolAccessibleLabel(tool: ToolCard): string {
-      const parts = [
-        this.t(tool.nameKey),
-        this.t(`experience.categories.${tool.category}`),
-        this.t(tool.descriptionKey),
-      ];
-      if (tool.destination !== 'embedded') {
-        parts.push(this.t(`experience.${tool.destination}`));
-      }
-      return parts.join('，');
+      return getToolAccessibleLabel(tool, this.t, this.currentLang);
     },
     loadFeTools() {
       this.feToolsLoading = true;
-      this.feToolsError = '';
+      // The remote list only supplements local tools; keep the home page usable when it fails.
       return ajax
         .getFeTools()
         .then((data: { list?: unknown }) => {
           this.feToolsList = normalizeFeToolsList(data.list);
           if (this.keywords) this.setSearchResult();
         })
-        .catch((error: Error) => {
-          this.feToolsError = error?.message || this.t('errors.fetchLinksFailed');
-        })
+        .catch(() => undefined)
         .finally(() => {
           this.feToolsLoading = false;
         });
     },
-    handleLanguageChange() {
+    handleLanguageChange(value?: string) {
+      if (value) this.currentLang = value;
       langManager.setLanguage(this.currentLang);
     },
     openSettings(event?: Event) {
       this.settingsTrigger =
         (event?.currentTarget as HTMLElement) || (this.$refs.settingsEntry as HTMLElement);
       this.showSettings = true;
-      nextTick(() => {
-        const panel = this.$refs.settingsPanel as HTMLElement | undefined;
-        (panel?.querySelector<HTMLElement>('button, select, input') || panel)?.focus();
-      });
     },
     closeSettings() {
       this.showSettings = false;
       nextTick(() => restoreFocus(this.settingsTrigger, this.$refs.settingsEntry as HTMLElement));
-    },
-    handleSettingsKeydown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        this.closeSettings();
-        return;
-      }
-      const panel = this.$refs.settingsPanel as HTMLElement | undefined;
-      if (panel) trapFocus(panel, event);
     },
     toHome() {
       jumpAction('https://github.com/MichealWayne/fe-tools');
@@ -360,7 +274,7 @@ export default defineComponent({
     },
     handleInputInput() {
       this.resultsDismissed = false;
-      this.activeResultIndex = -1;
+      this.activeResultIndex = toolSearch.resetSelection();
       if (this.keywords) {
         this.logoFold = true;
         this.setSearchResult();
@@ -370,7 +284,7 @@ export default defineComponent({
     },
     handleSearchKeydown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        this.activeResultIndex = -1;
+        this.activeResultIndex = toolSearch.resetSelection();
         this.resultsDismissed = true;
         return;
       }
@@ -379,8 +293,11 @@ export default defineComponent({
         event.preventDefault();
         this.resultsDismissed = false;
         const direction = event.key === 'ArrowDown' ? 1 : -1;
-        const next = this.activeResultIndex + direction;
-        this.activeResultIndex = (next + this.resultList.length) % this.resultList.length;
+        this.activeResultIndex = toolSearch.getNextResultIndex(
+          this.activeResultIndex,
+          this.resultList.length,
+          direction
+        );
       } else if (event.key === 'Enter' && this.activeResultIndex >= 0) {
         event.preventDefault();
         this.handleResultClick(this.resultList[this.activeResultIndex]);
@@ -396,43 +313,43 @@ export default defineComponent({
       }
     },
     getResultText(item: SearchResultItem) {
-      return sanitizeInlineMarkup(item?.name || '--');
+      return getResultText(item);
     },
     getResultLabel(type?: 'tools' | 'mark') {
-      if (!type) return '';
-      return { tools: 's-simple', mark: 's-red' }[type];
+      return getResultLabel(type);
     },
     handleSearchClear() {
       this.keywords = '';
-      this.activeResultIndex = -1;
+      this.activeResultIndex = toolSearch.resetSelection();
       this.resultsDismissed = false;
       this.handleInputBlur();
     },
-    handlePinyinSearchToggle() {
+    handlePinyinSearchToggle(value?: boolean) {
+      if (typeof value === 'boolean') this.enablePinyinSearch = value;
       setPinyinSearchPreference(this.enablePinyinSearch);
       if (this.keywords) this.setSearchResult();
     },
     setSearchResult() {
-      this.resultList = buildSearchResults({
+      this.resultList = toolSearch.buildResults({
         keywords: this.keywords,
         feToolsList: this.feToolsList,
         markList: this.markList,
-        defaultSearchList: DEFAULT_SEARCH_LIST,
+        defaultSearchList: getDefaultSearchList(this.currentLang as 'zh' | 'en'),
         translate: this.t,
         qrCodeType: QR_CODE_TYPE,
         enablePinyinSearch: this.enablePinyinSearch,
       });
-      this.activeResultIndex = -1;
+      this.activeResultIndex = toolSearch.resetSelection();
     },
     focusActiveWorkspace() {
       const workspace = this.$refs.activeWorkspace as { focusHeading?: () => void } | undefined;
-      workspace?.focusHeading?.();
+      toolNavigation.focusWorkspace(workspace);
     },
     handleBackHome() {
       this.showCompName = '';
       nextTick(() => {
         const fallback = document.querySelector<HTMLElement>('#search');
-        restoreFocus(this.lastToolTrigger, fallback);
+        toolNavigation.restoreHomeFocus(this.lastToolTrigger, fallback);
       });
     },
   },

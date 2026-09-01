@@ -13,7 +13,7 @@ type BuildSearchResultsParams = {
   keywords: string;
   feToolsList: FeToolListItem[];
   markList: BookmarkItem[];
-  defaultSearchList: DefaultSearchItem[];
+  defaultSearchList: ReadonlyArray<DefaultSearchItem>;
   translate: Translate;
   qrCodeType: string;
   enablePinyinSearch?: boolean;
