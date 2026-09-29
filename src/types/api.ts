@@ -145,18 +145,15 @@ export interface LinuxCommand {
  * Metadata describing a utility function.
  */
 export interface UtilFunction {
+  id: number;
   name: string;
-  module: string;
-  description: string;
-  parameters: Array<{
-    name: string;
-    type: string;
-    description: string;
-    optional?: boolean;
-  }>;
-  returnType: string;
-  example?: string;
+  query: string;
+  hash: string;
+  kind: number;
+  flags: Record<string, unknown>;
 }
+
+export type UtilFunctionMap = Record<string, UtilFunction>;
 
 /**
  * API service method signatures for typed clients.
@@ -167,5 +164,5 @@ export interface ApiEndpoints {
   getMooCSS: () => Promise<ApiListResponse<MooCSSData>>;
   getRegex: () => Promise<ApiListResponse<RegexData>>;
   getLinuxCommands: () => Promise<ApiListResponse<LinuxCommand>>;
-  getUtilFuncs: () => Promise<ApiListResponse<UtilFunction>>;
+  getUtilFuncs: () => Promise<ApiItemResponse<UtilFunctionMap>>;
 }

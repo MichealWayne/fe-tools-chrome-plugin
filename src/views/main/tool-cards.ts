@@ -18,12 +18,14 @@ export type ToolComponentName =
   | 'LinuxCommand'
   | 'PageScreenshot'
   | 'TechStackDetection'
-  | 'CodexQuota';
+  | 'CodexQuota'
+  | 'TailwindConverter';
 
 export type ToolDefinition = {
   key: string;
   nameKey: string;
   descriptionKey: string;
+  workspaceDescriptionKey?: string;
   iconClass: string;
   category: ToolCategory;
   destination: ToolDestination;
@@ -52,6 +54,7 @@ export const TOOL_COMPONENT_NAMES: readonly ToolComponentName[] = [
   'PageScreenshot',
   'TechStackDetection',
   'CodexQuota',
+  'TailwindConverter',
 ];
 
 export const TOOL_REGISTRY: ToolDefinition[] = [
@@ -188,15 +191,27 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     key: 'tech-stack-detection',
     nameKey: 'tools.techStack',
     descriptionKey: 'descriptions.techStack',
+    workspaceDescriptionKey: 'techStack.description',
     iconClass: 'u-icon icon-tech-stack g-center g-fs36',
     category: 'inspect',
     destination: 'embedded',
     componentName: 'TechStackDetection',
   },
   {
+    key: 'tailwind-converter',
+    nameKey: 'tools.tailwindConverter',
+    descriptionKey: 'descriptions.tailwindConverter',
+    workspaceDescriptionKey: 'descriptions.tailwindConverter',
+    iconClass: 'u-icon icon-tailwind-converter g-center',
+    category: 'transform',
+    destination: 'embedded',
+    componentName: 'TailwindConverter',
+  },
+  {
     key: 'codex-quota',
     nameKey: 'tools.codexQuota',
     descriptionKey: 'descriptions.codexQuota',
+    workspaceDescriptionKey: 'codexQuota.description',
     iconClass: 'u-icon iconfont icon-calc g-center g-fs36',
     category: 'network',
     destination: 'embedded',

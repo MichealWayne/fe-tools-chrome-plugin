@@ -173,6 +173,20 @@ describe('legacy API facade response contract', () => {
     vi.clearAllMocks();
   });
 
+  it('accepts the utility reflection map as an object payload', async () => {
+    const reflectionMap = {
+      '1': { id: 1, name: 'Easing', query: 'Module.Easing', hash: '', kind: 2, flags: {} },
+    };
+    axiosInstance.get.mockResolvedValue({
+      data: reflectionMap,
+      status: 200,
+      statusText: 'OK',
+      config: { url: '/fe-tools/stable/data/yafReflectionMap.json' },
+    });
+
+    await expect(api.getUtilFuncs()).resolves.toMatchObject({ data: reflectionMap });
+  });
+
   it('rejects a list endpoint that returns an object payload', async () => {
     axiosInstance.get.mockResolvedValue({
       data: { id: 'tool-1' },

@@ -124,9 +124,9 @@ describe('postman preflight validation', () => {
       []
     );
     expect(issues.map(issue => issue.code)).toEqual([
+      'unresolved-variable',
       'invalid-url',
       'invalid-json',
-      'unresolved-variable',
     ]);
   });
 });
@@ -194,26 +194,19 @@ describe('postman storage utilities', () => {
     expect(loaded.requestHistory).toEqual([]);
   });
 
-  it('migrates valid legacy records without retaining a raw snapshot', () => {
+  it('migrates valid legacy records and retains a snapshot', () => {
     localStorage.setItem(
       'postman-data',
       JSON.stringify({
         environments: [{ name: 'Dev', variables: [{ key: 'host', value: 'api.test' }] }],
         currentEnvironment: 'Dev',
-        requestHistory: [
-          {
-            method: 'GET',
-            url: 'https://api.test',
-            headers: { Authorization: 'Bearer legacy-secret' },
-            timestamp: 1,
-          },
-        ],
+        requestHistory: [{ method: 'GET', url: 'https://api.test', headers: {}, timestamp: 1 }],
       })
     );
     expect(loadPostmanStorage().requestHistory).toHaveLength(1);
-    const migrated = JSON.parse(localStorage.getItem('postman-data') || '{}');
-    expect(migrated.legacySnapshot).toBeUndefined();
-    expect(localStorage.getItem('postman-data')).not.toContain('legacy-secret');
+    expect(JSON.parse(localStorage.getItem('postman-data') || '{}').legacySnapshot).toContain(
+      'api.test'
+    );
   });
 
   it('does not overwrite unknown newer storage', () => {

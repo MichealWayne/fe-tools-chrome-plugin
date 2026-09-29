@@ -33,6 +33,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SavedRequests: typeof import('./src/components/PostMan/SavedRequests.vue')['default']
     SvgEditor: typeof import('./src/components/SvgEditor/index.vue')['default']
+    TailwindConverter: typeof import('./src/components/TailwindConverter/index.vue')['default']
     TechStackDetection: typeof import('./src/components/TechStackDetection/index.vue')['default']
     ToolState: typeof import('./src/components/Experience/ToolState.vue')['default']
     ToolWorkspace: typeof import('./src/components/Experience/ToolWorkspace.vue')['default']

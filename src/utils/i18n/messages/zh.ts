@@ -50,7 +50,7 @@ export default {
   title: 'FE工具箱',
   homeTitle: '返回首页',
   language: '语言',
-  searchPlaceholder: '请输入关键词或二维码生成地址',
+  searchPlaceholder: '搜索工具、书签，或输入网址',
   toolsLabel: '工具分类',
 
   // 工具模块
@@ -58,56 +58,69 @@ export default {
     colorPass: '颜色转换',
     dateConverter: '日期转换',
     imageCompressor: '图片压缩',
-    jsonCtn: 'JSON工具',
+    jsonCtn: 'JSON 转换',
     langTranslator: '语言翻译',
     pageScreenshot: '页面截图',
     postMan: 'API测试',
-    qrCode: '二维码',
+    qrCode: '生成二维码',
     svgEditor: 'SVG编辑器',
-    unitCalculator: '单位换算',
-    regexCtn: '正则工具',
-    utilsCtn: '实用工具',
-    mooCtn: 'Moo工具',
-    linuxCommand: 'Linux命令',
-    techStack: '技术栈判断',
+    unitCalculator: 'px/rem/vw',
+    regexCtn: '正则速查',
+    utilsCtn: '工具函数',
+    mooCtn: 'Moo CSS',
+    linuxCommand: 'Linux 命令',
+    techStack: '技术栈检测',
     codexQuota: 'Codex 额度',
+    tailwindConverter: 'TW 转 CSS',
   },
 
   // 工具描述
   descriptions: {
-    colorPass: '颜色格式转换工具',
-    dateConverter: '时间戳与日期转换',
-    imageCompressor: '在线图片压缩',
-    jsonCtn: 'JSON格式化与验证',
-    langTranslator: '多语言翻译工具',
-    pageScreenshot: '整页截图并保存',
-    postMan: 'HTTP接口测试',
-    qrCode: '二维码生成与解析',
-    svgEditor: 'SVG在线编辑器',
-    unitCalculator: '长度重量单位换算',
-    regexCtn: '正则表达式测试',
-    utilsCtn: '常用开发工具集',
-    mooCtn: '特色功能工具',
-    linuxCommand: 'Linux命令查询工具',
+    colorPass: 'HEX、RGB、HSB、HSL 互转',
+    dateConverter: '支持时区显示与日期计算',
+    imageCompressor: '选择图片并调整压缩比例',
+    jsonCtn: 'JavaScript 对象与 JSON 相互转换',
+    langTranslator: '打开在线翻译网站',
+    pageScreenshot: '截取整页或页面元素并保存',
+    postMan: '发送 HTTP 请求并查看响应',
+    qrCode: '支持当前网页地址和自定义文本，导出 SVG',
+    svgEditor: '编辑、预览和优化 SVG',
+    unitCalculator: '按页面适配比例换算 px、rem 和 vw',
+    regexCtn: '查找、复制和测试常用正则表达式',
+    utilsCtn: '按方法名定位使用文档',
+    mooCtn: '查询样式属性、类名、颜色和方法',
+    linuxCommand: '查询命令语法与示例',
     techStack: '分析当前页面技术栈特征',
-    codexQuota: '查看 Codex 剩余额度与重置时间',
+    codexQuota: '查看各额度窗口的剩余比例和重置时间',
+    tailwindConverter: '输入 Tailwind 类名，生成可复制的 CSS',
+  },
+
+  tailwindConverter: {
+    inputLabel: 'Tailwind 类名',
+    inputPlaceholder: '例如：flex items-center p-4 bg-red-500 hover:bg-red-600 md:w-[320px]',
+    outputLabel: 'CSS',
+    outputPlaceholder: '转换结果会显示在这里',
+    convertedCount: '已转换 {count} 个类名',
+    unsupported: '未识别的类名',
+    copyFailed: '复制失败，请手动选择 CSS',
   },
 
   // QRCode 组件
   qrcode: {
     title: '二维码生成器',
-    inputPlaceholder: '请输入地址',
-    generate: '更新',
+    inputPlaceholder: '如 https://example.com',
+    generate: '生成二维码',
+    regenerate: '重新生成',
     download: '下载二维码',
-    downloadSvg: '下载SVG文件',
+    downloadSvg: '下载 SVG',
     clear: '清空',
     rightClickTip: '右键可保存二维码图片',
     saveImageTip: '*右键选中图片可保存二维码PNG图片',
-    sourceLabel: '二维码内容',
+    sourceLabel: '网址或文本',
     previewAlt: '生成的二维码预览',
-    emptyPreview: '输入内容后生成二维码预览',
+    emptyPreview: '生成结果将显示在这里',
     messages: {
-      required: '请输入二维码内容',
+      required: '请输入网址或文本',
       generated: '二维码已生成',
       generateFailed: '二维码生成失败',
     },
@@ -115,13 +128,19 @@ export default {
 
   // 图片压缩
   imageCompressor: {
-    dragTip: '点击图标或拖拽图片至此处',
+    dragTip: '点击选择图片，或拖拽图片到此处',
     formatTip: '(*.jpg/*.png/*.gif格式)',
     resetTip: '点击重置图片',
     compressRatio: '图片压缩比例(0~1, 默认1)',
     ratioLabel: '压缩比例',
-    compress: '压缩',
-    download: '下载图片',
+    outputFormat: '输出格式',
+    jpegFormat: 'JPEG（文件更小）',
+    pngFormat: 'PNG（保留透明度）',
+    outputDetails: '{width} × {height} 像素 · {size}',
+    pngQualityHint: 'PNG 会保留透明度；压缩比例不影响 PNG 输出。',
+    compress: '重新压缩',
+    copyBase64: '复制 Base64',
+    download: '下载压缩图片',
     processing: '图片处理中…',
     previewAlt: '压缩图片预览',
     base64Label: '压缩后的 Base64 结果',
@@ -137,14 +156,14 @@ export default {
   // 页面截图
   pageScreenshot: {
     title: '页面截图',
-    startCapture: '开始截图',
-    selectNode: '选择节点截图',
+    startCapture: '截取整页',
+    selectNode: '截取元素',
     capturing: '截图中...',
     selecting: '等待选择...',
     selectingTip: '请在页面上点击需要截图的元素',
     previewTip: '截图预览',
-    previewEmptyTitle: '暂无预览',
-    previewEmptyDesc: '先开始截图，预览将显示在这里',
+    previewEmptyTitle: '等待截图',
+    previewEmptyDesc: '截图完成后会显示在这里',
     saveToLocal: '保存到本地',
     retake: '重新截图',
     errorCapture: '截图失败，请重试',
@@ -157,7 +176,7 @@ export default {
   // 技术栈判断
   techStack: {
     title: '技术栈判断',
-    description: '分析当前页面的框架、构建工具和常见子库特征',
+    description: '结果依据页面特征推测，请结合命中依据判断。',
     startDetect: '开始分析',
     analyzing: '分析中...',
     hitCount: '命中 {count} 项',
@@ -176,7 +195,7 @@ export default {
   },
 
   codexQuota: {
-    description: '显示当前 ChatGPT 登录账户报告的 Codex 额度窗口；额度并不等同于固定 Token 数。',
+    description: '数据来自当前 ChatGPT 登录账户；百分比不对应固定 Token 数。',
     loading: '正在读取 Codex 额度…',
     refreshing: '刷新中…',
     refresh: '刷新额度',
@@ -218,8 +237,7 @@ export default {
   // JSON工具
   jsonCtn: {
     title: 'JSON 转换工具',
-    description:
-      '为方便将js对象（object）转为可供KAmis编辑器处理的JSON对象。典型场景为ECharts官方配置转换',
+    description: '支持带注释的 JavaScript 对象，可用于转换 ECharts 配置',
     jsObject: 'JavaScript 对象',
     jsonResult: 'JSON 结果',
     inputPlaceholder: '在此输入js对象，如var obj = { a: 1 }',
@@ -263,7 +281,7 @@ export default {
   svgEditor: {
     title: 'SVG 编辑器/优化器',
     description: '帮助开发者调整 SVG 属性、减小文件大小，并生成优化后的代码',
-    svgInput: 'SVG 输入',
+    svgInput: '源代码',
     placeholder: '在此粘贴或输入SVG代码...',
     clearInput: '清空',
     loadExample: '加载示例',
@@ -353,6 +371,7 @@ export default {
     },
     timezoneTitle: '时区设置',
     outputTitle: '转换结果',
+    moreResults: '更多格式',
     resultLabels: {
       timestampSeconds: 'Unix时间戳（秒）:',
       timestampMilliseconds: 'Unix时间戳（毫秒）:',
@@ -400,7 +419,8 @@ export default {
 
   // 单位换算
   unitCalculator: {
-    title: 'rem/vw/px换算',
+    title: 'px / rem / vw 换算',
+    conversionHint: '按设置的 rem 比例换算；1 rem = 10 vw。修改任一数值即可换算。',
     pxPlaceholder: 'px单位',
     vwPlaceholder: 'vw单位,1rem=10vw',
     remPlaceholder: 'rem单位',
@@ -417,18 +437,19 @@ export default {
 
   // 正则工具
   regex: {
-    filterLabel: '筛选正则表达式',
-    filter: '筛选',
+    filterLabel: '关键词',
+    filter: '名称、用途或表达式',
     test: '测试',
-    inputTest: '请输入测试字符串',
+    openTest: '展开测试',
+    inputTest: '测试文本',
     result: '结果',
     loadFailed: '正则列表加载失败',
   },
 
   // Moo CSS
   mooCss: {
-    searchLabel: '搜索 CSS 与 Moo CSS 词典',
-    searchPlaceholder: '请输入模块或样式属性',
+    searchLabel: '关键词',
+    searchPlaceholder: '属性、类名、颜色或方法',
     loadFailed: 'Moo CSS 词典加载失败',
     variable: '变量',
     method: '方法',
@@ -436,8 +457,8 @@ export default {
 
   // 工具函数
   utils: {
-    searchLabel: '搜索工具函数',
-    searchPlaceholder: '请输入方法名或模块名',
+    searchLabel: '方法或模块',
+    searchPlaceholder: '例如 array.chunk、string.trim',
     loadFailed: '工具函数列表加载失败',
   },
 
@@ -450,10 +471,10 @@ export default {
       hsb: 'HSB',
       hsl: 'HSL',
     },
-    hexPlaceholder: 'HEX颜色值',
-    rgbPlaceholder: 'RGB颜色值',
-    hsbPlaceholder: 'HSB颜色值，如 0,100%,100%',
-    hslPlaceholder: 'HSL颜色值',
+    hexPlaceholder: '例如 FF8800',
+    rgbPlaceholder: '例如 255,136,0',
+    hsbPlaceholder: '例如 30,100%,100%',
+    hslPlaceholder: '例如 30,100%,50%',
     messages: {
       invalidHex: 'HEX 必须是 6 位十六进制颜色值',
       invalidRgb: 'RGB 必须是 0 到 255 的三个整数',
@@ -462,7 +483,7 @@ export default {
     },
     backHome: '返回主页',
     remarks: {
-      title: '注：',
+      title: '颜色格式说明',
       rgb: 'RGB：通过对红(R)、绿(G)、蓝(B)三个颜色通道的变化以及它们相互之间的叠加来得到各式各样的颜色的。',
       hex: 'HEX：16进制颜色码，将对应RGB10进制数转化成16进制。',
       hsb: 'HSB：又称HSV，在HSB模式中，H(hues)表示色相，S(saturation)表示饱和度，B（brightness）表示亮度。',
@@ -473,8 +494,8 @@ export default {
   // Linux命令查询
   linuxCommand: {
     title: 'Linux命令查询工具',
-    inputPlaceholder: '请输入Linux命令名称',
-    searchLabel: '搜索 Linux 命令',
+    inputPlaceholder: '例如 ls、grep、curl',
+    searchLabel: '关键词',
     loadFailed: 'Linux 命令列表加载失败',
     syntax: '语法',
     examples: '示例',
@@ -488,6 +509,7 @@ export default {
   // PostMan
   postman: {
     title: 'API 测试工具',
+    requestManagement: '请求管理',
     feedback: {
       requestPending: '请求正在发送，请等待完成',
       requestComplete: '请求已完成',
@@ -562,12 +584,13 @@ export default {
     },
     headers: {
       title: '请求头',
-      add: '添加',
+      add: '添加请求头',
       headerKey: 'Header Key',
       headerValue: 'Header Value',
     },
     body: {
       title: '请求体',
+      typeLabel: '内容类型',
       types: {
         none: 'None',
         json: 'JSON',

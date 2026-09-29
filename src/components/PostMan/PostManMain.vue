@@ -14,27 +14,30 @@
           </option>
         </select>
       </div>
-      <div class="header-actions">
-        <button class="toolbar-btn" @click="toggleDrawer('environments')">
-          <i class="fas fa-sliders" aria-hidden="true"></i> {{ t('postman.environments.manage') }}
-        </button>
-        <button class="toolbar-btn" @click="toggleDrawer('history')">
-          <i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
-          {{ t('postman.history.title') }}
-        </button>
-        <button class="toolbar-btn" @click="toggleDrawer('saved')">
-          <i class="fas fa-bookmark" aria-hidden="true"></i> {{ t('postman.saved.title') }}
-        </button>
-        <button class="toolbar-btn" @click="toggleDrawer('curl')">
-          <i class="fas fa-terminal" aria-hidden="true"></i> cURL
-        </button>
-        <button class="save-btn" @click="saveRequest">
-          <i class="fas fa-save" aria-hidden="true"></i> {{ t('postman.saveRequest') }}
-        </button>
-        <button class="load-btn" @click="loadRequest">
-          <i class="fas fa-folder-open" aria-hidden="true"></i> {{ t('postman.loadRequest') }}
-        </button>
-      </div>
+      <details ref="requestManagementRef" class="postman-management">
+        <summary>{{ t('postman.requestManagement') }}</summary>
+        <div class="header-actions">
+          <button class="toolbar-btn" @click="openManagementDrawer('environments')">
+            <i class="fas fa-sliders" aria-hidden="true"></i> {{ t('postman.environments.manage') }}
+          </button>
+          <button class="toolbar-btn" @click="openManagementDrawer('history')">
+            <i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
+            {{ t('postman.history.title') }}
+          </button>
+          <button class="toolbar-btn" @click="openManagementDrawer('saved')">
+            <i class="fas fa-bookmark" aria-hidden="true"></i> {{ t('postman.saved.title') }}
+          </button>
+          <button class="toolbar-btn" @click="openManagementDrawer('curl')">
+            <i class="fas fa-terminal" aria-hidden="true"></i> cURL
+          </button>
+          <button class="save-btn" @click="saveRequest">
+            <i class="fas fa-save" aria-hidden="true"></i> {{ t('postman.saveRequest') }}
+          </button>
+          <button class="load-btn" @click="loadRequest">
+            <i class="fas fa-folder-open" aria-hidden="true"></i> {{ t('postman.loadRequest') }}
+          </button>
+        </div>
+      </details>
     </div>
     <inline-feedback :feedback="feedback" />
 
@@ -148,6 +151,7 @@ const validationMessage = ref('');
 const validationField = ref<'url' | 'body' | 'environment' | ''>('');
 const activeDrawer = ref<PostmanDrawer>('');
 const drawerRef = ref<HTMLElement | null>(null);
+const requestManagementRef = ref<HTMLDetailsElement | null>(null);
 
 const setFeedback = (message: string, tone: 'success' | 'error') => {
   feedback.value = { message, tone };
@@ -231,6 +235,11 @@ const { toggleDrawer, closeDrawer, trapDrawerFocus } = useDrawerFocus({
   activeDrawer,
   drawerRef,
 });
+
+const openManagementDrawer = (drawer: Exclude<PostmanDrawer, ''>) => {
+  if (requestManagementRef.value) requestManagementRef.value.open = false;
+  toggleDrawer(drawer);
+};
 
 const { updateRequest, loadSavedRequest, applyImportedRequest } = usePostmanWorkspace({
   request,

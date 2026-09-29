@@ -1,8 +1,13 @@
 <template>
   <div class="request-body">
     <div class="section-header">
-      <h3>{{ t('postman.body.title') }}</h3>
-      <select v-model="bodyType" class="body-type-select" @change="onBodyTypeChange">
+      <label for="postman-body-type">{{ t('postman.body.typeLabel') }}</label>
+      <select
+        id="postman-body-type"
+        v-model="bodyType"
+        class="body-type-select"
+        @change="onBodyTypeChange"
+      >
         <option value="none">{{ t('postman.body.types.none') }}</option>
         <option value="json">{{ t('postman.body.types.json') }}</option>
         <option value="form-data">{{ t('postman.body.types.formData') }}</option>
@@ -135,8 +140,7 @@ const formatJson = () => {
   margin-bottom: var(--spacing-md);
 }
 
-.section-header h3 {
-  margin: 0;
+.section-header label {
   color: var(--color-text-primary);
 }
 

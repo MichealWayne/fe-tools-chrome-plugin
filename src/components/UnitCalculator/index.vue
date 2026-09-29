@@ -1,5 +1,6 @@
 <template>
   <section class="converter-tool unit-calculator">
+    <p class="unit-calculator__hint">{{ t('unitCalculator.conversionHint') }}</p>
     <div v-for="unit in units" :key="unit" class="converter-field">
       <label :for="`unit-${unit}`">{{ unit }}</label>
       <input
@@ -97,6 +98,12 @@ const reset = () => {
 </script>
 
 <style scoped>
+.unit-calculator__hint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+}
+
 .unit-calculator {
   display: grid;
   gap: var(--spacing-sm);

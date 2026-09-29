@@ -1,11 +1,5 @@
 <template>
   <section class="date-converter" @click="stopPropagation">
-    <div class="date-converter__header">
-      <div class="date-converter__header-content">
-        <p>{{ t('dateConverter.description') }}</p>
-      </div>
-    </div>
-
     <div class="date-converter__content">
       <!-- 输入区域 -->
       <div class="date-converter__panel">
@@ -159,47 +153,49 @@
 
           <div class="date-converter__result-item">
             <div class="date-converter__result-label">
-              {{ t('dateConverter.resultLabels.timestampMilliseconds') }}
-            </div>
-            <div class="date-converter__result-value">{{ outputTimestampMilliseconds }}</div>
-          </div>
-
-          <div class="date-converter__result-item">
-            <div class="date-converter__result-label">
-              {{ t('dateConverter.resultLabels.iso') }}
-            </div>
-            <div class="date-converter__result-value">{{ outputIso }}</div>
-          </div>
-
-          <div class="date-converter__result-item">
-            <div class="date-converter__result-label">
               {{ t('dateConverter.resultLabels.local') }}
             </div>
             <div class="date-converter__result-value">{{ outputLocal }}</div>
           </div>
 
-          <div class="date-converter__result-item">
-            <div class="date-converter__result-label">
-              {{ t('dateConverter.resultLabels.utc') }}
+          <details class="date-converter__more-results">
+            <summary>{{ t('dateConverter.moreResults') }}</summary>
+            <div class="date-converter__more-results-list">
+              <div class="date-converter__result-item">
+                <div class="date-converter__result-label">
+                  {{ t('dateConverter.resultLabels.timestampMilliseconds') }}
+                </div>
+                <div class="date-converter__result-value">{{ outputTimestampMilliseconds }}</div>
+              </div>
+              <div class="date-converter__result-item">
+                <div class="date-converter__result-label">
+                  {{ t('dateConverter.resultLabels.iso') }}
+                </div>
+                <div class="date-converter__result-value">{{ outputIso }}</div>
+              </div>
+              <div class="date-converter__result-item">
+                <div class="date-converter__result-label">
+                  {{ t('dateConverter.resultLabels.utc') }}
+                </div>
+                <div class="date-converter__result-value">{{ outputUtc }}</div>
+              </div>
+              <div class="date-converter__result-item">
+                <div class="date-converter__result-label">
+                  {{ t('dateConverter.resultLabels.relative') }}
+                </div>
+                <div class="date-converter__result-value">{{ outputRelative }}</div>
+              </div>
             </div>
-            <div class="date-converter__result-value">{{ outputUtc }}</div>
-          </div>
-
-          <div class="date-converter__result-item">
-            <div class="date-converter__result-label">
-              {{ t('dateConverter.resultLabels.relative') }}
-            </div>
-            <div class="date-converter__result-value">{{ outputRelative }}</div>
-          </div>
+          </details>
         </div>
       </div>
     </div>
 
     <!-- 日期计算工具 -->
-    <div class="date-converter__calculator">
-      <div class="date-converter__panel-header">
+    <details class="date-converter__calculator">
+      <summary class="date-converter__panel-header">
         <span>{{ t('dateConverter.calculator.title') }}</span>
-      </div>
+      </summary>
 
       <div class="date-converter__calculator-content">
         <div class="date-converter__calculator-row">
@@ -236,17 +232,17 @@
           <div class="date-converter__result-value">{{ calculationResult }}</div>
         </div>
       </div>
-    </div>
+    </details>
 
-    <div class="date-converter__tips">
-      <h4>{{ t('dateConverter.tips.title') }}</h4>
+    <details class="date-converter__tips">
+      <summary>{{ t('dateConverter.tips.title') }}</summary>
       <ul>
         <li>{{ t('dateConverter.tips.item1') }}</li>
         <li>{{ t('dateConverter.tips.item2') }}</li>
         <li>{{ t('dateConverter.tips.item3') }}</li>
         <li>{{ t('dateConverter.tips.item4') }}</li>
       </ul>
-    </div>
+    </details>
 
     <inline-feedback
       :feedback="successVisible ? { message: successMessage, tone: 'success' } : null"

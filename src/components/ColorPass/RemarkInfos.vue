@@ -1,11 +1,11 @@
 <template>
-  <article class="m-color-intro g-fs12" s-ft_sub_>
-    <p>{{ t('colorPass.remarks.title') }}</p>
+  <details class="m-color-intro g-fs12" s-ft_sub_>
+    <summary>{{ t('colorPass.remarks.title') }}</summary>
     <p>{{ t('colorPass.remarks.rgb') }}</p>
     <p>{{ t('colorPass.remarks.hex') }}</p>
     <p>{{ t('colorPass.remarks.hsb') }}</p>
     <p>{{ t('colorPass.remarks.hsl') }}</p>
-  </article>
+  </details>
 </template>
 
 <script lang="ts" setup>
