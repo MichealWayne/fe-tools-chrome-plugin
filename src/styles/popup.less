@@ -44,44 +44,6 @@
   cursor: pointer;
 }
 
-.m-back-entry {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 12;
-  width: 48px;
-  height: 48px;
-  padding: 4px 0;
-  border: none;
-  border-radius: 50%;
-  color: var(--color-text-inverse);
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-  box-shadow: 0 6px 16px var(--color-primary-shadow);
-  opacity: 0.65;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 2px;
-  cursor: pointer;
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.m-back-entry:hover {
-  opacity: 1;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px var(--color-primary-shadow-hover);
-}
-
-.m-back-entry__label {
-  font-size: 10px;
-  line-height: 1;
-  letter-spacing: 0.2px;
-}
-
 [s-color='blue'] {
   color: @blue;
 }
@@ -234,6 +196,13 @@
   height: 40px;
   background: url(../assets/i-tech-stack.png) no-repeat 0 0;
   background-size: 100% 100%;
+}
+.icon-tailwind-converter {
+  width: 40px;
+  height: 40px;
+  background-color: currentColor;
+  -webkit-mask: url(../assets/i-tailwind-converter.svg) center / contain no-repeat;
+  mask: url(../assets/i-tailwind-converter.svg) center / contain no-repeat;
 }
 .icon-label {
   padding-left: 4px;
@@ -455,7 +424,6 @@
 @media (prefers-reduced-motion: reduce) {
   .m-logo,
   .j-logo_ctn .logo-button::before,
-  .m-back-entry,
   .u-btn,
   .u-btn_il,
   .tool-state__action,
@@ -471,7 +439,6 @@
     transition: none !important;
   }
 
-  .m-back-entry:hover,
   .u-btn:hover,
   .u-btn_il:hover,
   .tool-state__action:hover,

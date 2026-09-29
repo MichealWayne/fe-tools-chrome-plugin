@@ -19,6 +19,7 @@ import LinuxCommand from './LinuxCommand/index.vue';
 import PageScreenshot from './PageScreenshot/index.vue';
 import TechStackDetection from './TechStackDetection/index.vue';
 import CodexQuota from './CodexQuota/index.vue';
+import TailwindConverter from './TailwindConverter/index.vue';
 import MooCtn from '@/views/MooCtn.vue';
 import RegexCtn from '@/views/RegexCtn.vue';
 import UtilsCtn from '@/views/UtilsCtn.vue';
@@ -38,6 +39,7 @@ const CompMap: Record<ToolComponentName, Component> = {
   PageScreenshot,
   TechStackDetection,
   CodexQuota,
+  TailwindConverter,
   MooCtn,
   RegexCtn,
   UtilsCtn,

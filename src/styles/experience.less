@@ -47,6 +47,20 @@
   flex: 0 0 auto;
 }
 
+.workspace-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.u-btn.workspace-nav-button {
+  gap: 4px;
+  min-height: 30px;
+  padding: 4px 8px;
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
 .converter-tool__actions button {
   white-space: nowrap;
 }
@@ -139,6 +153,7 @@
 
 button:focus-visible,
 a:focus-visible,
+summary:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
@@ -160,7 +175,7 @@ textarea:focus-visible,
   }
 
   .tool-workspace__header {
-    flex-direction: column;
+    align-items: center;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-sm);
   }
@@ -172,12 +187,12 @@ textarea:focus-visible,
   justify-content: center;
   width: 100%;
   min-width: 0;
-  padding: 12px 12px 72px;
+  padding: 12px;
 }
 
 @media (max-width: 520px) {
   .module-host {
-    padding: 8px 8px 68px;
+    padding: 8px;
   }
 }
 

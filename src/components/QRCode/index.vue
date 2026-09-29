@@ -13,7 +13,9 @@
         aria-describedby="qr-feedback"
         @keydown.enter="generateQr"
       />
-      <button class="u-btn" s-color="blue" @click="generateQr">{{ t('qrcode.generate') }}</button>
+      <button class="u-btn" s-color="blue" @click="generateQr">
+        {{ qrUrl ? t('qrcode.regenerate') : t('qrcode.generate') }}
+      </button>
       <button type="button" class="u-btn" :disabled="!originWords" @click="reset">
         {{ t('common.clear') }}
       </button>

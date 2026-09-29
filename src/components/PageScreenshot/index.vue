@@ -35,7 +35,7 @@
     <p v-if="isSelecting" class="m-screenshot_tip g-fs12">{{ t('pageScreenshot.selectingTip') }}</p>
 
     <div v-else class="m-screenshot_preview">
-      <p class="g-fs12 g-mb10">{{ t('pageScreenshot.previewTip') }}</p>
+      <p v-if="previewUrl" class="g-fs12 g-mb10">{{ t('pageScreenshot.previewTip') }}</p>
       <div class="m-preview_img">
         <div v-if="previewUrl" class="m-preview_frame">
           <img :src="previewUrl" alt="screenshot preview" />
@@ -225,6 +225,60 @@ const scrollToPosition = async (tabId: number, y: number) => {
   }
 };
 
+const setPageCaptureMode = async (tabId: number, mode: 'prepare' | 'segment' | 'restore') =>
+  executeScript(
+    tabId,
+    (action: unknown) => {
+      const styleId = 'fe-tools-capture-style';
+      const marker = 'data-fe-tools-capture-kind';
+      const hidden = 'data-fe-tools-capture-hidden';
+      if (action === 'restore') {
+        document.querySelectorAll(`[${marker}]`).forEach(node => {
+          node.removeAttribute(marker);
+          node.removeAttribute('data-fe-tools-capture-top');
+          node.removeAttribute(hidden);
+        });
+        document.getElementById(styleId)?.remove();
+        return;
+      }
+      if (action === 'prepare') {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `html { scroll-behavior: auto !important; } [${hidden}] { visibility: hidden !important; }`;
+        document.documentElement.appendChild(style);
+        return;
+      }
+      if (window.scrollY === 0) {
+        document.querySelectorAll('*').forEach(node => {
+          const element = node as HTMLElement;
+          const position = getComputedStyle(element).position;
+          if (position !== 'fixed' && position !== 'sticky') return;
+          element.setAttribute(marker, position);
+          element.setAttribute(
+            'data-fe-tools-capture-top',
+            String(element.getBoundingClientRect().top)
+          );
+        });
+      }
+      document.querySelectorAll(`[${marker}]`).forEach(node => {
+        const element = node as HTMLElement;
+        const kind = element.getAttribute(marker);
+        const naturalTop = Number(element.getAttribute('data-fe-tools-capture-top'));
+        const stickyTop = parseFloat(getComputedStyle(element).top) || 0;
+        const isStuck =
+          kind === 'sticky' &&
+          window.scrollY > naturalTop &&
+          element.getBoundingClientRect().top <= stickyTop + 2;
+        if (window.scrollY > 0 && (kind === 'fixed' || isStuck)) {
+          element.setAttribute(hidden, '');
+        } else {
+          element.removeAttribute(hidden);
+        }
+      });
+    },
+    [mode]
+  );
+
 type CropRect = {
   left: number;
   top: number;
@@ -237,10 +291,12 @@ const captureFullPage = async (cropRect?: CropRect) => {
   previewUrl.value = '';
   isCapturing.value = true;
   let restoreScroll: (() => Promise<unknown>) | undefined;
+  let captureTabId: number | undefined;
 
   try {
     const tab = await getActiveTab();
     const tabId = tab.id as number;
+    captureTabId = tabId;
     const metrics = await getPageMetrics(tabId);
 
     if (!metrics || !metrics.totalHeight || !metrics.viewportHeight) {
@@ -250,27 +306,20 @@ const captureFullPage = async (cropRect?: CropRect) => {
     const { totalHeight, viewportHeight, viewportWidth, devicePixelRatio, scrollY } = metrics;
     restoreScroll = () => scrollToPosition(tabId, scrollY);
 
-    const maxScroll = Math.max(0, totalHeight - viewportHeight);
-    const positions: number[] = [];
-    let current = 0;
-    while (current <= maxScroll) {
-      positions.push(current);
-      current += viewportHeight;
-    }
-    if (positions[positions.length - 1] !== maxScroll) {
-      positions.push(maxScroll);
-    }
-
-    const estimatedPixels =
-      totalHeight * viewportWidth * Math.max(1, devicePixelRatio) * Math.max(1, devicePixelRatio);
-    if (positions.length > MAX_CAPTURE_SEGMENTS || estimatedPixels > MAX_CAPTURE_PIXELS) {
-      throw new Error(t('pageScreenshot.errorTooLarge'));
-    }
-
     const captures: Array<{ y: number; dataUrl: string }> = [];
-    for (const y of positions) {
-      await scrollToPosition(tabId, y);
+    let capturedHeight = totalHeight;
+    let y = 0;
+    await setPageCaptureMode(tabId, 'prepare');
+    while (captures.length < MAX_CAPTURE_SEGMENTS) {
+      const position = await scrollToPosition(tabId, y);
       await delay(200);
+      await setPageCaptureMode(tabId, 'segment');
+      const currentMetrics = await getPageMetrics(tabId);
+      capturedHeight = Math.max(capturedHeight, currentMetrics.totalHeight);
+      const estimatedPixels = capturedHeight * viewportWidth * Math.max(1, devicePixelRatio) ** 2;
+      if (estimatedPixels > MAX_CAPTURE_PIXELS) {
+        throw new Error(t('pageScreenshot.errorTooLarge'));
+      }
       const captureResponse = await sendRuntimeMessage<CaptureResponse>(
         {
           action: 'captureVisibleTab',
@@ -283,16 +332,35 @@ const captureFullPage = async (cropRect?: CropRect) => {
         throw new Error(captureResponse?.error || t('pageScreenshot.errorCapture'));
       }
 
-      captures.push({ y, dataUrl: captureResponse.dataUrl });
+      captures.push({ y: position.scrollY, dataUrl: captureResponse.dataUrl });
+      let latestMetrics = await getPageMetrics(tabId);
+      capturedHeight = Math.max(capturedHeight, latestMetrics.totalHeight);
+      let maxScroll = Math.max(0, capturedHeight - viewportHeight);
+      if (position.scrollY >= maxScroll) {
+        await delay(250);
+        latestMetrics = await getPageMetrics(tabId);
+        capturedHeight = Math.max(capturedHeight, latestMetrics.totalHeight);
+        maxScroll = Math.max(0, capturedHeight - viewportHeight);
+        if (position.scrollY >= maxScroll) break;
+      }
+      y = Math.min(position.scrollY + viewportHeight, maxScroll);
+      if (y <= position.scrollY) throw new Error(t('pageScreenshot.errorCapture'));
     }
+    if (
+      captures.length === MAX_CAPTURE_SEGMENTS &&
+      captures[captures.length - 1].y < capturedHeight - viewportHeight
+    )
+      throw new Error(t('pageScreenshot.errorTooLarge'));
 
     await restoreScroll();
     restoreScroll = undefined;
+    await setPageCaptureMode(tabId, 'restore');
+    captureTabId = undefined;
 
     const firstImage = await loadImage(captures[0].dataUrl);
     captures[0].dataUrl = '';
     const scale = firstImage.width / viewportWidth;
-    const canvasHeight = Math.round(totalHeight * scale);
+    const canvasHeight = Math.round(capturedHeight * scale);
     if (firstImage.width * canvasHeight > MAX_CAPTURE_PIXELS) {
       throw new Error(t('pageScreenshot.errorTooLarge'));
     }
@@ -355,6 +423,13 @@ const captureFullPage = async (cropRect?: CropRect) => {
         await restoreScroll();
       } catch {
         // Preserve the original screenshot failure; restoring the page is best effort.
+      }
+    }
+    if (captureTabId !== undefined) {
+      try {
+        await setPageCaptureMode(captureTabId, 'restore');
+      } catch {
+        // The tab may have closed while the capture was in progress.
       }
     }
     isCapturing.value = false;

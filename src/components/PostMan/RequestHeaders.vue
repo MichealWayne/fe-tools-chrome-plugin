@@ -1,7 +1,6 @@
 <template>
   <div class="request-headers">
     <div class="section-header">
-      <h3>{{ t('postman.headers.title') }}</h3>
       <button class="add-btn" @click="addHeader">
         <i class="fas fa-plus"></i> {{ t('postman.headers.add') }}
       </button>
@@ -66,14 +65,9 @@ const updateHeaders = () => {
 
 .section-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: var(--spacing-sm);
-}
-
-.section-header h3 {
-  margin: 0;
-  color: var(--color-text-primary);
 }
 
 .add-btn {

@@ -32,9 +32,23 @@
         min="0.01"
         max="1"
         step="0.05"
+        :disabled="outputFormat === 'image/png'"
         :aria-invalid="Boolean(error)"
       />
     </label>
+    <label class="converter-field" for="image-output-format">
+      <span>{{ t('imageCompressor.outputFormat') }}</span>
+      <select
+        id="image-output-format"
+        v-model="outputFormat"
+        :disabled="processing"
+        @change="compress"
+      >
+        <option value="image/jpeg">{{ t('imageCompressor.jpegFormat') }}</option>
+        <option value="image/png">{{ t('imageCompressor.pngFormat') }}</option>
+      </select>
+    </label>
+    <p v-if="outputFormat === 'image/png'">{{ t('imageCompressor.pngQualityHint') }}</p>
     <div class="converter-tool__actions">
       <button
         class="u-btn"
@@ -46,7 +60,7 @@
         {{ t('imageCompressor.compress') }}
       </button>
       <button class="u-btn" type="button" :disabled="!base64Result" @click="copyResult">
-        {{ t('common.copy') }}
+        {{ t('imageCompressor.copyBase64') }}
       </button>
       <button class="u-btn" type="button" :disabled="!base64Result" @click="downloadResult">
         {{ t('imageCompressor.download') }}
@@ -57,6 +71,7 @@
     </div>
     <tool-state v-if="processing" state="loading" :message="t('imageCompressor.processing')" />
     <inline-feedback :feedback="error ? { message: error, tone: 'error' } : feedback" />
+    <p v-if="outputDetails" class="image-compressor__details">{{ outputDetails }}</p>
     <textarea
       v-if="base64Result"
       v-model="base64Result"
@@ -67,10 +82,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import { langManager } from '@/utils/i18n';
-import { getFileBase64 } from '@/utils';
-import { getCompressedImageBase64, handleInputUploadImageFile } from '@/utils/image';
+import {
+  getCompressedImageBase64,
+  handleInputUploadImageFile,
+  type ImageOutputFormat,
+} from '@/utils/image';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 import ToolState from '@/components/Experience/ToolState.vue';
 import type { InlineFeedbackMessage } from '@/types/experience';
@@ -78,15 +96,32 @@ import IconInbox from './IconInbox.vue';
 
 defineOptions({ name: 'ImageCompressor' });
 
-const t = (key: string) => langManager.t(key);
+const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
 const fileInput = ref<HTMLInputElement | null>(null);
 const compressRate = ref('0.8');
+const outputFormat = ref<ImageOutputFormat>('image/jpeg');
 const imgUrl = ref('');
 const base64Result = ref('');
-const originalBase64 = ref('');
+const outputWidth = ref(0);
+const outputHeight = ref(0);
 const processing = ref(false);
 const error = ref('');
 const feedback = ref<InlineFeedbackMessage | null>(null);
+let operationId = 0;
+const outputDetails = computed(() => {
+  if (!base64Result.value || !outputWidth.value || !outputHeight.value) return '';
+  const encoded = base64Result.value.split(',')[1] || '';
+  const bytes = Math.max(
+    0,
+    Math.floor((encoded.length * 3) / 4) - (encoded.match(/=+$/)?.[0].length || 0)
+  );
+  const size = bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB`;
+  return t('imageCompressor.outputDetails', {
+    width: outputWidth.value,
+    height: outputHeight.value,
+    size,
+  });
+});
 
 const releasePreviewUrl = () => {
   if (imgUrl.value.startsWith('blob:')) URL.revokeObjectURL(imgUrl.value);
@@ -105,22 +140,35 @@ const handleFiles = async (files?: FileList | null) => {
     error.value = t('imageCompressor.messages.invalidFile');
     return;
   }
+  const currentOperation = ++operationId;
   processing.value = true;
   error.value = '';
   feedback.value = null;
-  getFileBase64(file, value => {
-    originalBase64.value = value;
-  });
+  base64Result.value = '';
+  outputWidth.value = 0;
+  outputHeight.value = 0;
   try {
-    const result = await handleInputUploadImageFile(files || undefined, validRate());
+    outputFormat.value = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+    const result = await handleInputUploadImageFile(
+      files || undefined,
+      validRate(),
+      outputFormat.value
+    );
+    if (currentOperation !== operationId) {
+      URL.revokeObjectURL(result.imgUrl);
+      return;
+    }
     releasePreviewUrl();
     imgUrl.value = result.imgUrl;
     base64Result.value = result.base64result;
+    outputWidth.value = result.width || 0;
+    outputHeight.value = result.height || 0;
     feedback.value = { message: t('imageCompressor.messages.ready'), tone: 'success' };
   } catch (cause) {
-    error.value = (cause as Error).message || t('imageCompressor.messages.convertFailed');
+    if (currentOperation === operationId)
+      error.value = (cause as Error).message || t('imageCompressor.messages.convertFailed');
   } finally {
-    processing.value = false;
+    if (currentOperation === operationId) processing.value = false;
   }
 };
 
@@ -128,16 +176,22 @@ const onFileChange = (event: Event) => handleFiles((event.target as HTMLInputEle
 const onDrop = (event: DragEvent) => handleFiles(event.dataTransfer?.files);
 
 const compress = async () => {
-  if (!imgUrl.value) return;
+  if (!imgUrl.value || processing.value) return;
+  const currentOperation = ++operationId;
   processing.value = true;
   error.value = '';
+  feedback.value = null;
+  base64Result.value = '';
   try {
-    base64Result.value = await getCompressedImageBase64(imgUrl.value, validRate());
+    const result = await getCompressedImageBase64(imgUrl.value, validRate(), outputFormat.value);
+    if (currentOperation !== operationId) return;
+    base64Result.value = result;
     feedback.value = { message: t('imageCompressor.messages.ready'), tone: 'success' };
   } catch (cause) {
-    error.value = (cause as Error).message || t('imageCompressor.messages.convertFailed');
+    if (currentOperation === operationId)
+      error.value = (cause as Error).message || t('imageCompressor.messages.convertFailed');
   } finally {
-    processing.value = false;
+    if (currentOperation === operationId) processing.value = false;
   }
 };
 
@@ -149,20 +203,27 @@ const copyResult = async () => {
 const downloadResult = () => {
   const link = document.createElement('a');
   link.href = base64Result.value;
-  link.download = 'compressed-image.png';
+  link.download = `compressed-image.${base64Result.value.startsWith('data:image/png') ? 'png' : 'jpg'}`;
   link.click();
   feedback.value = { message: t('experience.downloaded'), tone: 'success' };
 };
 
 const reset = () => {
+  operationId += 1;
+  processing.value = false;
   releasePreviewUrl();
   imgUrl.value = '';
   base64Result.value = '';
-  originalBase64.value = '';
+  outputWidth.value = 0;
+  outputHeight.value = 0;
   error.value = '';
   feedback.value = null;
   if (fileInput.value) fileInput.value.value = '';
 };
+onBeforeUnmount(() => {
+  operationId += 1;
+  releasePreviewUrl();
+});
 </script>
 
 <style scoped>

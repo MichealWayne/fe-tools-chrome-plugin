@@ -1,13 +1,25 @@
 <template>
   <section class="svg-editor" @click="stopPropagation">
-    <div class="svg-editor__header">
-      <div class="svg-editor__header-content">
-        <p>{{ t('svgEditor.description') }}</p>
-      </div>
+    <div class="svg-editor__view-switch">
+      <button
+        type="button"
+        :aria-pressed="activePanel === 'input'"
+        :class="{ 'is-active': activePanel === 'input' }"
+        @click="activePanel = 'input'"
+      >
+        {{ t('svgEditor.svgInput') }}
+      </button>
+      <button
+        type="button"
+        :aria-pressed="activePanel === 'output'"
+        :class="{ 'is-active': activePanel === 'output' }"
+        @click="activePanel = 'output'"
+      >
+        {{ t('svgEditor.outputTitle') }}
+      </button>
     </div>
-
     <div class="svg-editor__content">
-      <div class="svg-editor__input-section">
+      <div v-show="activePanel === 'input'" class="svg-editor__input-section">
         <div class="svg-editor__panel">
           <div class="svg-editor__panel-header">
             <span>{{ t('svgEditor.svgInput') }}</span>
@@ -50,7 +62,7 @@
         </div>
       </div>
 
-      <div class="svg-editor__middle-section">
+      <div v-show="activePanel === 'input'" class="svg-editor__middle-section">
         <div class="svg-editor__controls-section">
           <div class="svg-editor__controls">
             <div class="svg-editor__options">
@@ -130,7 +142,7 @@
         </div>
       </div>
 
-      <div class="svg-editor__output-section">
+      <div v-show="activePanel === 'output'" class="svg-editor__output-section">
         <div class="svg-editor__panel">
           <div class="svg-editor__panel-header">
             <span>{{ t('svgEditor.outputTitle') }}</span>
@@ -182,8 +194,8 @@
       <div class="svg-editor__preview-content" v-html="sanitizedPreviewSvg"></div>
     </div>
 
-    <div class="svg-editor__tips">
-      <h4>{{ t('svgEditor.tips.title') }}</h4>
+    <details class="svg-editor__tips">
+      <summary>{{ t('svgEditor.tips.title') }}</summary>
       <ul>
         <li>{{ t('svgEditor.tips.item1') }}</li>
         <li>{{ t('svgEditor.tips.item2') }}</li>
@@ -191,7 +203,7 @@
         <li>{{ t('svgEditor.tips.item4') }}</li>
         <li>{{ t('svgEditor.tips.item5') }}</li>
       </ul>
-    </div>
+    </details>
 
     <inline-feedback
       :feedback="successVisible ? { message: successMessage, tone: 'success' } : null"
@@ -234,10 +246,11 @@ const successVisible = ref(false);
 const successMessage = ref('');
 const showPreview = ref(false);
 const confirmClear = ref(false);
+const activePanel = ref<'input' | 'output'>('input');
 /**
  * Toggle state for the options panel accordion.
  */
-const optionsExpanded = ref(true);
+const optionsExpanded = ref(false);
 
 /**
  * Optimizer feature flags set by the user.
@@ -416,6 +429,7 @@ const optimizeSvg = () => {
     stats.reduction = `${reduction}%`;
 
     optimizedSvg.value = optimized;
+    activePanel.value = 'output';
     showSuccess(t('svgEditor.messages.optimizeSuccess'));
   } catch (e) {
     console.error(e);

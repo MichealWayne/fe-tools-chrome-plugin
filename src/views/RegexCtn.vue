@@ -38,7 +38,7 @@
               :aria-expanded="Boolean(item.isOpened)"
               @click="item.isOpened = !item.isOpened"
             >
-              {{ item.isOpened ? t('common.collapse') : t('regex.test') }}
+              {{ item.isOpened ? t('common.collapse') : t('regex.openTest') }}
             </button>
           </span>
         </div>

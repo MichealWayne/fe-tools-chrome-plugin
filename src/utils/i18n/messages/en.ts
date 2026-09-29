@@ -50,7 +50,7 @@ export default {
   title: 'FE Toolbox',
   homeTitle: 'Back to home',
   language: 'Language',
-  searchPlaceholder: 'Enter keywords or QR code generation address',
+  searchPlaceholder: 'Search tools and bookmarks, or enter a URL',
   toolsLabel: 'Tool categories',
 
   // Tool modules
@@ -58,56 +58,69 @@ export default {
     colorPass: 'Color Converter',
     dateConverter: 'Date Converter',
     imageCompressor: 'Image Compressor',
-    jsonCtn: 'JSON Tools',
+    jsonCtn: 'JSON Converter',
     langTranslator: 'Language Translator',
     pageScreenshot: 'Page Screenshot',
     postMan: 'API Tester',
-    qrCode: 'QR Code',
+    qrCode: 'Generate QR Code',
     svgEditor: 'SVG Editor',
-    unitCalculator: 'Unit Calculator',
-    regexCtn: 'Regex Tools',
-    utilsCtn: 'Utility Tools',
-    mooCtn: 'Moo Tools',
-    linuxCommand: 'Linux Commands',
-    techStack: 'Tech Stack',
+    unitCalculator: 'px/rem/vw Converter',
+    regexCtn: 'Regex Library',
+    utilsCtn: 'Utility Functions',
+    mooCtn: 'Moo CSS Dictionary',
+    linuxCommand: 'Linux Command Lookup',
+    techStack: 'Tech Stack Detection',
     codexQuota: 'Codex Quota',
+    tailwindConverter: 'TW to CSS',
   },
 
   // Tool descriptions
   descriptions: {
-    colorPass: 'Color format conversion tool',
-    dateConverter: 'Timestamp and date conversion',
-    imageCompressor: 'Online image compression',
-    jsonCtn: 'JSON formatting and validation',
-    langTranslator: 'Multi-language translation tool',
-    pageScreenshot: 'Full-page capture and save',
-    postMan: 'HTTP API testing',
-    qrCode: 'QR code generation and parsing',
-    svgEditor: 'Online SVG editor',
-    unitCalculator: 'Length and weight unit conversion',
-    regexCtn: 'Regular expression testing',
-    utilsCtn: 'Common development tools',
-    mooCtn: 'Featured tools',
-    linuxCommand: 'Linux command reference tool',
+    colorPass: 'Convert between HEX, RGB, HSB, and HSL',
+    dateConverter: 'View time zones and calculate dates',
+    imageCompressor: 'Choose an image and adjust its compression ratio',
+    jsonCtn: 'Convert between JavaScript objects and JSON',
+    langTranslator: 'Open an online translation website',
+    pageScreenshot: 'Capture and save a full page or an element',
+    postMan: 'Send HTTP requests and inspect responses',
+    qrCode: 'Use the current page or custom text and export an SVG',
+    svgEditor: 'Edit, preview, and optimize SVG',
+    unitCalculator: 'Convert px, rem, and vw with page scaling ratios',
+    regexCtn: 'Find, copy, and test common regular expressions',
+    utilsCtn: 'Find usage documentation by method name',
+    mooCtn: 'Look up style properties, classes, colors, and functions',
+    linuxCommand: 'Look up command syntax and examples',
     techStack: 'Analyze current page tech-stack signals',
-    codexQuota: 'View remaining Codex quota and reset times',
+    codexQuota: 'View remaining percentages and reset times for quota windows',
+    tailwindConverter: 'Convert Tailwind class names to copyable CSS',
+  },
+
+  tailwindConverter: {
+    inputLabel: 'Tailwind class names',
+    inputPlaceholder: 'e.g. flex items-center p-4 bg-red-500 hover:bg-red-600 md:w-[320px]',
+    outputLabel: 'CSS',
+    outputPlaceholder: 'Converted CSS appears here',
+    convertedCount: '{count} classes converted',
+    unsupported: 'Unrecognized classes',
+    copyFailed: 'Copy failed. Select the CSS manually.',
   },
 
   // QRCode component
   qrcode: {
     title: 'QR Code Generator',
-    inputPlaceholder: 'Enter address',
-    generate: 'Generate',
+    inputPlaceholder: 'e.g. https://example.com',
+    generate: 'Generate QR Code',
+    regenerate: 'Regenerate',
     download: 'Download QR Code',
-    downloadSvg: 'Download SVG File',
+    downloadSvg: 'Download SVG',
     clear: 'Clear',
     rightClickTip: 'Right click to save QR code image',
     saveImageTip: '*Right click on image to save QR code PNG image',
-    sourceLabel: 'QR code content',
+    sourceLabel: 'URL or text',
     previewAlt: 'Generated QR code preview',
-    emptyPreview: 'Enter content to generate a QR code preview',
+    emptyPreview: 'The generated result will appear here',
     messages: {
-      required: 'Enter QR code content',
+      required: 'Enter a URL or text',
       generated: 'QR code generated',
       generateFailed: 'Failed to generate QR code',
     },
@@ -115,13 +128,19 @@ export default {
 
   // Image Compressor
   imageCompressor: {
-    dragTip: 'Click icon or drag image here',
+    dragTip: 'Choose an image or drag one here',
     formatTip: '(*.jpg/*.png/*.gif formats)',
     resetTip: 'Click to reset image',
     compressRatio: 'Image compression ratio (0~1, default 1)',
     ratioLabel: 'Compression ratio',
-    compress: 'Compress',
-    download: 'Download image',
+    outputFormat: 'Output format',
+    jpegFormat: 'JPEG (smaller file)',
+    pngFormat: 'PNG (keeps transparency)',
+    outputDetails: '{width} × {height} px · {size}',
+    pngQualityHint: 'PNG keeps transparency; the quality value does not affect PNG output.',
+    compress: 'Recompress',
+    copyBase64: 'Copy Base64',
+    download: 'Download compressed image',
     processing: 'Processing image…',
     previewAlt: 'Compressed image preview',
     base64Label: 'Compressed Base64 result',
@@ -137,14 +156,14 @@ export default {
   // Page screenshot
   pageScreenshot: {
     title: 'Page Screenshot',
-    startCapture: 'Start Capture',
-    selectNode: 'Select Node Screenshot',
+    startCapture: 'Capture full page',
+    selectNode: 'Capture element',
     capturing: 'Capturing...',
     selecting: 'Waiting for selection...',
     selectingTip: 'Click an element on the page to capture',
     previewTip: 'Preview',
-    previewEmptyTitle: 'No preview yet',
-    previewEmptyDesc: 'Start a capture to see it here.',
+    previewEmptyTitle: 'Waiting for a capture',
+    previewEmptyDesc: 'The captured image will appear here.',
     saveToLocal: 'Save locally',
     retake: 'Retake',
     errorCapture: 'Capture failed, please retry',
@@ -158,7 +177,7 @@ export default {
   // Tech stack detection
   techStack: {
     title: 'Tech Stack Detection',
-    description: 'Analyze framework, bundler, and common library signals on the current page',
+    description: 'Results are inferred from page signals; review the supporting evidence.',
     startDetect: 'Start Detection',
     analyzing: 'Analyzing...',
     hitCount: '{count} hits',
@@ -178,7 +197,7 @@ export default {
 
   codexQuota: {
     description:
-      'Shows Codex allowance windows reported for the signed-in ChatGPT account. Quota is not a fixed token count.',
+      'Data comes from the signed-in ChatGPT account; percentages do not represent a fixed token count.',
     loading: 'Reading Codex quota…',
     refreshing: 'Refreshing…',
     refresh: 'Refresh quota',
@@ -221,8 +240,7 @@ export default {
   // JSON Tools
   jsonCtn: {
     title: 'JSON Conversion Tool',
-    description:
-      'Convenient tool to convert JS objects to JSON objects for KAmis editor processing. Typical scenario: ECharts configuration conversion',
+    description: 'Supports JavaScript objects with comments, including ECharts configurations',
     jsObject: 'JavaScript Object',
     jsonResult: 'JSON Result',
     inputPlaceholder: 'Enter JS object here, e.g., var obj = { a: 1 }',
@@ -267,7 +285,7 @@ export default {
     title: 'SVG Editor/Optimizer',
     description:
       'Help developers adjust SVG attributes, reduce file size, and generate optimized code',
-    svgInput: 'SVG Input',
+    svgInput: 'Source code',
     placeholder: 'Paste or enter SVG code here...',
     clearInput: 'Clear',
     loadExample: 'Load Example',
@@ -358,6 +376,7 @@ export default {
     },
     timezoneTitle: 'Timezone',
     outputTitle: 'Results',
+    moreResults: 'More formats',
     resultLabels: {
       timestampSeconds: 'Unix timestamp (seconds):',
       timestampMilliseconds: 'Unix timestamp (milliseconds):',
@@ -405,7 +424,8 @@ export default {
 
   // Unit Calculator
   unitCalculator: {
-    title: 'rem/vw/px Converter',
+    title: 'px / rem / vw Converter',
+    conversionHint: 'Uses the configured rem ratio and 1 rem = 10 vw. Edit any value to convert.',
     pxPlaceholder: 'px unit',
     vwPlaceholder: 'vw unit, 1rem=10vw',
     remPlaceholder: 'rem unit',
@@ -422,18 +442,19 @@ export default {
 
   // Regex Tools
   regex: {
-    filterLabel: 'Filter regular expressions',
-    filter: 'Filter',
+    filterLabel: 'Keyword',
+    filter: 'Name, purpose, or expression',
     test: 'Test',
-    inputTest: 'Enter test string',
+    openTest: 'Open tester',
+    inputTest: 'Test text',
     result: 'Result',
     loadFailed: 'Failed to load regular expressions',
   },
 
   // Moo CSS
   mooCss: {
-    searchLabel: 'Search CSS and Moo CSS dictionaries',
-    searchPlaceholder: 'Enter module or style property',
+    searchLabel: 'Keyword',
+    searchPlaceholder: 'Property, class, color, or function',
     loadFailed: 'Failed to load the Moo CSS dictionary',
     variable: 'variable',
     method: 'method',
@@ -441,8 +462,8 @@ export default {
 
   // Utils
   utils: {
-    searchLabel: 'Search utility functions',
-    searchPlaceholder: 'Enter method name or module name',
+    searchLabel: 'Method or module',
+    searchPlaceholder: 'For example, array.chunk or string.trim',
     loadFailed: 'Failed to load utility functions',
   },
 
@@ -455,10 +476,10 @@ export default {
       hsb: 'HSB',
       hsl: 'HSL',
     },
-    hexPlaceholder: 'HEX color value',
-    rgbPlaceholder: 'RGB color value',
-    hsbPlaceholder: 'HSB value, e.g. 0,100%,100%',
-    hslPlaceholder: 'HSL color value',
+    hexPlaceholder: 'For example, FF8800',
+    rgbPlaceholder: 'For example, 255,136,0',
+    hsbPlaceholder: 'For example, 30,100%,100%',
+    hslPlaceholder: 'For example, 30,100%,50%',
     messages: {
       invalidHex: 'HEX must contain 6 hexadecimal characters',
       invalidRgb: 'RGB must contain three integers from 0 to 255',
@@ -467,7 +488,7 @@ export default {
     },
     backHome: 'Back to Home',
     remarks: {
-      title: 'Note:',
+      title: 'Color format guide',
       rgb: 'RGB: Colors are formed by combining red (R), green (G), and blue (B) channels.',
       hex: 'HEX: 16-bit color code converted from RGB decimal values.',
       hsb: 'HSB (HSV): H is hue, S is saturation, B is brightness.',
@@ -478,8 +499,8 @@ export default {
   // Linux Command
   linuxCommand: {
     title: 'Linux Command Reference Tool',
-    inputPlaceholder: 'Enter Linux command name',
-    searchLabel: 'Search Linux commands',
+    inputPlaceholder: 'For example, ls, grep, or curl',
+    searchLabel: 'Keyword',
     loadFailed: 'Failed to load Linux commands',
     syntax: 'Syntax',
     examples: 'Examples',
@@ -492,6 +513,7 @@ export default {
 
   // PostMan
   postman: {
+    requestManagement: 'Request management',
     title: 'API Testing Tool',
     feedback: {
       requestPending: 'A request is already in progress',
@@ -567,12 +589,13 @@ export default {
     },
     headers: {
       title: 'Headers',
-      add: 'Add',
+      add: 'Add header',
       headerKey: 'Header Key',
       headerValue: 'Header Value',
     },
     body: {
       title: 'Body',
+      typeLabel: 'Content type',
       types: {
         none: 'None',
         json: 'JSON',

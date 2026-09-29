@@ -35,7 +35,7 @@ describe('MainContent settings window', () => {
     await flushPromises();
 
     expect(wrapper.get('.logo-button').attributes('title')).toBe('返回首页');
-    expect(wrapper.findAll('.tool-card')).toHaveLength(16);
+    expect(wrapper.findAll('.tool-card')).toHaveLength(17);
     expect(wrapper.findAll('.tool-card__category')).toHaveLength(0);
     expect(wrapper.findAll('.tool-card__destination')).toHaveLength(0);
     expect(wrapper.get('.m-ctn').classes()).toContain('m-ctn--scrollable');
@@ -53,6 +53,24 @@ describe('MainContent settings window', () => {
     );
     expect(wrapper.get('[data-tool-key="postman"]').attributes('aria-label')).toContain('独立页面');
     expect(wrapper.get('[data-tool-key="postman"]').attributes('title')).toContain('独立页面');
+    const tailwindCard = wrapper.get('[data-tool-key="tailwind-converter"]');
+    expect(tailwindCard.get('.tool-card__name').text()).toBe('TW 转 CSS');
+    expect(tailwindCard.get('.icon-tailwind-converter').exists()).toBe(true);
+    expect(tailwindCard.attributes('aria-label')).toContain('Tailwind');
+  });
+
+  it('keeps card help separate from the module heading', async () => {
+    const wrapper = mount(MainContent);
+    await flushPromises();
+    expect(wrapper.get('[data-tool-key="moo-ctn"]').attributes('title')).toContain('样式属性');
+
+    await wrapper.get('[data-tool-key="moo-ctn"]').trigger('click');
+    expect(wrapper.get('.tool-workspace__title').text()).toBe('Moo CSS');
+    expect(wrapper.find('.tool-workspace__description').exists()).toBe(false);
+
+    await wrapper.get('.m-back-entry').trigger('click');
+    await wrapper.get('[data-tool-key="tech-stack-detection"]').trigger('click');
+    expect(wrapper.get('.tool-workspace__description').text()).toContain('推测');
   });
 
   it('supports keyboard result selection and activation', async () => {

@@ -1,14 +1,5 @@
 <template>
   <section class="json-converter">
-    <div class="json-converter__header">
-      <div class="json-converter__header-content">
-        <h3>{{ t('jsonCtn.title') }}</h3>
-        <p>
-          {{ t('jsonCtn.description') }}
-        </p>
-      </div>
-    </div>
-
     <div class="json-converter__content">
       <div class="json-converter__panel">
         <div class="json-converter__panel-header">
@@ -97,15 +88,15 @@
       </div>
     </div>
 
-    <div class="json-converter__tips">
-      <h4>{{ t('jsonCtn.tips.title') }}</h4>
+    <details class="json-converter__tips">
+      <summary>{{ t('jsonCtn.tips.title') }}</summary>
       <ul>
         <li>{{ t('jsonCtn.tips.item1') }}</li>
         <li>{{ t('jsonCtn.tips.item2') }}</li>
         <li>{{ t('jsonCtn.tips.item3') }}</li>
         <li>{{ t('jsonCtn.tips.item4') }}</li>
       </ul>
-    </div>
+    </details>
 
     <inline-feedback
       :feedback="successVisible ? { message: successMessage, tone: 'success' } : null"

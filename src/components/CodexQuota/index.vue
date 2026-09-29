@@ -1,7 +1,6 @@
 <template>
   <section class="codex-quota" @click.stop>
     <header class="codex-quota__header">
-      <p>{{ t('codexQuota.description') }}</p>
       <span v-if="freshness === 'stale'" class="codex-quota__stale">{{
         t('codexQuota.stale')
       }}</span>
@@ -75,8 +74,8 @@
     <p v-if="error === 'signed_out'" class="codex-quota__hint">
       <button type="button" @click="openSignIn">{{ t('codexQuota.openSignIn') }}</button>
     </p>
-    <section v-if="diagnostic" class="codex-quota__debug" :aria-label="t('codexQuota.debug.title')">
-      <strong>{{ t('codexQuota.debug.title') }}</strong>
+    <details v-if="diagnostic" class="codex-quota__debug">
+      <summary>{{ t('codexQuota.debug.title') }}</summary>
       <p>
         {{
           t('codexQuota.debug.summary', {
@@ -91,7 +90,7 @@
           {{ t(`codexQuota.debug.world.${attempt.world}`) }}: {{ attempt.result }}
         </li>
       </ul>
-    </section>
+    </details>
     <p class="codex-quota__privacy">{{ t('codexQuota.privacy') }}</p>
   </section>
 </template>

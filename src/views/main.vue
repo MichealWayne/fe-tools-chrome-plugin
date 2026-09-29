@@ -1,13 +1,14 @@
 <template>
   <section
-    class="m-ctn m-ctn--scrollable u-pt20"
+    class="m-ctn m-ctn--scrollable"
     :class="{
       'm-ctn--home': !showCompName,
+      'u-pt20': !showCompName,
       'm-ctn--wide':
         activeTool?.workspaceSize === 'wide' && activeTool.destination === 'standalone',
     }"
   >
-    <div class="settings-header">
+    <div v-if="!showCompName" class="settings-header">
       <button
         ref="settingsEntry"
         class="u-btn settings-entry"
@@ -103,22 +104,37 @@
       <tool-workspace
         ref="activeWorkspace"
         :title="activeTool ? t(activeTool.nameKey) : t('title')"
-        :description="activeTool ? t(activeTool.descriptionKey) : ''"
+        :description="
+          activeTool?.workspaceDescriptionKey ? t(activeTool.workspaceDescriptionKey) : ''
+        "
         :wide="activeTool?.workspaceSize === 'wide' && activeTool.destination === 'standalone'"
       >
+        <template #actions>
+          <div class="workspace-nav-actions">
+            <button
+              class="u-btn workspace-nav-button"
+              type="button"
+              :title="t('common.backHome')"
+              @click.stop="handleBackHome"
+            >
+              <i class="u-icon icon-home" aria-hidden="true"></i>
+              <span>{{ t('common.back') }}</span>
+            </button>
+            <button
+              ref="settingsEntry"
+              class="u-btn workspace-nav-button"
+              type="button"
+              :title="t('settings.entryTitle')"
+              :aria-label="t('settings.entryTitle')"
+              @click="openSettings"
+            >
+              <i class="u-icon icon-settings" aria-hidden="true"></i>
+            </button>
+          </div>
+        </template>
         <component :is="showCompName" :keywords="keywords" :back="handleBackHome" />
       </tool-workspace>
     </div>
-    <button
-      v-if="showCompName"
-      class="m-back-entry"
-      type="button"
-      :title="t('common.backHome')"
-      @click.stop="handleBackHome"
-    >
-      <i class="u-icon icon-home" aria-hidden="true"></i>
-      <span class="m-back-entry__label">{{ t('common.back') }}</span>
-    </button>
   </section>
 </template>
 

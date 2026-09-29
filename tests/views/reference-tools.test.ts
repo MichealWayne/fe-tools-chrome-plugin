@@ -24,7 +24,7 @@ describe('reference tool experience', () => {
     vi.mocked(ajax.getRegex).mockResolvedValue({ list: [] });
     vi.mocked(ajax.getLinuxCommands).mockResolvedValue({ list: [] });
     vi.mocked(ajax.getMooCSS).mockResolvedValue({ list: {} });
-    vi.mocked(ajax.getUtilFuncs).mockResolvedValue({ list: [] });
+    vi.mocked(ajax.getUtilFuncs).mockResolvedValue({ data: {} });
   });
 
   it('shows Regex results, no-match state, and retryable load errors', async () => {
@@ -59,6 +59,8 @@ describe('reference tool experience', () => {
   it('shows Moo CSS no-match state and opens semantic external results', async () => {
     const wrapper = mount(MooCtn);
     await flushPromises();
+    expect(wrapper.get('.reference-tool__label').text()).toBe('关键词');
+    expect(wrapper.get('input[type="search"]').attributes('placeholder')).toContain('属性');
     await wrapper.get('input[type="search"]').setValue('missing');
     expect(wrapper.get('.tool-state--empty').exists()).toBe(true);
     await wrapper.setData({
@@ -69,7 +71,12 @@ describe('reference tool experience', () => {
   });
 
   it('loads, filters, and opens utility function results', async () => {
-    vi.mocked(ajax.getUtilFuncs).mockResolvedValue({ list: ['array.chunk', 'string.trim'] });
+    vi.mocked(ajax.getUtilFuncs).mockResolvedValue({
+      data: {
+        '1': { id: 1, name: 'chunk', query: 'array.chunk', hash: '', kind: 2, flags: {} },
+        '2': { id: 2, name: 'trim', query: 'string.trim', hash: '', kind: 2, flags: {} },
+      },
+    });
     const wrapper = mount(UtilsCtn);
     await flushPromises();
     await wrapper.get('input[type="search"]').setValue('chunk');

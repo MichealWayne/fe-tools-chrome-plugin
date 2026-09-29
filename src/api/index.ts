@@ -21,7 +21,7 @@ import {
   MooCSSData,
   RegexData,
   LinuxCommand,
-  UtilFunction,
+  UtilFunctionMap,
 } from '@/types/api';
 
 /**
@@ -71,8 +71,12 @@ class FeToolsService extends ApiClient {
   /**
    * Fetch metadata for the utils catalog.
    */
-  async getUtilFuncs(): Promise<ApiListResponse<UtilFunction>> {
-    return this.getList<UtilFunction>('/fe-tools/stable/data/yafReflectionMap.json');
+  async getUtilFuncs(): Promise<ApiItemResponse<UtilFunctionMap>> {
+    const response = await this.get<UtilFunctionMap>('/fe-tools/stable/data/yafReflectionMap.json');
+    if (isApiItemResponse(response)) return response;
+    throw new TypeError(
+      'Expected an item response from /fe-tools/stable/data/yafReflectionMap.json'
+    );
   }
 }
 
@@ -146,7 +150,7 @@ const api: ApiEndpoints = {
   getMooCSS: handleAjax<MooCSSData>(AJAX_INTERFACE.getMooCSS, 'list'),
   getRegex: handleAjax<RegexData>(AJAX_INTERFACE.getRegex, 'list'),
   getLinuxCommands: handleAjax<LinuxCommand>(AJAX_INTERFACE.getLinuxCommands, 'list'),
-  getUtilFuncs: handleAjax<UtilFunction>(AJAX_INTERFACE.getUtilFuncs, 'list'),
+  getUtilFuncs: handleAjax<UtilFunctionMap>(AJAX_INTERFACE.getUtilFuncs, 'item'),
 };
 
 export default api;

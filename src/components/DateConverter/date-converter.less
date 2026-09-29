@@ -33,7 +33,7 @@
   --date-error-surface: #fff2f0;
   --date-error-border: #ffccc7;
   --date-success: #2fb36b;
-  padding: 22px 26px 18px;
+  padding: 12px;
   max-width: 880px;
   margin: 0 auto;
   font-family:
@@ -44,10 +44,6 @@
     Helvetica Neue,
     Arial,
     sans-serif;
-  height: calc(100vh - 40px);
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border-dark) var(--color-background-dark);
   background: linear-gradient(180deg, var(--date-surface), var(--date-background));
   border: 1px solid var(--date-border-light);
   border-radius: 12px;
@@ -58,21 +54,6 @@
 .date-converter *::before,
 .date-converter *::after {
   box-sizing: border-box;
-}
-.date-converter::-webkit-scrollbar {
-  width: 8px;
-}
-.date-converter::-webkit-scrollbar-track {
-  background: var(--color-background-dark);
-  border-radius: 4px;
-}
-.date-converter::-webkit-scrollbar-thumb {
-  background-color: var(--color-border-dark);
-  border-radius: 4px;
-  border: 2px solid var(--color-background-dark);
-}
-.date-converter::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-text-tertiary);
 }
 .date-converter__header {
   display: flex;
@@ -130,8 +111,8 @@
 .date-converter__content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 .date-converter__panel,
 .date-converter__timezone-panel,
@@ -139,7 +120,7 @@
 .date-converter__calculator {
   background-color: var(--date-surface);
   border-radius: 12px;
-  padding: 16px;
+  padding: 10px;
   border: 1px solid var(--date-border-panel);
   box-shadow: 0 6px 14px var(--date-shadow-subtle);
   transition:
@@ -261,22 +242,21 @@
 .date-converter__results {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-height: 300px;
-  overflow-y: auto;
-  padding-right: 4px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) var(--color-background);
+  gap: 8px;
 }
-.date-converter__results::-webkit-scrollbar {
-  width: 6px;
+.date-converter__more-results summary,
+.date-converter__tips summary,
+.date-converter__calculator summary {
+  cursor: pointer;
 }
-.date-converter__results::-webkit-scrollbar-track {
-  background: var(--color-background);
+.date-converter__more-results summary {
+  color: var(--date-primary);
+  font-size: 13px;
 }
-.date-converter__results::-webkit-scrollbar-thumb {
-  background-color: var(--color-border);
-  border-radius: 3px;
+.date-converter__more-results-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
 }
 .date-converter__result-item {
   display: flex;
@@ -294,7 +274,9 @@
   box-shadow: 0 8px 18px var(--date-shadow-hover);
 }
 .date-converter__result-label {
-  width: 180px;
+  width: min(34%, 120px);
+  flex-shrink: 0;
+  overflow-wrap: anywhere;
   font-weight: 500;
   color: var(--date-text-label);
 }
@@ -309,7 +291,20 @@
   color: var(--date-text-body);
 }
 .date-converter__calculator {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
+}
+.date-converter__calculator:not([open]) > summary {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.date-converter__calculator summary::after {
+  content: '▾';
+  margin-left: auto;
+  color: var(--date-text-secondary);
+}
+.date-converter__calculator[open] summary::after {
+  transform: rotate(180deg);
 }
 .date-converter__calculator-content {
   display: flex;
@@ -377,10 +372,12 @@
   margin-top: 16px;
   border-left: 4px solid var(--date-primary);
 }
-.date-converter__tips h4 {
-  margin-top: 0;
-  margin-bottom: 8px;
+.date-converter__tips summary {
   color: var(--date-text);
+  font-weight: 600;
+}
+.date-converter__tips ul {
+  margin-top: 8px;
 }
 .date-converter__tips ul {
   margin: 0;

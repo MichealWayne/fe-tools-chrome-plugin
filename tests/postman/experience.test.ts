@@ -68,8 +68,11 @@ describe('PostMan workflow experience', () => {
 
   it('opens the drawer with focus and closes it with Escape', async () => {
     const wrapper = mount(PostManMain, { attachTo: document.body });
+    const management = wrapper.get('.postman-management').element as HTMLDetailsElement;
+    management.open = true;
     await wrapper.get('.toolbar-btn').trigger('click');
     await wrapper.vm.$nextTick();
+    expect(management.open).toBe(false);
     const drawer = wrapper.get('.postman-drawer').element;
     expect(document.activeElement).toBe(drawer);
 

@@ -193,7 +193,7 @@ export const buildSearchResults = ({
 
   defaultSearchList.forEach(item => {
     resultList.push({
-      link: item.link + normalizedKeywords,
+      link: item.link + encodeURIComponent(normalizedKeywords),
       name: translate('search.searchIn', { site: item.name, keywords: normalizedKeywords }),
     });
   });

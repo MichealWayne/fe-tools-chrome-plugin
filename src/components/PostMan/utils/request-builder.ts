@@ -20,10 +20,13 @@ export const buildRequestPayload = (
 ): RequestPayload => {
   const headers: Record<string, string> = {};
 
+  const processedUrl = resolveValue(request.url);
   const requestUrl = request.queryParams?.length
-    ? serializeRequestUrl(request.url, request.queryParams) || request.url
-    : request.url;
-  const processedUrl = resolveValue(requestUrl);
+    ? serializeRequestUrl(
+        processedUrl,
+        request.queryParams.map(param => ({ ...param, value: resolveValue(param.value) }))
+      ) || processedUrl
+    : processedUrl;
 
   request.headers.forEach(header => {
     if (header.enabled !== false && header.key && header.value) {
@@ -36,7 +39,9 @@ export const buildRequestPayload = (
     const processedToken = resolveValue(request.auth.token);
     headers['Authorization'] = `Bearer ${processedToken}`;
   } else if (request.auth.type === 'basic' && request.auth.username && request.auth.password) {
-    const credentials = btoa(`${request.auth.username}:${request.auth.password}`);
+    const credentials = btoa(
+      `${resolveValue(request.auth.username)}:${resolveValue(request.auth.password)}`
+    );
     headers['Authorization'] = `Basic ${credentials}`;
   } else if (request.auth.type === 'api-key' && request.auth.key && request.auth.value) {
     const processedValue = resolveValue(request.auth.value);
@@ -77,7 +82,7 @@ export const buildRequestPayload = (
     }
   }
 
-  let finalUrl = processedUrl;
+  let finalUrl = requestUrl;
   if (
     request.auth.type === 'api-key' &&
     request.auth.addTo === 'query' &&
@@ -85,8 +90,11 @@ export const buildRequestPayload = (
     request.auth.value
   ) {
     const processedValue = resolveValue(request.auth.value);
-    const separator = finalUrl.includes('?') ? '&' : '?';
-    finalUrl += `${separator}${request.auth.key}=${encodeURIComponent(processedValue)}`;
+    const fragmentIndex = finalUrl.indexOf('#');
+    const urlWithoutFragment = fragmentIndex < 0 ? finalUrl : finalUrl.slice(0, fragmentIndex);
+    const fragment = fragmentIndex < 0 ? '' : finalUrl.slice(fragmentIndex);
+    const separator = urlWithoutFragment.includes('?') ? '&' : '?';
+    finalUrl = `${urlWithoutFragment}${separator}${encodeURIComponent(request.auth.key)}=${encodeURIComponent(processedValue)}${fragment}`;
   }
 
   return {

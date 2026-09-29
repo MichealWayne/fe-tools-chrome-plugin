@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import 'dayjs/locale/zh-cn';
 import 'dayjs/locale/en';
 import { langManager } from '@/utils/i18n';
@@ -15,6 +16,7 @@ const setupDayjs = (() => {
     dayjs.extend(utc);
     dayjs.extend(timezone);
     dayjs.extend(relativeTime);
+    dayjs.extend(customParseFormat);
     initialized = true;
   };
 })();
@@ -180,7 +182,7 @@ export const useDateConverter = (
       const sanitizedInput = DOMPurify.sanitize(inputCustom.value);
       const sanitizedFormat = DOMPurify.sanitize(customFormat.value);
 
-      const candidate = dayjs(sanitizedInput, sanitizedFormat);
+      const candidate = dayjs(sanitizedInput, sanitizedFormat, true);
 
       if (!candidate.isValid()) {
         throw new Error(t('dateConverter.messages.invalidDate'));

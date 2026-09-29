@@ -13,11 +13,12 @@ A Chrome extension toolbox for frontend developers, built with Manifest V3, Vue 
 - Pinyin search: Chinese tools and bookmarks support pinyin and initials matching, which can be disabled in settings.
 - CSS property / Moo-CSS search: search CSS properties, Moo-CSS variables, methods, and class names.
 - URL to QR code: generate QR codes and download them as images.
-- Image compression and Base64 conversion.
+- Image compression and Base64 conversion: choose JPEG or PNG output and view the compressed dimensions.
+- Tailwind class-to-CSS conversion: supports a bounded set of common Tailwind v3 utilities, arbitrary values, and variants such as `sm`/`md`/`lg`/`xl`/`2xl` and `hover`/`focus`. Copy the generated CSS and see which classes were not recognized.
 - px/rem/vw unit calculator.
 - RGB/HSB/HSL/HEX/CMYK color conversion.
 - Quick translation.
-- Lightweight Postman: supports request headers, request body, authentication, environments, saved requests, cURL import/export, history filtering, cancellation/timeouts, validation, and response search.
+- Lightweight Postman: supports request headers, request body, authentication, environment variable substitution, saved requests, cURL import/export, history filtering, cancellation/timeouts, validation, and response search.
 - Common regex lookup and testing.
 - JSON formatting and validation.
 - Online SVG editor and optimizer.
@@ -129,6 +130,6 @@ tests/                       Vitest unit tests
 
 ## Milestones
 
-- 2026: Codex quota monitoring, Postman workspace improvements, enhanced tech-stack detection, and extension localization.
+- 2026: Tailwind-to-CSS conversion, Codex quota monitoring, Postman workspace improvements, enhanced tech-stack detection, and extension localization.
 - 2025: Manifest V3, page screenshots, bilingual support.
 - 2019: Extension v1.

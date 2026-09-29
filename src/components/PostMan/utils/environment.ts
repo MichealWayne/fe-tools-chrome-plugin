@@ -10,7 +10,7 @@ export const replaceEnvironmentVariables = (
   variables: EnvironmentVariable[]
 ): string =>
   variables.reduce((result, variable) => {
-    if (!variable.key || !variable.value) return result;
+    if (variable.enabled === false || !variable.key || !variable.value) return result;
 
     const placeholder = new RegExp(`{{\\s*${escapeRegExp(variable.key)}\\s*}}`, 'g');
     return result.replace(placeholder, () => variable.value);

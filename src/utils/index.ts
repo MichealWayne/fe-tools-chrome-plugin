@@ -94,34 +94,32 @@ export function getFileBase64(file: File, cb: (base64: string) => unknown) {
 }
 
 /**
- * Compress an image element into a JPEG data URL.
+ * Compress an image element into a JPEG or PNG data URL.
  * @param img - Source image element.
  * @param rate - Compression quality between 0 and 1.
+ * @param format - Output MIME type.
  * @returns Compressed image data URL.
  */
-export function compressImg(img: HTMLImageElement, rate = 0.9) {
+export function compressImg(
+  img: HTMLImageElement,
+  rate = 0.9,
+  format: 'image/jpeg' | 'image/png' = 'image/jpeg'
+) {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d')!;
   const tCanvas = document.createElement('canvas');
   const tctx = tCanvas.getContext('2d')!;
 
-  let { width, height } = img;
-
-  let ratio;
-  if ((width > 750 || height > 1000) && (ratio = (width * height) / 500000) > 1) {
-    ratio = Math.sqrt(ratio);
-    width /= ratio;
-    height /= ratio;
-  } else {
-    ratio = 1;
-  }
+  const { width, height, ratio } = getCompressedDimensions(img);
 
   let count;
   canvas.width = width;
   canvas.height = height;
 
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, width, height);
+  if (format === 'image/jpeg') {
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, width, height);
+  }
   if ((count = (width * height) / 600000) > 1) {
     count = Math.floor(Math.sqrt(count) + 1);
 
@@ -138,7 +136,19 @@ export function compressImg(img: HTMLImageElement, rate = 0.9) {
   } else {
     ctx.drawImage(img, 0, 0, width, height);
   }
-  const ndata = canvas.toDataURL('image/jpeg', rate);
+  const ndata = canvas.toDataURL(format, rate);
   tCanvas.width = tCanvas.height = canvas.width = canvas.height = 0;
   return ndata;
+}
+
+/** Return the canvas dimensions used by image compression. */
+export function getCompressedDimensions(img: HTMLImageElement) {
+  let { width, height } = img;
+  let ratio = 1;
+  if (width > 750 || height > 1000) {
+    ratio = Math.max(1, Math.sqrt((width * height) / 500000));
+    width /= ratio;
+    height /= ratio;
+  }
+  return { width: Math.floor(width), height: Math.floor(height), ratio };
 }
