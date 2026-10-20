@@ -6,6 +6,13 @@ const sig = (
   weight: number,
   options: Partial<Pick<SignatureRule, 'operator' | 'group' | 'decisive'>> = {}
 ): SignatureRule => {
+  const packagePattern =
+    /^(?:\/)?[a-z][a-z0-9.-]*$/i.test(pattern) && (source === 'scripts' || source === 'links');
+  if (packagePattern && !options.operator) {
+    const name = pattern.replace(/^\//, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    pattern = `(?:^|/)${name}(?:@[^/]+/|/|(?:-[0-9]+\\.[0-9]+\\.[0-9]+)?\\.|$)`;
+    options = { ...options, operator: 'regex' };
+  }
   const exactSources: SignalSource[] = ['globals', 'selectors', 'scriptTypes', 'runtime'];
   const groupBySource: Record<SignalSource, SignatureGroup> = {
     scripts: 'asset',
@@ -103,21 +110,28 @@ export const TECH_STACK_CANDIDATES: SignatureCandidate[] = [
     ],
   },
   {
+    key: 'angularjs',
+    name: 'AngularJS',
+    category: 'framework',
+    versionKeys: ['angularjs'],
+    signatures: [
+      sig('runtime', 'angularjs-runtime', 3),
+      sig('globals', 'angular', 3),
+      sig('scripts', 'angular', 1),
+      sig('content', 'angular.module(', 2),
+    ],
+  },
+  {
     key: 'angular',
     name: 'Angular',
     category: 'framework',
     versionKeys: ['angular'],
     signatures: [
-      sig('globals', 'angular', 3),
       sig('runtime', 'angular-runtime', 3),
-      sig('globals', 'ng', 2),
       sig('selectors', 'ng_version_marker', 3),
       sig('htmlAttrs', 'ng-version', 1),
       sig('scripts', '@angular', 1),
       sig('scripts', 'zone.js', 1),
-      sig('scripts', '/angular', 1),
-      sig('links', '/angular', 1),
-      sig('content', 'angular.module(', 2),
       sig('content', 'platformbrowserdynamic', 2),
       sig('content', 'routermodule.forroot', 1),
     ],
@@ -125,7 +139,7 @@ export const TECH_STACK_CANDIDATES: SignatureCandidate[] = [
   {
     key: 'jquery',
     name: 'jQuery',
-    category: 'framework',
+    category: 'library',
     versionKeys: ['jquery'],
     signatures: [
       sig('globals', 'jquery', 3),
@@ -180,6 +194,7 @@ export const TECH_STACK_CANDIDATES: SignatureCandidate[] = [
       sig('scripts', '/_astro/', 2),
       sig('links', '/_astro/', 2),
       sig('content', 'astro-island', 3),
+      sig('selectors', 'astro_island', 3),
       sig('content', 'data-astro-', 2),
       sig('metas', 'astro', 1),
     ],
@@ -425,3 +440,28 @@ export const TECH_STACK_CANDIDATES: SignatureCandidate[] = [
     ],
   },
 ];
+
+const libraryCandidates: Array<[string, string, string, string | undefined]> = [
+  ['element-plus', 'Element Plus', 'element-plus', 'element_component'],
+  ['antd', 'Ant Design', 'antd', 'antd_component'],
+  ['bootstrap', 'Bootstrap', 'bootstrap', 'bootstrap_component'],
+  ['echarts', 'ECharts', 'echarts', 'echarts_instance'],
+  ['chartjs', 'Chart.js', 'chart.js', undefined],
+  ['monaco', 'Monaco Editor', 'monaco-editor', 'monaco_editor'],
+  ['codemirror', 'CodeMirror', 'codemirror', 'codemirror_editor'],
+];
+
+TECH_STACK_CANDIDATES.push(
+  ...libraryCandidates.map(([key, name, asset, marker]) => ({
+    key,
+    name,
+    category: 'library' as const,
+    versionKeys: [key],
+    signatures: [
+      sig('runtime', `${key}-runtime`, 3),
+      sig('scripts', asset, 2),
+      sig('links', asset, 2),
+      ...(marker ? [sig('selectors', marker, 2)] : []),
+    ],
+  }))
+);

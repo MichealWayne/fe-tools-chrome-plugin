@@ -32,7 +32,7 @@
     <ul class="reference-tool__list">
       <li v-for="(item, index) in resultList" :key="`${item.link}-${index}`">
         <button type="button" class="reference-tool__result" @click="handleResultClick(item)">
-          <em v-if="item.label" class="u-icon_il icon-label" :class="getResultLabel(item.label)">{{
+          <em v-if="item.label" class="tool-tag" :class="getResultLabel(item.label)">{{
             item.label
           }}</em>
           <span v-html="getResultName(item)"></span>
@@ -170,9 +170,9 @@ export default defineComponent({
     getResultLabel(type: string) {
       return (
         {
-          css: 's-simple',
-          moo: 's-red',
-          'moo-f': 's-blue',
+          css: 'tool-tag--warning',
+          moo: 'tool-tag--danger',
+          'moo-f': 'tool-tag--primary',
         } as Record<string, string>
       )[type];
     },
@@ -257,13 +257,6 @@ export default defineComponent({
   gap: var(--spacing-sm);
   width: 100%;
   min-width: 0;
-}
-
-.m-moo .reference-tool__search input {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 36px;
-  padding: 8px 12px;
 }
 
 .m-moo .reference-tool__list {

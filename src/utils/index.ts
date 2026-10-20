@@ -28,15 +28,15 @@ export function getUrlParam(name: string, decode?: (s: string) => string) {
 export function handleQRCode(url: string, type = 'canvas') {
   const { AraleQRCode } = window;
   if (typeof AraleQRCode === 'undefined') {
-    alert(langManager.t('errors.qrLibraryFailed'));
-    return null;
+    throw new Error(langManager.t('errors.qrLibraryFailed'));
   }
 
   return {
-    getImgUrl() {
+    getImgUrl(size = 256) {
       const qrnode = new AraleQRCode({
         text: url,
         render: type,
+        size: Math.min(1024, Math.max(128, size)),
       });
       return qrnode.toDataURL('image/png');
     },

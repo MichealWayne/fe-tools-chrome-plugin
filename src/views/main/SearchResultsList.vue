@@ -17,7 +17,7 @@
         @mouseenter="emit('hover', index)"
         @click="emit('select', item)"
       >
-        <em v-if="item.label" class="u-icon_il icon-label" :class="getResultLabel(item.label)">{{
+        <em v-if="item.label" class="tool-tag" :class="getResultLabel(item.label)">{{
           item.label
         }}</em>
         <span v-html="getResultText(item)"></span>

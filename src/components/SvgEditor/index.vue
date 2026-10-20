@@ -27,15 +27,19 @@
               <button
                 v-if="svgInput"
                 type="button"
-                class="svg-editor__btn-link"
+                class="tool-button tool-button--text svg-editor__btn-link"
                 @click="requestClear"
               >
                 {{ t('svgEditor.clearInput') }}
               </button>
-              <button type="button" class="svg-editor__btn-link" @click="loadExample">
+              <button
+                type="button"
+                class="tool-button tool-button--text svg-editor__btn-link"
+                @click="loadExample"
+              >
                 {{ t('svgEditor.loadExample') }}
               </button>
-              <label class="svg-editor__upload-btn">
+              <label class="tool-button tool-button--text svg-editor__upload-btn">
                 {{ t('svgEditor.uploadSvg') }}
                 <input
                   type="file"
@@ -53,8 +57,14 @@
           />
           <div v-if="confirmClear" class="svg-editor__confirm" role="alertdialog">
             <span>{{ t('svgEditor.messages.clearConfirm') }}</span>
-            <button type="button" @click="clearInput">{{ t('experience.confirm') }}</button>
-            <button type="button" @click="confirmClear = false">
+            <button class="tool-button tool-button--small" type="button" @click="clearInput">
+              {{ t('experience.confirm') }}
+            </button>
+            <button
+              class="tool-button tool-button--small"
+              type="button"
+              @click="confirmClear = false"
+            >
               {{ t('experience.cancel') }}
             </button>
           </div>
@@ -72,7 +82,7 @@
                 :aria-expanded="optionsExpanded"
                 @click="toggleOptionsPanel"
               >
-                <h4>{{ t('svgEditor.optionsTitle') }}</h4>
+                <span>{{ t('svgEditor.optionsTitle') }}</span>
                 <span class="svg-editor__options-toggle">
                   <i
                     class="u-icon"
@@ -147,18 +157,14 @@
           <div class="svg-editor__panel-header">
             <span>{{ t('svgEditor.outputTitle') }}</span>
             <div class="svg-editor__panel-controls">
+              <CopyButton
+                :value="optimizedSvg"
+                :label="t('svgEditor.actions.copy')"
+                class="tool-button--text svg-editor__btn-link"
+              />
               <button
                 type="button"
-                class="svg-editor__btn-link"
-                :class="{ 'svg-editor__btn-link--disabled': !optimizedSvg }"
-                :disabled="!optimizedSvg"
-                @click="copyToClipboard"
-              >
-                {{ t('svgEditor.actions.copy') }}
-              </button>
-              <button
-                type="button"
-                class="svg-editor__btn-link"
+                class="tool-button tool-button--text svg-editor__btn-link"
                 :class="{ 'svg-editor__btn-link--disabled': !optimizedSvg }"
                 :disabled="!optimizedSvg"
                 @click="downloadSvg"
@@ -184,15 +190,7 @@
       </div>
     </div>
 
-    <div v-if="showPreview" class="svg-editor__preview">
-      <div class="svg-editor__preview-header">
-        <h4>{{ t('svgEditor.previewTitle') }}</h4>
-        <button type="button" class="svg-editor__btn-link" @click="showPreview = false">
-          {{ t('svgEditor.actions.close') }}
-        </button>
-      </div>
-      <div class="svg-editor__preview-content" v-html="sanitizedPreviewSvg"></div>
-    </div>
+    <svg-preview v-if="showPreview" :svg="optimizedSvg || svgInput" @close="showPreview = false" />
 
     <details class="svg-editor__tips">
       <summary>{{ t('svgEditor.tips.title') }}</summary>
@@ -212,9 +210,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed } from 'vue';
+import CopyButton from '@/components/Experience/CopyButton.vue';
+import { ref, reactive, watch } from 'vue';
+import SvgPreview from './SvgPreview.vue';
+import { useTextDraft } from '@/composables/useTextDraft';
 import { langManager } from '@/utils/i18n';
-import { sanitizeSvgMarkup } from '@/utils/sanitize';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 import {
   cleanupIDs,
@@ -241,6 +241,14 @@ defineProps<{
 
 const svgInput = ref('');
 const optimizedSvg = ref('');
+useTextDraft('svg-input', svgInput);
+watch(svgInput, () => {
+  optimizedSvg.value = '';
+  showPreview.value = false;
+  stats.show = false;
+  successVisible.value = false;
+  successMessage.value = '';
+});
 const error = ref('');
 const successVisible = ref(false);
 const successMessage = ref('');
@@ -283,13 +291,6 @@ const stats = reactive({
 const toggleOptionsPanel = () => {
   optionsExpanded.value = !optionsExpanded.value;
 };
-
-/**
- * Sanitized SVG preview for safe rendering.
- */
-const sanitizedPreviewSvg = computed(() => {
-  return sanitizeSvgMarkup(optimizedSvg.value || svgInput.value);
-});
 
 /**
  * Reset the editor input, output, and stats.
@@ -448,20 +449,6 @@ const previewSvg = () => {
   }
 
   showPreview.value = true;
-};
-
-/**
- * Copy the optimized SVG to the clipboard.
- */
-const copyToClipboard = async () => {
-  if (!optimizedSvg.value) return;
-
-  try {
-    await navigator.clipboard.writeText(optimizedSvg.value);
-    showSuccess(t('svgEditor.messages.copySuccess'));
-  } catch (err) {
-    error.value = t('svgEditor.messages.copyFailed');
-  }
 };
 
 /**

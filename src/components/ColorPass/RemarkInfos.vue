@@ -19,10 +19,6 @@ const t = (key: string) => langManager.t(key);
  * Color swatch preview section.
  */
 .m-color-show {
-  height: 32px;
-  width: 32px;
-  border-radius: 50%;
-  border: 1px solid #e2e9ff;
-  box-shadow: 0 6px 14px rgba(28, 63, 124, 0.12);
+  box-sizing: border-box;
 }
 </style>

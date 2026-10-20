@@ -154,7 +154,7 @@ const formatJson = () => {
 .json-textarea,
 .raw-textarea {
   width: 100%;
-  min-height: 200px;
+  min-height: clamp(120px, 25dvh, 240px);
   padding: 10px;
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-sm);
@@ -165,7 +165,6 @@ const formatJson = () => {
 
 .json-textarea:focus,
 .raw-textarea:focus {
-  outline: none;
   border-color: var(--color-primary);
 }
 
@@ -199,7 +198,6 @@ const formatJson = () => {
 }
 
 .form-input:focus {
-  outline: none;
   border-color: var(--color-primary);
 }
 

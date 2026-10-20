@@ -1,14 +1,28 @@
 <template>
   <section class="json-converter">
+    <json-workbench
+      :input="jsValue"
+      :output="jsonValue"
+      :error-position="parseLocation"
+      @import="importJson"
+      @select="selectText"
+      @error="error = $event"
+    />
     <div class="json-converter__content">
       <div class="json-converter__panel">
         <div class="json-converter__panel-header">
           <span>{{ t('jsonCtn.jsObject') }}</span>
-          <a-button v-if="jsValue" type="link" size="small" class="clear-btn" @click="clearInput">
-            <span>{{ t('common.clear') }}</span>
-          </a-button>
+          <button
+            v-if="jsValue"
+            type="button"
+            class="tool-button tool-button--text clear-btn"
+            @click="clearInput"
+          >
+            {{ t('common.clear') }}
+          </button>
         </div>
         <textarea
+          ref="inputEditor"
           v-model="jsValue"
           class="json-converter__textarea"
           :placeholder="t('jsonCtn.inputPlaceholder')"
@@ -18,26 +32,24 @@
 
       <div class="json-converter__divider">
         <div class="json-converter__action-icons">
-          <a-tooltip :title="t('jsonCtn.actions.convert')">
-            <button
-              type="button"
-              class="action-icon to-json"
-              :aria-label="t('jsonCtn.actions.convert')"
-              @click="handleChange()"
-            >
-              →
-            </button>
-          </a-tooltip>
-          <a-tooltip :title="t('jsonCtn.actions.reverse')">
-            <button
-              type="button"
-              class="action-icon to-js"
-              :aria-label="t('jsonCtn.actions.reverse')"
-              @click="handleReverse()"
-            >
-              ←
-            </button>
-          </a-tooltip>
+          <button
+            type="button"
+            class="tool-button tool-button--small action-icon to-json"
+            :aria-label="t('jsonCtn.actions.convert')"
+            :title="t('jsonCtn.actions.convert')"
+            @click="handleChange()"
+          >
+            {{ t('jsonCtn.actions.convert') }}
+          </button>
+          <button
+            type="button"
+            class="tool-button tool-button--small action-icon to-js"
+            :aria-label="t('jsonCtn.actions.reverse')"
+            :title="t('jsonCtn.actions.reverse')"
+            @click="handleReverse()"
+          >
+            {{ t('jsonCtn.actions.reverse') }}
+          </button>
         </div>
       </div>
 
@@ -45,45 +57,31 @@
         <div class="json-converter__panel-header">
           <span>{{ t('jsonCtn.jsonResult') }}</span>
           <div class="json-converter__panel-controls">
-            <a-tooltip :title="t('jsonCtn.actions.copyToClipboard')">
-              <a-button
-                type="link"
-                size="small"
-                :disabled="!jsonValue"
-                class="copy-btn"
-                @click="copyToClipboard"
-              >
-                {{ t('jsonCtn.actions.copy') }}
-              </a-button>
-            </a-tooltip>
-            <a-dropdown v-if="jsonValue">
-              <a-button type="link" size="small" class="format-btn">
-                {{ t('jsonCtn.actions.format') }}
-              </a-button>
-              <template #overlay>
-                <a-menu>
-                  <a-menu-item @click="formatJson(null)">{{
-                    t('jsonCtn.actions.formatDefault')
-                  }}</a-menu-item>
-                  <a-menu-item @click="formatJson(0)">{{
-                    t('jsonCtn.actions.formatMinify')
-                  }}</a-menu-item>
-                  <a-menu-item @click="formatJson(2)">{{
-                    t('jsonCtn.actions.formatIndent2')
-                  }}</a-menu-item>
-                  <a-menu-item @click="formatJson(4)">{{
-                    t('jsonCtn.actions.formatIndent4')
-                  }}</a-menu-item>
-                </a-menu>
-              </template>
-            </a-dropdown>
+            <CopyButton
+              :value="jsonValue"
+              :label="t('jsonCtn.actions.copy')"
+              class="tool-button--text copy-btn"
+              :title="t('jsonCtn.actions.copyToClipboard')"
+            />
+            <select
+              v-if="jsonValue"
+              class="format-btn"
+              :aria-label="t('jsonCtn.actions.format')"
+              :value="indentLevel"
+              @change="handleFormatChange"
+            >
+              <option value="default">{{ t('jsonCtn.actions.formatDefault') }}</option>
+              <option value="0">{{ t('jsonCtn.actions.formatMinify') }}</option>
+              <option value="2">{{ t('jsonCtn.actions.formatIndent2') }}</option>
+              <option value="4">{{ t('jsonCtn.actions.formatIndent4') }}</option>
+            </select>
           </div>
         </div>
         <textarea
+          ref="outputEditor"
           v-model="jsonValue"
           class="json-converter__textarea"
           :placeholder="t('jsonCtn.outputPlaceholder')"
-          :disabled="!jsonValue"
         />
       </div>
     </div>
@@ -105,7 +103,11 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import CopyButton from '@/components/Experience/CopyButton.vue';
+import { onBeforeUnmount, ref, watch } from 'vue';
+import JsonWorkbench from './JsonWorkbench.vue';
+import { jsonErrorOffset, revealTextSelection, type JsonSelection } from './workbench';
+import { useTextDraft } from '@/composables/useTextDraft';
 import { langManager } from '@/utils/i18n';
 
 const t = (key: string, params?: Record<string, string | number>) => langManager.t(key, params);
@@ -121,10 +123,37 @@ defineProps<{
 
 const jsValue = ref('');
 const jsonValue = ref('');
+useTextDraft('json-input', jsValue);
+useTextDraft('json-output', jsonValue);
 const error = ref('');
 const successVisible = ref(false);
 const successMessage = ref('');
 const indentLevel = ref(2);
+const parseLocation = ref<JsonSelection>();
+const inputEditor = ref<HTMLTextAreaElement | null>(null);
+const outputEditor = ref<HTMLTextAreaElement | null>(null);
+const selectText = (selection: JsonSelection) => {
+  const editor = selection.target === 'input' ? inputEditor.value : outputEditor.value;
+  if (editor) revealTextSelection(editor, selection.start, selection.end);
+};
+const importJson = (value: string) => {
+  jsValue.value = value;
+  jsonValue.value = value;
+  error.value = '';
+  parseLocation.value = undefined;
+};
+watch([jsValue, jsonValue], () => {
+  parseLocation.value = undefined;
+});
+const setParserLocation = (cause: unknown) => {
+  const offset = jsonErrorOffset(jsonValue.value, cause);
+  if (offset !== undefined)
+    parseLocation.value = {
+      target: 'output',
+      start: offset,
+      end: Math.min(offset + 1, jsonValue.value.length),
+    };
+};
 
 const BLOCKED_EXPRESSION_TOKENS =
   /\b(?:chrome|browser|window|document|globalThis|location|history|navigator|localStorage|sessionStorage|indexedDB|caches|fetch|XMLHttpRequest|WebSocket|importScripts|eval|Function|constructor|prototype|__proto__)\b/;
@@ -149,19 +178,16 @@ const assertSafeExpression = (value: string) => {
 /**
  * Debounced handler to avoid over-processing input changes.
  */
-const debouncedWatch = (() => {
-  let timeout: number | null = null;
-  return (fn: Function) => {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      fn();
-      timeout = null;
-    }, 1000) as unknown as number;
-  };
-})();
+let conversionTimer: ReturnType<typeof setTimeout> | undefined;
+const debouncedWatch = (fn: () => void) => {
+  clearTimeout(conversionTimer);
+  conversionTimer = setTimeout(fn, 1000);
+};
+onBeforeUnmount(() => clearTimeout(conversionTimer));
 
 watch(jsValue, val => {
   if (!val) {
+    clearTimeout(conversionTimer);
     error.value = '';
     jsonValue.value = '';
     return;
@@ -195,25 +221,16 @@ const handleChange = (noMsg = false) => {
   }
 
   try {
-    /**
-     * Strip comments before parsing.
-     */
-    jsStr = removeComments(jsStr);
-
-    /**
-     * Extract the object portion for inputs that include extra text.
-     */
-    if (jsStr.includes('{') && jsStr.includes('}')) {
-      jsStr = jsStr.slice(jsStr.indexOf('{'), jsStr.lastIndexOf('}') + 1);
+    let obj: unknown;
+    try {
+      obj = JSON.parse(jsStr);
+    } catch {
+      jsStr = removeComments(jsStr);
+      if (jsStr.includes('{') && jsStr.includes('}'))
+        jsStr = jsStr.slice(jsStr.indexOf('{'), jsStr.lastIndexOf('}') + 1);
+      obj = safeEval(jsStr);
     }
-
-    /**
-     * Evaluate the object in a constrained function scope.
-     */
-    const obj = safeEval(jsStr);
-    if (!obj) {
-      throw new Error(t('jsonCtn.messages.parseFailed'));
-    }
+    if (obj === undefined) throw new Error(t('jsonCtn.messages.parseFailed'));
 
     /**
      * Apply indentation settings and serialize output.
@@ -253,6 +270,7 @@ const handleReverse = () => {
     showSuccess(t('jsonCtn.messages.reverseSuccess'));
   } catch (e) {
     console.error(e);
+    setParserLocation(e);
     error.value = t('jsonCtn.messages.reverseFailed', { message: (e as Error).message });
   }
 };
@@ -330,21 +348,6 @@ const jsonToJsString = (obj: any, indent = 2) => {
 };
 
 /**
- * Copy the formatted JSON output to the clipboard.
- */
-const copyToClipboard = async () => {
-  if (!jsonValue.value) return;
-
-  try {
-    await navigator.clipboard.writeText(jsonValue.value);
-    showSuccess(t('jsonCtn.messages.copySuccess'));
-  } catch (err) {
-    console.error('Clipboard copy failed:', err);
-    error.value = t('jsonCtn.messages.copyFailed');
-  }
-};
-
-/**
  * Reformat JSON output with a new indentation width.
  * @param spaces - Number of spaces to indent with.
  */
@@ -357,8 +360,14 @@ const formatJson = (spaces: number | null) => {
     jsonValue.value = JSON.stringify(obj, null, spaces ?? 2);
   } catch (e) {
     console.error(e);
+    setParserLocation(e);
     error.value = t('jsonCtn.messages.formatFailed', { message: (e as Error).message });
   }
+};
+
+const handleFormatChange = (event: Event) => {
+  const value = (event.target as HTMLSelectElement).value;
+  formatJson(value === 'default' ? null : Number(value));
 };
 
 /**

@@ -33,5 +33,5 @@ export const getResultText = (item: SearchResultItem): string =>
 
 export const getResultLabel = (type?: SearchResultItem['label']): string => {
   if (!type) return '';
-  return { tools: 's-simple', mark: 's-red' }[type];
+  return { tools: 'tool-tag--primary', mark: 'tool-tag--warning' }[type];
 };

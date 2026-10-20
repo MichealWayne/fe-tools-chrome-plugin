@@ -3,9 +3,8 @@
     class="m-ctn m-ctn--scrollable"
     :class="{
       'm-ctn--home': !showCompName,
+      'focus-inset': !showCompName,
       'u-pt20': !showCompName,
-      'm-ctn--wide':
-        activeTool?.workspaceSize === 'wide' && activeTool.destination === 'standalone',
     }"
   >
     <div v-if="!showCompName" class="settings-header">
@@ -84,11 +83,10 @@
           @hover="activeResultIndex = $event"
           @select="handleResultClick"
         />
-        <tool-state
-          v-else-if="keywords && !feToolsLoading && !resultsDismissed"
-          state="empty"
-          :message="t('experience.noResults')"
-        />
+        <div v-else-if="keywords && !feToolsLoading && !resultsDismissed">
+          <tool-state state="empty" :message="t('experience.noResults')" />
+          <p class="search-hint">{{ t('search.dismissHint') }}</p>
+        </div>
       </section>
 
       <tool-launcher-grid
@@ -103,34 +101,34 @@
     <div v-if="showCompName" class="module-host">
       <tool-workspace
         ref="activeWorkspace"
+        compact
         :title="activeTool ? t(activeTool.nameKey) : t('title')"
         :description="
           activeTool?.workspaceDescriptionKey ? t(activeTool.workspaceDescriptionKey) : ''
         "
-        :wide="activeTool?.workspaceSize === 'wide' && activeTool.destination === 'standalone'"
       >
+        <template #leading>
+          <button
+            class="u-btn workspace-nav-button"
+            type="button"
+            :title="t('common.backHome')"
+            @click.stop="handleBackHome"
+          >
+            <i class="u-icon icon-home" aria-hidden="true"></i>
+            <span>{{ t('common.back') }}</span>
+          </button>
+        </template>
         <template #actions>
-          <div class="workspace-nav-actions">
-            <button
-              class="u-btn workspace-nav-button"
-              type="button"
-              :title="t('common.backHome')"
-              @click.stop="handleBackHome"
-            >
-              <i class="u-icon icon-home" aria-hidden="true"></i>
-              <span>{{ t('common.back') }}</span>
-            </button>
-            <button
-              ref="settingsEntry"
-              class="u-btn workspace-nav-button"
-              type="button"
-              :title="t('settings.entryTitle')"
-              :aria-label="t('settings.entryTitle')"
-              @click="openSettings"
-            >
-              <i class="u-icon icon-settings" aria-hidden="true"></i>
-            </button>
-          </div>
+          <button
+            ref="settingsEntry"
+            class="u-btn workspace-nav-button"
+            type="button"
+            :title="t('settings.entryTitle')"
+            :aria-label="t('settings.entryTitle')"
+            @click="openSettings"
+          >
+            <i class="u-icon icon-settings" aria-hidden="true"></i>
+          </button>
         </template>
         <component :is="showCompName" :keywords="keywords" :back="handleBackHome" />
       </tool-workspace>
@@ -157,6 +155,7 @@ import MainSettingsDialog from './main/MainSettingsDialog.vue';
 import SearchResultsList from './main/SearchResultsList.vue';
 import ToolLauncherGrid from './main/ToolLauncherGrid.vue';
 import { useToolNavigation } from './main/useToolNavigation';
+import { provideTextDrafts } from '@/composables/useTextDraft';
 import { useToolSearch } from './main/useToolSearch';
 import {
   getResultLabel,
@@ -177,6 +176,10 @@ export default defineComponent({
     ToolLauncherGrid,
     ToolState,
     ToolWorkspace,
+  },
+
+  setup() {
+    provideTextDrafts();
   },
 
   data(): ComponentDataTypes {
@@ -339,6 +342,7 @@ export default defineComponent({
       this.activeResultIndex = toolSearch.resetSelection();
       this.resultsDismissed = false;
       this.handleInputBlur();
+      nextTick(() => document.querySelector<HTMLElement>('#search')?.focus());
     },
     handlePinyinSearchToggle(value?: boolean) {
       if (typeof value === 'boolean') this.enablePinyinSearch = value;

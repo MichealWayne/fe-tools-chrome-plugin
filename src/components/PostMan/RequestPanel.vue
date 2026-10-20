@@ -44,7 +44,7 @@
               ? t('postman.request.missingUrl')
               : ''
         "
-        class="send-btn"
+        class="tool-button tool-button--primary send-btn"
         @click="loading ? $emit('cancel-request') : $emit('send-request')"
       >
         <i v-if="loading" class="fas fa-stop"></i>
@@ -286,6 +286,7 @@ defineExpose({
 
 .request-line {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-lg);
   align-items: center;
@@ -304,13 +305,13 @@ defineExpose({
 }
 
 .method-select:focus {
-  outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px var(--color-shadow-dark);
 }
 
 .url-input {
-  flex: 1;
+  flex: 1 1 180px;
+  min-width: 0;
   padding: 10px 15px;
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
@@ -318,7 +319,6 @@ defineExpose({
 }
 
 .url-input:focus {
-  outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px var(--color-shadow-dark);
 }
@@ -337,25 +337,7 @@ defineExpose({
 }
 
 .send-btn {
-  padding: 10px 20px;
-  background: var(--color-primary);
-  color: var(--color-text-inverse);
-  border: none;
-  border-radius: var(--border-radius-md);
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-bold);
   min-width: 100px;
-  transition: background-color var(--transition-normal);
-}
-
-.send-btn:hover:not(:disabled) {
-  background: var(--color-primary-dark);
-}
-
-.send-btn:disabled {
-  background: var(--color-text-tertiary);
-  cursor: not-allowed;
 }
 
 .request-tabs {
@@ -386,7 +368,7 @@ defineExpose({
 }
 
 .request-tab-content {
-  min-height: 200px;
+  min-height: min(200px, 25dvh);
 }
 
 .auth-section {
@@ -418,7 +400,6 @@ defineExpose({
 }
 
 .auth-select:focus {
-  outline: none;
   border-color: var(--color-primary);
 }
 
@@ -437,7 +418,6 @@ defineExpose({
 }
 
 .auth-input:focus {
-  outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 2px var(--color-shadow-dark);
 }

@@ -14,7 +14,7 @@
         v-for="quickCmd in quickCommands"
         :key="quickCmd"
         type="button"
-        class="u-btn u-btn_quick"
+        class="tool-chip tool-tag--primary u-btn_quick"
         @click="filterTxt = quickCmd"
       >
         {{ quickCmd }}
@@ -40,15 +40,11 @@
     <ul class="reference-tool__list">
       <li v-for="item in visibleCommands" :key="item.name" class="m-command_item">
         <div class="reference-tool__item-header">
-          <span
-            ><strong>{{ item.name }}</strong> {{ item.description }}</span
-          >
+          <strong class="reference-tool__item-title">{{ item.name }}</strong>
           <span class="reference-tool__actions">
-            <button class="u-btn" type="button" @click="copyCommand(item.syntax)">
-              {{ t('common.copy') }}
-            </button>
+            <CopyButton :value="item.syntax" :label="t('common.copy')" class="tool-button--small" />
             <button
-              class="u-btn"
+              class="tool-button tool-button--small"
               type="button"
               :aria-expanded="item.isOpened"
               @click="item.isOpened = !item.isOpened"
@@ -56,6 +52,9 @@
               {{ item.isOpened ? t('common.collapse') : t('linuxCommand.viewDetails') }}
             </button>
           </span>
+          <p v-if="item.description" class="reference-tool__description">
+            {{ item.description }}
+          </p>
         </div>
         <figure>
           <pre :class="$style.pre">{{ item.syntax }}</pre>
@@ -79,18 +78,16 @@
         </div>
       </li>
     </ul>
-    <inline-feedback :feedback="feedback" />
   </section>
 </template>
 
 <script setup lang="ts">
+import CopyButton from '@/components/Experience/CopyButton.vue';
 import { computed, onMounted, ref } from 'vue';
 import ajax from '@/api';
 import { langManager } from '@/utils/i18n';
-import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 import ToolState from '@/components/Experience/ToolState.vue';
 import type { LinuxCommand } from '@/types/api';
-import type { InlineFeedbackMessage } from '@/types/experience';
 
 defineOptions({ name: 'LinuxCommand' });
 
@@ -101,7 +98,6 @@ const filterTxt = ref(props.keywords);
 const commandList = ref<CommandItem[]>([]);
 const loading = ref(false);
 const loadError = ref('');
-const feedback = ref<InlineFeedbackMessage | null>(null);
 const quickCommands = [
   'ls',
   'cd',
@@ -142,15 +138,6 @@ const loadCommands = async () => {
   }
 };
 
-const copyCommand = async (syntax: string) => {
-  try {
-    await navigator.clipboard.writeText(syntax);
-    feedback.value = { message: t('experience.copied'), tone: 'success' };
-  } catch (error) {
-    feedback.value = { message: (error as Error).message, tone: 'error' };
-  }
-};
-
 onMounted(loadCommands);
 </script>
 
@@ -182,19 +169,6 @@ onMounted(loadCommands);
   flex-wrap: wrap;
   gap: 4px;
   margin: 10px 0;
-}
-.u-btn_quick {
-  min-height: 0;
-  padding: 4px 8px;
-  border: 1px solid var(--color-primary-light);
-  border-radius: 999px;
-}
-
-.u-btn_quick:hover {
-  color: var(--color-text-inverse);
-  background: var(--color-primary);
-  box-shadow: 0 3px 8px var(--color-primary-shadow);
-  transform: translateY(-1px);
 }
 .m-command_item {
   padding: 12px;

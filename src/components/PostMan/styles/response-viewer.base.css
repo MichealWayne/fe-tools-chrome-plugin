@@ -12,60 +12,20 @@
 #buttonFormatted,
 #buttonCollapseAll,
 #btnDownload {
-  cursor: pointer;
-  -webkit-border-radius: 2px;
-  -webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
-  -webkit-user-select: none;
-  background: -webkit-linear-gradient(#fafafa, #f4f4f4 40%, #e5e5e5);
-  outline: none;
-  border: 1px solid #aaa;
-  color: #444;
-  font-size: 12px;
-  margin-bottom: 0px;
   min-width: 4em;
-  padding: 0px 10px;
   position: relative;
   z-index: 10;
-  display: inline-block;
-  height: 30px;
-  text-shadow: 1px 1px rgba(255, 255, 255, 0.3);
-}
-#buttonCollapseAll,
-#btnDownload {
-  margin-left: 0;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-#buttonFormatted,
-#buttonCollapseAll {
-  margin-right: 0;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  border-right: none;
-}
-#buttonFormatted:hover,
-#btnDownload:hover,
-#buttonCollapseAll:hover {
-  -webkit-box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
-  background: #ebebeb -webkit-linear-gradient(#fefefe, #f8f8f8 40%, #e9e9e9);
-  border-color: #999;
-  color: #222;
-}
-#buttonFormatted:active {
-  -webkit-box-shadow: inset 0px 1px 3px rgba(0, 0, 0, 0.2);
-  background: #ebebeb -webkit-linear-gradient(#f4f4f4, #efefef 40%, #dcdcdc);
-  color: #333;
 }
 #buttonFormatted.selected,
 #buttonCollapseAll.selected {
-  -webkit-box-shadow: inset 0px 1px 5px rgba(0, 0, 0, 0.2);
-  background: #ebebeb -webkit-linear-gradient(#e4e4e4, #dfdfdf 40%, #dcdcdc);
-  color: #333;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-surface);
 }
 #jsonpOpener,
 #jsonpCloser {
   padding: 4px 0 0 8px;
-  color: black;
+  color: var(--color-text-primary);
   margin-bottom: -6px;
 }
 #jsonpCloser {
@@ -75,7 +35,7 @@
   padding-left: 28px;
   padding-top: 6px;
 }
-pre {
+#jfContent pre {
   padding: 36px 5px 5px 5px;
 }
 .kvov {
@@ -90,11 +50,11 @@ pre {
   margin-bottom: 25px;
 }
 #jfContent .kvov .s a {
-  color: #00b;
+  color: var(--color-primary);
   text-decoration: underline;
 }
 #jfContent .kvov .s a:hover {
-  color: #b00;
+  color: var(--color-error-dark);
 }
 .collapsed {
   white-space: nowrap;
@@ -108,7 +68,7 @@ pre {
 }
 .collapsed > .ell {
   margin: 0 4px;
-  color: #888;
+  color: var(--color-text-tertiary);
 }
 .collapsed .kvov {
   display: inline;
@@ -144,23 +104,23 @@ pre {
 .blockInner {
   display: block;
   padding-left: 24px;
-  border-left: 1px dotted #bbb;
+  border-left: 1px dotted var(--color-border-dark);
   margin-left: 2px;
 }
 #formattedJson,
 #jsonpOpener,
 #jsonpCloser {
-  color: #333;
-  font: 13px/18px monospace;
+  color: var(--color-text-primary);
+  font: var(--font-size-control) / 18px var(--font-family-mono);
 }
 #formattedJson {
-  color: #444;
+  color: var(--color-text-secondary);
 }
 .b {
   font-weight: bold;
 }
 .s {
-  color: #0b7500;
+  color: var(--color-code-string);
   word-wrap: break-word;
 }
 #jfContent a:link,
@@ -171,16 +131,16 @@ pre {
 #jfContent a:hover,
 #jfContent a:active {
   text-decoration: underline;
-  color: #050;
+  color: var(--color-success-dark);
 }
 .bl,
 .nl,
 .n {
   font-weight: bold;
-  color: #1a01cc;
+  color: var(--color-code-literal);
 }
 .k {
-  color: black;
+  color: var(--color-text-primary);
 }
 #formattingMsg {
   display: none;
@@ -188,10 +148,10 @@ pre {
 #formattingMsg .x-loading {
   width: 12px;
   height: 12px;
-  border: 1px solid #f00;
+  border: 1px solid var(--color-error);
   border-radius: 50%;
   box-shadow: 0 0 10px 2px;
-  color: #cc0000;
+  color: var(--color-error-dark);
   border-right-color: transparent;
   border-top-color: transparent;
   animation: spin-right 1s linear infinite normal;
@@ -204,7 +164,7 @@ pre {
   width: 8px;
   height: 8px;
   margin: 1px;
-  border: 2px solid #f00;
+  border: 2px solid var(--color-error);
   content: ' ';
   border-radius: 50%;
   border-left-color: transparent;
@@ -232,7 +192,7 @@ pre {
   white-space: pre-wrap;
 }
 #jfContent .x-json-tips {
-  color: red;
+  color: var(--color-error);
 }
 #jfContent_pre {
   padding: 0;
@@ -254,18 +214,18 @@ pre {
 }
 .mod-json .callback-name {
   font-weight: bolder;
-  color: #a00;
+  color: var(--color-error-dark);
 }
 
 #jfContent .x-hover {
-  outline: 1px solid #cdc;
-  background: #fff;
+  outline: 1px solid var(--color-border);
+  background: var(--color-background-light);
 }
 #jfContent .x-outline {
-  outline: 1px solid #8ac;
-  box-shadow: rgba(100, 100, 100, 0.4) -3px 3px 5px;
+  outline: 1px solid var(--color-primary-light);
+  box-shadow: var(--shadow-md);
   font-weight: bold;
-  background-color: #fffff8;
+  background-color: var(--color-primary-surface);
 }
 #boxOpt {
   display: none !important;

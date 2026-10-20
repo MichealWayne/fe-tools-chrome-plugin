@@ -1,11 +1,12 @@
 {
   "name": "fe-tools-chrome-plugin",
   "private": true,
-  "version": "1.7.0",
+  "version": "1.8.0",
   "scripts": {
     "start": "npm run dev",
     "dev": "vite",
     "build": "vite build",
+    "package:extension": "node scripts/release/package-extension.mjs",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "check:version": "node -e \"const p=require('./package.json');const m=require('./public/manifest.json');if(p.version!==m.version)throw new Error('package.json and manifest version differ');\"",

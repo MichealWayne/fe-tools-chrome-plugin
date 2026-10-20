@@ -1,4 +1,9 @@
 import type { ProbeSignals } from './detector';
+import type { VersionObservation } from './types';
+import { normalizeVersionObservations } from './versions';
+import { collectMainWorldSignals } from './runtime-probe';
+
+export { collectMainWorldSignals } from './runtime-probe';
 
 type PartialProbeSignals = Partial<ProbeSignals>;
 
@@ -47,8 +52,7 @@ export function collectIsolatedPageSignals(): PartialProbeSignals {
     .join('\n')
     .slice(0, 120000)
     .toLowerCase();
-  const htmlSnippet = document.documentElement.innerHTML.slice(0, 120000).toLowerCase();
-  const contentPool = `${inlineScriptText}\n${htmlSnippet}`;
+  const contentPool = inlineScriptText;
   const contentPatterns = [
     '__next_data__',
     '__next_f',
@@ -113,12 +117,14 @@ export function collectIsolatedPageSignals(): PartialProbeSignals {
   ];
   const content = contentPatterns.filter(pattern => contentPool.includes(pattern));
 
-  const metas = Array.from(document.querySelectorAll('meta')).map(meta => {
-    const name = meta.getAttribute('name') || '';
-    const property = meta.getAttribute('property') || '';
-    const value = meta.getAttribute('content') || '';
-    return `${name}|${property}|${value}`;
-  });
+  const metas = Array.from(document.querySelectorAll('meta'))
+    .map(meta => {
+      const name = meta.getAttribute('name') || '';
+      const property = meta.getAttribute('property') || '';
+      const value = meta.getAttribute('content') || '';
+      return name.toLowerCase() === 'generator' ? `${name}|${property}|${value.slice(0, 160)}` : '';
+    })
+    .filter(Boolean);
 
   const selectors: string[] = [];
   const addSelector = (condition: boolean, marker: string) => {
@@ -143,6 +149,51 @@ export function collectIsolatedPageSignals(): PartialProbeSignals {
   );
   addSelector(Boolean(document.getElementById('__nuxt')), 'nuxt_root');
   addSelector(Boolean(document.querySelector('[data-n-head]')), 'nuxt_head_marker');
+  addSelector(Boolean(document.querySelector('astro-island')), 'astro_island');
+  addSelector(Boolean(document.querySelector('[_echarts_instance_]')), 'echarts_instance');
+  addSelector(Boolean(document.querySelector('.monaco-editor .view-lines')), 'monaco_editor');
+  addSelector(
+    Boolean(document.querySelector('.CodeMirror .CodeMirror-code,.cm-editor .cm-content')),
+    'codemirror_editor'
+  );
+  addSelector(
+    Boolean(document.querySelector('.el-button,.el-input,.el-select')),
+    'element_component'
+  );
+  addSelector(Boolean(document.querySelector('.ant-btn,.ant-input,.ant-select')), 'antd_component');
+  addSelector(
+    Boolean(document.querySelector('[data-bs-toggle],[data-bs-target]')),
+    'bootstrap_component'
+  );
+
+  const versionObservations: VersionObservation[] = Array.from(
+    document.querySelectorAll('[ng-version]')
+  )
+    .slice(0, 30)
+    .map(node => ({
+      technology: 'angular',
+      version: node.getAttribute('ng-version') || '',
+      source: 'dom',
+      detail: 'ng-version',
+      confidence: 'high',
+    }));
+  document.querySelectorAll('meta[name="generator"]').forEach(meta => {
+    const match = (meta.getAttribute('content') || '')
+      .slice(0, 160)
+      .match(/^(Astro|Next\.js|Nuxt(?:\.js)?)\s+v?(\d+\.\d+(?:\.\d+)?(?:-[0-9a-z.-]+)?)$/i);
+    if (match)
+      versionObservations.push({
+        technology: /^astro$/i.test(match[1])
+          ? 'astro'
+          : /^next/i.test(match[1])
+            ? 'nextjs'
+            : 'nuxt',
+        version: match[2],
+        source: 'dom',
+        detail: 'meta generator',
+        confidence: 'high',
+      });
+  });
 
   const htmlAttrPool = new Set<string>();
   const sampleNodes = Array.from(document.querySelectorAll('*')).slice(0, 1000);
@@ -150,7 +201,7 @@ export function collectIsolatedPageSignals(): PartialProbeSignals {
   sampleNodes.forEach(node => {
     Array.from(node.attributes || []).forEach(attr => {
       htmlAttrPool.add(attr.name);
-      if (attr.value) htmlAttrPool.add(`${attr.name}=${attr.value}`);
+      if (attr.name === 'ng-version') htmlAttrPool.add(`${attr.name}=${attr.value.slice(0, 64)}`);
       if (attr.name.startsWith('data-v-')) hasVueScopeMarker = true;
     });
   });
@@ -165,102 +216,8 @@ export function collectIsolatedPageSignals(): PartialProbeSignals {
     htmlAttrs: limitList(Array.from(htmlAttrPool)),
     content,
     resources: limitList(Array.from(new Set(resources))),
+    versionObservations,
   };
-}
-
-export function collectMainWorldSignals(): PartialProbeSignals {
-  const pageWindow = window as unknown as Record<string, unknown>;
-  const globals: string[] = [];
-  const runtime: string[] = [];
-  const versions: Record<string, string> = {};
-
-  const safeRead = (key: string): unknown => {
-    try {
-      return pageWindow[key];
-    } catch {
-      return undefined;
-    }
-  };
-  const asRecord = (value: unknown): Record<string, unknown> | undefined =>
-    value && typeof value === 'object' ? (value as Record<string, unknown>) : undefined;
-  const readProperty = (value: unknown, key: string): unknown => {
-    try {
-      return asRecord(value)?.[key];
-    } catch {
-      return undefined;
-    }
-  };
-  const setVersion = (key: string, value: unknown) => {
-    if (typeof value !== 'string' && typeof value !== 'number') return;
-    const normalized = String(value).trim().slice(0, 64);
-    if (/^[0-9a-z][0-9a-z.+_-]*$/i.test(normalized)) versions[key] = normalized;
-  };
-  const addGlobal = (key: string) => {
-    if (safeRead(key) !== undefined) globals.push(key);
-  };
-
-  [
-    'Vue',
-    'React',
-    'angular',
-    'jQuery',
-    '__NEXT_DATA__',
-    '__NUXT__',
-    '__webpack_require__',
-    'axios',
-    'Redux',
-    'VueRouter',
-    'Vuex',
-    'Pinia',
-    'mobx',
-    'rxjs',
-    'preact',
-    'SolidJS',
-    'Alpine',
-    'Stimulus',
-    'Ember',
-    'Backbone',
-    '___gatsby',
-    '__remixContext',
-    '__APOLLO_CLIENT__',
-    '__REACT_QUERY_STATE__',
-  ].forEach(addGlobal);
-
-  const reactHook = safeRead('__REACT_DEVTOOLS_GLOBAL_HOOK__');
-  const reactRenderers = readProperty(reactHook, 'renderers');
-  const legacyReactRenderers = readProperty(reactHook, '_renderers');
-  if (
-    (typeof readProperty(reactRenderers, 'size') === 'number' &&
-      Number(readProperty(reactRenderers, 'size')) > 0) ||
-    (asRecord(legacyReactRenderers) && Object.keys(asRecord(legacyReactRenderers) || {}).length > 0)
-  ) {
-    runtime.push('react-renderer');
-  }
-
-  const vueHook = safeRead('__VUE_DEVTOOLS_GLOBAL_HOOK__');
-  const vueApps = readProperty(vueHook, 'apps');
-  if (Array.isArray(vueApps) && vueApps.length > 0) runtime.push('vue-app');
-  if (asRecord(safeRead('__NEXT_DATA__'))) runtime.push('next-runtime');
-  if (safeRead('__NUXT__') !== undefined) runtime.push('nuxt-runtime');
-  if (safeRead('angular') !== undefined || safeRead('ng') !== undefined)
-    runtime.push('angular-runtime');
-  if (readProperty(readProperty(safeRead('jQuery'), 'fn'), 'jquery') !== undefined) {
-    runtime.push('jquery-runtime');
-  }
-  if (safeRead('__webpack_require__') !== undefined) runtime.push('webpack-runtime');
-  if (safeRead('axios') !== undefined) runtime.push('axios-runtime');
-
-  setVersion('vue', readProperty(safeRead('Vue'), 'version'));
-  setVersion('react', readProperty(safeRead('React'), 'version'));
-  setVersion(
-    'angular',
-    readProperty(readProperty(safeRead('angular'), 'version'), 'full') ||
-      readProperty(readProperty(safeRead('ng'), 'version'), 'full')
-  );
-  setVersion('jquery', readProperty(readProperty(safeRead('jQuery'), 'fn'), 'jquery'));
-  setVersion('axios', readProperty(safeRead('axios'), 'VERSION'));
-
-  return { globals, runtime, versions };
 }
 
 const normalizeStringList = (value: unknown, limit = 1000): string[] => {
@@ -277,7 +234,9 @@ const normalizeStringList = (value: unknown, limit = 1000): string[] => {
 
 export const mergeProbeSignals = (...parts: PartialProbeSignals[]): ProbeSignals => {
   const result: ProbeSignals = { ...EMPTY_SIGNALS, versions: {} };
-  const listKeys: Array<Exclude<keyof ProbeSignals, 'versions'>> = [
+  const listKeys: Array<
+    Exclude<keyof ProbeSignals, 'versions' | 'versionObservations' | 'coverage'>
+  > = [
     'scripts',
     'links',
     'scriptTypes',
@@ -302,6 +261,9 @@ export const mergeProbeSignals = (...parts: PartialProbeSignals[]): ProbeSignals
       }
     });
   });
+  result.versionObservations = normalizeVersionObservations(
+    parts.flatMap(part => part.versionObservations || [])
+  );
   return result;
 };
 
@@ -310,15 +272,17 @@ const executeProbe = <T extends PartialProbeSignals>(
   world: chrome.scripting.ExecutionWorld,
   func: () => T
 ) =>
-  new Promise<T>((resolve, reject) => {
+  new Promise<{ signals: T; documentId?: string }>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Probe timed out')), 4000);
     chrome.scripting.executeScript({ target: { tabId }, world, func }, results => {
+      clearTimeout(timer);
       const error = chrome.runtime.lastError;
       const result = results?.[0]?.result as T | undefined;
       if (error || !result) {
         reject(new Error(error?.message || `No ${world.toLowerCase()} probe result`));
         return;
       }
-      resolve(result);
+      resolve({ signals: result, documentId: results?.[0]?.documentId });
     });
   });
 
@@ -329,7 +293,10 @@ export const runPageProbes = async (tabId: number): Promise<ProbeSignals> => {
   ]);
   const successful = settled
     .filter(
-      (item): item is PromiseFulfilledResult<PartialProbeSignals> => item.status === 'fulfilled'
+      (
+        item
+      ): item is PromiseFulfilledResult<{ signals: PartialProbeSignals; documentId?: string }> =>
+        item.status === 'fulfilled'
     )
     .map(item => item.value);
 
@@ -341,5 +308,13 @@ export const runPageProbes = async (tabId: number): Promise<ProbeSignals> => {
       ? firstFailure.reason
       : new Error('No probe result');
   }
-  return mergeProbeSignals(...successful);
+  const documents = new Set(successful.map(item => item.documentId).filter(Boolean));
+  if (documents.size > 1) throw new Error('Page changed during detection');
+  return {
+    ...mergeProbeSignals(...successful.map(item => item.signals)),
+    coverage: {
+      isolated: settled[0].status === 'fulfilled' ? 'ok' : 'failed',
+      main: settled[1].status === 'fulfilled' ? 'ok' : 'failed',
+    },
+  };
 };
