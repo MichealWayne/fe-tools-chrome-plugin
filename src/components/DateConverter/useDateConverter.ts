@@ -38,11 +38,11 @@ export const useDateConverter = (
   const inputCustom = ref('');
   const customFormat = ref('YYYY-MM-DD HH:mm:ss');
   const timestampUnit = ref('seconds');
+  const timestampForInput = (date: dayjs.Dayjs) =>
+    timestampUnit.value === 'milliseconds' ? date.valueOf() : Math.floor(date.valueOf() / 1000);
   const selectedTimezone = ref('Asia/Shanghai');
   const error = ref('');
   const currentDate = ref<dayjs.Dayjs | null>(null);
-  const successVisible = ref(false);
-  const successMessage = ref('');
 
   const calculationValue = ref<number | null>(1);
   const calculationUnit = ref('days');
@@ -98,7 +98,7 @@ export const useDateConverter = (
     error.value = '';
     currentDate.value = dayjs();
 
-    inputTimestamp.value = Math.floor(currentDate.value.valueOf() / 1000);
+    inputTimestamp.value = timestampForInput(currentDate.value);
     inputIso.value = currentDate.value.toISOString();
     inputLocalString.value = currentDate.value.format('YYYY-MM-DDTHH:mm');
     inputCustom.value = currentDate.value.format(customFormat.value);
@@ -141,7 +141,7 @@ export const useDateConverter = (
         throw new Error(t('dateConverter.messages.invalidIso'));
       }
       currentDate.value = candidate;
-      inputTimestamp.value = Math.floor(candidate.valueOf() / 1000);
+      inputTimestamp.value = timestampForInput(candidate);
       inputLocalString.value = candidate.format('YYYY-MM-DDTHH:mm');
       inputCustom.value = candidate.format(customFormat.value);
     } catch (e) {
@@ -163,7 +163,7 @@ export const useDateConverter = (
         throw new Error(t('dateConverter.messages.invalidDate'));
       }
       currentDate.value = candidate;
-      inputTimestamp.value = Math.floor(candidate.valueOf() / 1000);
+      inputTimestamp.value = timestampForInput(candidate);
       inputIso.value = candidate.toISOString();
       inputCustom.value = candidate.format(customFormat.value);
     } catch (e) {
@@ -188,7 +188,7 @@ export const useDateConverter = (
         throw new Error(t('dateConverter.messages.invalidDate'));
       }
       currentDate.value = candidate;
-      inputTimestamp.value = Math.floor(candidate.valueOf() / 1000);
+      inputTimestamp.value = timestampForInput(candidate);
       inputIso.value = candidate.toISOString();
       inputLocalString.value = candidate.format('YYYY-MM-DDTHH:mm');
     } catch (e) {
@@ -216,31 +216,16 @@ export const useDateConverter = (
     }
   };
 
-  const copyToClipboard = async () => {
-    if (!currentDate.value) return;
-
-    const textToCopy = `${t('dateConverter.resultLabels.timestampSeconds')} ${outputTimestampSeconds.value}
+  const copyValue = computed(() =>
+    currentDate.value
+      ? `${t('dateConverter.resultLabels.timestampSeconds')} ${outputTimestampSeconds.value}
 ${t('dateConverter.resultLabels.timestampMilliseconds')} ${outputTimestampMilliseconds.value}
 ${t('dateConverter.resultLabels.iso')} ${outputIso.value}
 ${t('dateConverter.resultLabels.local')} (${selectedTimezone.value}): ${outputLocal.value}
 ${t('dateConverter.resultLabels.utc')} ${outputUtc.value}
-${t('dateConverter.resultLabels.relative')} ${outputRelative.value}`;
-
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      showSuccess(t('dateConverter.messages.copySuccess'));
-    } catch (e) {
-      error.value = t('dateConverter.messages.copyFailed', { message: (e as Error).message });
-    }
-  };
-
-  const showSuccess = (message: string) => {
-    successMessage.value = message;
-    successVisible.value = true;
-    setTimeout(() => {
-      successVisible.value = false;
-    }, 2000);
-  };
+${t('dateConverter.resultLabels.relative')} ${outputRelative.value}`
+      : ''
+  );
 
   return {
     inputType,
@@ -253,8 +238,6 @@ ${t('dateConverter.resultLabels.relative')} ${outputRelative.value}`;
     selectedTimezone,
     error,
     currentDate,
-    successVisible,
-    successMessage,
     calculationValue,
     calculationUnit,
     calculationResult,
@@ -273,6 +256,6 @@ ${t('dateConverter.resultLabels.relative')} ${outputRelative.value}`;
     convertFromCustom,
     updateAllOutputs,
     calculateDate,
-    copyToClipboard,
+    copyValue,
   };
 };

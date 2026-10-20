@@ -5,7 +5,11 @@
       <div class="date-converter__panel">
         <div class="date-converter__panel-header">
           <span>{{ t('dateConverter.inputTime') }}</span>
-          <button type="button" class="date-converter__btn-link" @click="useCurrentTime">
+          <button
+            type="button"
+            class="tool-button tool-button--text date-converter__btn-link"
+            @click="useCurrentTime"
+          >
             {{ t('dateConverter.useCurrentTime') }}
           </button>
         </div>
@@ -106,6 +110,14 @@
           </div>
         </div>
 
+        <p v-if="suggestedUnit" class="date-converter__suggestion" role="status">
+          {{
+            t('dateConverter.unitSuggestion', { unit: t(`dateConverter.units.${suggestedUnit}`) })
+          }}
+          <button type="button" class="tool-button tool-button--text" @click="applySuggestedUnit">
+            {{ t('dateConverter.applyUnit') }}
+          </button>
+        </p>
         <inline-feedback :feedback="error ? { message: error, tone: 'validation' } : null" />
       </div>
 
@@ -131,15 +143,12 @@
         <div class="date-converter__panel-header">
           <span>{{ t('dateConverter.outputTitle') }}</span>
           <div class="date-converter__panel-controls">
-            <button
-              type="button"
-              class="date-converter__btn-link"
-              :class="{ 'date-converter__btn-disabled': !hasValidDate }"
+            <CopyButton
+              :value="copyValue"
+              :label="t('common.copy')"
               :disabled="!hasValidDate"
-              @click="copyToClipboard"
-            >
-              {{ t('common.copy') }}
-            </button>
+              class="tool-button--text date-converter__btn-link"
+            />
           </div>
         </div>
 
@@ -149,6 +158,13 @@
               {{ t('dateConverter.resultLabels.timestampSeconds') }}
             </div>
             <div class="date-converter__result-value">{{ outputTimestampSeconds }}</div>
+            <CopyButton
+              :value="String(outputTimestampSeconds)"
+              :label="t('common.copy')"
+              :accessible-label="`${t('common.copy')} ${t('dateConverter.resultLabels.timestampSeconds')}`"
+              :disabled="!hasValidDate"
+              class="tool-button--small date-result-copy"
+            />
           </div>
 
           <div class="date-converter__result-item">
@@ -156,6 +172,13 @@
               {{ t('dateConverter.resultLabels.local') }}
             </div>
             <div class="date-converter__result-value">{{ outputLocal }}</div>
+            <CopyButton
+              :value="String(outputLocal)"
+              :label="t('common.copy')"
+              :accessible-label="`${t('common.copy')} ${t('dateConverter.resultLabels.local')}`"
+              :disabled="!hasValidDate"
+              class="tool-button--small date-result-copy"
+            />
           </div>
 
           <details class="date-converter__more-results">
@@ -166,24 +189,52 @@
                   {{ t('dateConverter.resultLabels.timestampMilliseconds') }}
                 </div>
                 <div class="date-converter__result-value">{{ outputTimestampMilliseconds }}</div>
+                <CopyButton
+                  :value="String(outputTimestampMilliseconds)"
+                  :label="t('common.copy')"
+                  :accessible-label="`${t('common.copy')} ${t('dateConverter.resultLabels.timestampMilliseconds')}`"
+                  :disabled="!hasValidDate"
+                  class="tool-button--small date-result-copy"
+                />
               </div>
               <div class="date-converter__result-item">
                 <div class="date-converter__result-label">
                   {{ t('dateConverter.resultLabels.iso') }}
                 </div>
                 <div class="date-converter__result-value">{{ outputIso }}</div>
+                <CopyButton
+                  :value="String(outputIso)"
+                  :label="t('common.copy')"
+                  :accessible-label="`${t('common.copy')} ${t('dateConverter.resultLabels.iso')}`"
+                  :disabled="!hasValidDate"
+                  class="tool-button--small date-result-copy"
+                />
               </div>
               <div class="date-converter__result-item">
                 <div class="date-converter__result-label">
                   {{ t('dateConverter.resultLabels.utc') }}
                 </div>
                 <div class="date-converter__result-value">{{ outputUtc }}</div>
+                <CopyButton
+                  :value="String(outputUtc)"
+                  :label="t('common.copy')"
+                  :accessible-label="`${t('common.copy')} ${t('dateConverter.resultLabels.utc')}`"
+                  :disabled="!hasValidDate"
+                  class="tool-button--small date-result-copy"
+                />
               </div>
               <div class="date-converter__result-item">
                 <div class="date-converter__result-label">
                   {{ t('dateConverter.resultLabels.relative') }}
                 </div>
                 <div class="date-converter__result-value">{{ outputRelative }}</div>
+                <CopyButton
+                  :value="String(outputRelative)"
+                  :label="t('common.copy')"
+                  :accessible-label="`${t('common.copy')} ${t('dateConverter.resultLabels.relative')}`"
+                  :disabled="!hasValidDate"
+                  class="tool-button--small date-result-copy"
+                />
               </div>
             </div>
           </details>
@@ -243,14 +294,12 @@
         <li>{{ t('dateConverter.tips.item4') }}</li>
       </ul>
     </details>
-
-    <inline-feedback
-      :feedback="successVisible ? { message: successMessage, tone: 'success' } : null"
-    />
   </section>
 </template>
 
 <script lang="ts" setup>
+import CopyButton from '@/components/Experience/CopyButton.vue';
+import { computed } from 'vue';
 import { langManager } from '@/utils/i18n';
 import { useDateConverter } from './useDateConverter';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
@@ -275,8 +324,6 @@ const {
   timestampUnit,
   selectedTimezone,
   error,
-  successVisible,
-  successMessage,
   calculationValue,
   calculationUnit,
   calculationResult,
@@ -295,8 +342,23 @@ const {
   convertFromCustom,
   updateAllOutputs,
   calculateDate,
-  copyToClipboard,
+  copyValue,
 } = useDateConverter(t);
+
+const suggestedUnit = computed(() => {
+  if (inputType.value !== 'timestamp' || inputTimestamp.value === null) return '';
+  const magnitude = Math.abs(Number(inputTimestamp.value));
+  if (timestampUnit.value === 'seconds' && magnitude >= 1e12 && magnitude < 1e13)
+    return 'milliseconds';
+  if (timestampUnit.value === 'milliseconds' && magnitude >= 1e9 && magnitude < 1e10)
+    return 'seconds';
+  return '';
+});
+const applySuggestedUnit = () => {
+  if (!suggestedUnit.value) return;
+  timestampUnit.value = suggestedUnit.value;
+  convertFromTimestamp();
+};
 
 const stopPropagation = (e: Event) => {
   e.stopPropagation();

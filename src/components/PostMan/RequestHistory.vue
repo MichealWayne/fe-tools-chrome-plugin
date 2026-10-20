@@ -59,10 +59,12 @@
             <i :class="[item.favorite ? 'fas' : 'far', 'fa-star']"></i>
           </button>
           <button type="button" class="history-select" @click="selectHistoryItem(item)">
-            <span class="history-method" :class="item.method.toLowerCase()">{{ item.method }}</span>
+            <span class="tool-tag history-method" :class="item.method.toLowerCase()">{{
+              item.method
+            }}</span>
             <span class="history-url">{{ item.url }}</span>
             <span class="history-time">{{ formatTime(item.timestamp) }}</span>
-            <span class="history-status" :class="getStatusClass(item.status)">{{
+            <span class="tool-tag history-status" :class="getStatusClass(item.status)">{{
               item.status
             }}</span>
           </button>
@@ -246,6 +248,8 @@ const getStatusClass = (status?: number) => {
   flex: 1;
 }
 .favorite-btn {
+  min-width: var(--control-height-small);
+  min-height: var(--control-height-small);
   border: 0;
   background: transparent;
   color: var(--color-warning-foreground);
@@ -254,7 +258,13 @@ const getStatusClass = (status?: number) => {
 }
 
 .history-select {
-  display: contents;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: var(--control-height-small);
+  align-items: center;
+  border-radius: var(--control-radius);
+  text-align: left;
   color: inherit;
   border: 0;
   background: transparent;
@@ -296,12 +306,7 @@ const getStatusClass = (status?: number) => {
 }
 
 .history-method {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: bold;
   min-width: 60px;
-  text-align: center;
   margin-right: 15px;
 }
 
@@ -348,12 +353,7 @@ const getStatusClass = (status?: number) => {
 }
 
 .history-status {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: bold;
   min-width: 40px;
-  text-align: center;
   margin-right: 10px;
 }
 
@@ -384,8 +384,8 @@ const getStatusClass = (status?: number) => {
   cursor: pointer;
   padding: 4px;
   border-radius: var(--border-radius-sm);
-  width: 24px;
-  height: 24px;
+  width: var(--control-height-small);
+  height: var(--control-height-small);
   display: flex;
   align-items: center;
   justify-content: center;

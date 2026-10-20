@@ -59,4 +59,26 @@ describe('tech-stack detector', () => {
   it('returns no hits when no supported evidence exists', () => {
     expect(detectTechStackFromSignals(emptySignals())).toEqual([]);
   });
+
+  it.each([
+    ['element-plus', 'element_component', 'element-plus'],
+    ['antd', 'antd_component', 'antd'],
+    ['bootstrap', 'bootstrap_component', 'bootstrap'],
+    ['echarts', 'echarts_instance', 'echarts'],
+    ['monaco', 'monaco_editor', 'monaco-editor'],
+    ['codemirror', 'codemirror_editor', 'codemirror'],
+  ])('requires independent evidence for %s without a runtime', (key, marker, asset) => {
+    const signals = {
+      ...emptySignals(),
+      selectors: [marker],
+      scripts: [`https://cdn.test/${asset}/dist/index.js`],
+    };
+    expect(detectTechStackFromSignals(signals).map(hit => hit.key)).toContain(key);
+    expect(
+      detectTechStackFromSignals({ ...signals, scripts: [] }).map(hit => hit.key)
+    ).not.toContain(key);
+    expect(
+      detectTechStackFromSignals({ ...signals, selectors: [] }).map(hit => hit.key)
+    ).not.toContain(key);
+  });
 });

@@ -63,7 +63,13 @@ describe('PostMan workflow experience', () => {
       },
     });
     await response.get('.copy-btn').trigger('click');
-    expect(response.emitted('feedback')?.[0]).toEqual(['响应内容已复制', 'success']);
+    await flushPromises();
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('ok');
+    expect(response.get('.copy-btn').attributes('aria-label')).toBe('已复制');
+    expect(response.get('.copy-btn [role="status"]').text()).toBe('已复制');
+    expect(response.emitted('feedback')).toBeUndefined();
+    response.unmount();
+    main.unmount();
   });
 
   it('opens the drawer with focus and closes it with Escape', async () => {

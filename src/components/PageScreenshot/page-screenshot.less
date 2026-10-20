@@ -5,8 +5,12 @@
   min-width: 0;
   max-height: none;
   overflow: visible;
-  padding: 22px 26px 18px;
-  background: linear-gradient(180deg, var(--color-background-light) 0%, var(--color-background-dark) 100%);
+  padding: 10px;
+  background: linear-gradient(
+    180deg,
+    var(--color-background-light) 0%,
+    var(--color-background-dark) 100%
+  );
   border: 1px solid var(--color-border-light);
   border-radius: var(--border-radius-xl);
   box-shadow: var(--shadow-lg);
@@ -45,48 +49,7 @@
 }
 
 .m-screenshot_actions--primary {
-  margin: 18px 0 6px;
-}
-
-.m-screenshot_btn {
-  min-width: 150px;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: var(--border-radius-lg);
-  border: 1px solid var(--color-border);
-  background: var(--color-background-light);
-  color: var(--color-text-primary);
-  cursor: pointer;
-  transition:
-    transform var(--transition-fast),
-    box-shadow var(--transition-fast),
-    background var(--transition-fast),
-    color var(--transition-fast),
-    border-color var(--transition-fast);
-  box-shadow: var(--shadow-sm);
-}
-
-.m-screenshot_btn:hover {
-  transform: translateY(-1px);
-  border-color: var(--color-primary-light);
-}
-
-.m-screenshot_btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
-}
-
-.m-screenshot_btn[s-color='blue'] {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-  border-color: var(--color-primary);
-  color: var(--color-text-inverse);
-  box-shadow: var(--shadow-md);
-}
-
-.m-screenshot_btn[s-color='blue']:hover {
-  box-shadow: var(--shadow-lg);
+  margin: 10px 0 4px;
 }
 
 .m-screenshot_tip {
@@ -100,15 +63,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: 6px;
   flex: 1;
   width: 100%;
 }
 
 .m-preview_img {
   box-sizing: border-box;
-  max-height: 260px;
-  overflow: hidden;
+  height: clamp(180px, calc(100dvh - 200px), 520px);
+  overflow: auto;
   border: 1px solid var(--color-border-light);
   background: var(--color-background);
   padding: 12px;
@@ -123,6 +86,9 @@
 
 .m-preview_frame img {
   max-width: 100%;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
   display: block;
   margin: 0 auto;
   border-radius: var(--border-radius-md);

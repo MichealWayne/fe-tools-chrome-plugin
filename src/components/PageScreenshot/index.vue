@@ -34,44 +34,23 @@
 
     <p v-if="isSelecting" class="m-screenshot_tip g-fs12">{{ t('pageScreenshot.selectingTip') }}</p>
 
-    <div v-else class="m-screenshot_preview">
-      <p v-if="previewUrl" class="g-fs12 g-mb10">{{ t('pageScreenshot.previewTip') }}</p>
+    <div v-if="previewUrl" class="m-screenshot_preview">
+      <p class="g-fs12 g-mb10">{{ t('pageScreenshot.previewTip') }}</p>
       <div class="m-preview_img">
-        <div v-if="previewUrl" class="m-preview_frame">
-          <img :src="previewUrl" alt="screenshot preview" />
-        </div>
-        <div v-else class="m-preview_empty">
-          <div class="m-preview_icon" aria-hidden="true">
-            <svg viewBox="0 0 64 64" role="presentation">
-              <rect
-                x="12"
-                y="18"
-                width="40"
-                height="30"
-                rx="6"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3"
-              />
-              <circle cx="32" cy="33" r="8" fill="none" stroke="currentColor" stroke-width="3" />
-              <path
-                d="M22 18l4-6h12l4 6"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3"
-                stroke-linecap="round"
-              />
-            </svg>
-          </div>
-          <p class="g-fs12 m-preview_title">{{ t('pageScreenshot.previewEmptyTitle') }}</p>
-          <p class="g-fs12 m-preview_desc">{{ t('pageScreenshot.previewEmptyDesc') }}</p>
+        <div class="m-preview_frame">
+          <image-viewer :src="previewUrl" :alt="t('pageScreenshot.previewTip')" />
         </div>
       </div>
       <div class="m-screenshot_actions g-mt20">
-        <button class="u-btn_il g-fs14 m-screenshot_btn" s-color="blue" @click="saveScreenshot">
+        <button
+          class="u-btn_il g-fs14 m-screenshot_btn"
+          s-color="blue"
+          :disabled="isSaving"
+          @click="saveScreenshot"
+        >
           {{ t('pageScreenshot.saveToLocal') }}
         </button>
-        <button class="u-btn_il g-fs14 m-screenshot_btn" @click="resetCapture">
+        <button class="u-btn_il g-fs14 m-screenshot_btn" :disabled="isSaving" @click="resetCapture">
           {{ t('pageScreenshot.retake') }}
         </button>
       </div>
@@ -86,20 +65,24 @@ export default {
 </script>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import ImageViewer from '@/components/Experience/ImageViewer.vue';
 import { langManager } from '@/utils/i18n';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 import ToolState from '@/components/Experience/ToolState.vue';
 import { sendRuntimeMessage, sendTabMessage } from '@/extension/chrome-client';
 import {
   isCaptureResponse,
-  isPageMetrics,
-  isScrollResponse,
   isSelectionResponse,
   type CaptureResponse,
-  type PageMetrics,
   type SelectionResponse,
 } from '@/extension/messages';
+import {
+  executeScriptFiles,
+  getPageMetrics,
+  scrollToPosition,
+  setPageCaptureMode,
+} from './capture-page';
 import type { InlineFeedbackMessage } from '@/types/experience';
 
 const MAX_CAPTURE_SEGMENTS = 40;
@@ -107,19 +90,23 @@ const MAX_CAPTURE_PIXELS = 25_000_000;
 
 const t = (key: string) => langManager.t(key);
 
-defineProps({
+const props = defineProps({
+  sourceTabId: { type: Number, default: undefined },
   back: {
     type: Function,
     default: () => undefined,
   },
 });
 
+const emit = defineEmits<{ finished: [] }>();
+
 const previewUrl = ref('');
 const isCapturing = ref(false);
 const isSelecting = ref(false);
+const isSaving = ref(false);
 const errorMessage = ref('');
 const feedback = ref<InlineFeedbackMessage | null>(null);
-const lastAction = ref<'capture' | 'select'>('capture');
+const lastAction = ref<'capture' | 'select' | 'save'>('capture');
 
 const handleStop = (e: Event) => {
   e.stopPropagation();
@@ -127,8 +114,9 @@ const handleStop = (e: Event) => {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const getActiveTab = () =>
-  new Promise<chrome.tabs.Tab>((resolve, reject) => {
+const getActiveTab = () => {
+  if (props.sourceTabId !== undefined) return chrome.tabs.get(props.sourceTabId);
+  return new Promise<chrome.tabs.Tab>((resolve, reject) => {
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
       const tab = tabs?.[0];
       if (!tab || !tab.id) {
@@ -138,43 +126,7 @@ const getActiveTab = () =>
       resolve(tab);
     });
   });
-
-const executeScript = <T,>(tabId: number, func: (...args: unknown[]) => T, args: unknown[] = []) =>
-  new Promise<T>((resolve, reject) => {
-    chrome.scripting.executeScript(
-      {
-        target: { tabId },
-        func,
-        args,
-      },
-      results => {
-        const err = chrome.runtime.lastError;
-        if (err) {
-          reject(new Error(err.message));
-          return;
-        }
-        resolve(results?.[0]?.result as T);
-      }
-    );
-  });
-
-const executeScriptFiles = (tabId: number, files: string[]) =>
-  new Promise<void>((resolve, reject) => {
-    chrome.scripting.executeScript(
-      {
-        target: { tabId },
-        files,
-      },
-      () => {
-        const err = chrome.runtime.lastError;
-        if (err) {
-          reject(new Error(err.message));
-          return;
-        }
-        resolve();
-      }
-    );
-  });
+};
 
 const loadImage = (src: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
@@ -183,101 +135,6 @@ const loadImage = (src: string) =>
     img.onerror = () => reject(new Error(t('pageScreenshot.errorCapture')));
     img.src = src;
   });
-
-const getPageMetrics = async (tabId: number) => {
-  try {
-    return await sendTabMessage<PageMetrics>(tabId, { action: 'getPageMetrics' }, isPageMetrics);
-  } catch {
-    return executeScript(tabId, () => {
-      const doc = document.documentElement;
-      const body = document.body;
-      return {
-        totalWidth: Math.max(doc.scrollWidth, body ? body.scrollWidth : 0),
-        totalHeight: Math.max(doc.scrollHeight, body ? body.scrollHeight : 0),
-        viewportWidth: window.innerWidth || doc.clientWidth,
-        viewportHeight: window.innerHeight || doc.clientHeight,
-        devicePixelRatio: window.devicePixelRatio || 1,
-        scrollY: window.scrollY || window.pageYOffset || doc.scrollTop || 0,
-      };
-    });
-  }
-};
-
-const scrollToPosition = async (tabId: number, y: number) => {
-  try {
-    return await sendTabMessage<{ scrollY: number }>(
-      tabId,
-      { action: 'scrollTo', y, delay: 0 },
-      isScrollResponse
-    );
-  } catch {
-    return executeScript(
-      tabId,
-      (targetY: unknown) => {
-        window.scrollTo(0, targetY as number);
-        const doc = document.documentElement;
-        return {
-          scrollY: window.scrollY || window.pageYOffset || doc.scrollTop || 0,
-        };
-      },
-      [y]
-    );
-  }
-};
-
-const setPageCaptureMode = async (tabId: number, mode: 'prepare' | 'segment' | 'restore') =>
-  executeScript(
-    tabId,
-    (action: unknown) => {
-      const styleId = 'fe-tools-capture-style';
-      const marker = 'data-fe-tools-capture-kind';
-      const hidden = 'data-fe-tools-capture-hidden';
-      if (action === 'restore') {
-        document.querySelectorAll(`[${marker}]`).forEach(node => {
-          node.removeAttribute(marker);
-          node.removeAttribute('data-fe-tools-capture-top');
-          node.removeAttribute(hidden);
-        });
-        document.getElementById(styleId)?.remove();
-        return;
-      }
-      if (action === 'prepare') {
-        const style = document.createElement('style');
-        style.id = styleId;
-        style.textContent = `html { scroll-behavior: auto !important; } [${hidden}] { visibility: hidden !important; }`;
-        document.documentElement.appendChild(style);
-        return;
-      }
-      if (window.scrollY === 0) {
-        document.querySelectorAll('*').forEach(node => {
-          const element = node as HTMLElement;
-          const position = getComputedStyle(element).position;
-          if (position !== 'fixed' && position !== 'sticky') return;
-          element.setAttribute(marker, position);
-          element.setAttribute(
-            'data-fe-tools-capture-top',
-            String(element.getBoundingClientRect().top)
-          );
-        });
-      }
-      document.querySelectorAll(`[${marker}]`).forEach(node => {
-        const element = node as HTMLElement;
-        const kind = element.getAttribute(marker);
-        const naturalTop = Number(element.getAttribute('data-fe-tools-capture-top'));
-        const stickyTop = parseFloat(getComputedStyle(element).top) || 0;
-        const isStuck =
-          kind === 'sticky' &&
-          window.scrollY > naturalTop &&
-          element.getBoundingClientRect().top <= stickyTop + 2;
-        if (window.scrollY > 0 && (kind === 'fixed' || isStuck)) {
-          element.setAttribute(hidden, '');
-        } else {
-          element.removeAttribute(hidden);
-        }
-      });
-    },
-    [mode]
-  );
 
 type CropRect = {
   left: number;
@@ -292,11 +149,21 @@ const captureFullPage = async (cropRect?: CropRect) => {
   isCapturing.value = true;
   let restoreScroll: (() => Promise<unknown>) | undefined;
   let captureTabId: number | undefined;
+  const restoreOnPageHide = () => {
+    if (restoreScroll) void restoreScroll().catch(() => undefined);
+    if (captureTabId !== undefined) {
+      void setPageCaptureMode(captureTabId, 'restore').catch(() => undefined);
+    }
+  };
+  window.addEventListener('pagehide', restoreOnPageHide);
 
   try {
     const tab = await getActiveTab();
     const tabId = tab.id as number;
     captureTabId = tabId;
+    if (props.sourceTabId !== undefined && !tab.active) {
+      await chrome.tabs.update(tabId, { active: true });
+    }
     const metrics = await getPageMetrics(tabId);
 
     if (!metrics || !metrics.totalHeight || !metrics.viewportHeight) {
@@ -312,7 +179,7 @@ const captureFullPage = async (cropRect?: CropRect) => {
     await setPageCaptureMode(tabId, 'prepare');
     while (captures.length < MAX_CAPTURE_SEGMENTS) {
       const position = await scrollToPosition(tabId, y);
-      await delay(200);
+      await delay(550);
       await setPageCaptureMode(tabId, 'segment');
       const currentMetrics = await getPageMetrics(tabId);
       capturedHeight = Math.max(capturedHeight, currentMetrics.totalHeight);
@@ -324,6 +191,7 @@ const captureFullPage = async (cropRect?: CropRect) => {
         {
           action: 'captureVisibleTab',
           windowId: tab.windowId,
+          tabId,
         },
         isCaptureResponse
       );
@@ -432,7 +300,9 @@ const captureFullPage = async (cropRect?: CropRect) => {
         // The tab may have closed while the capture was in progress.
       }
     }
+    window.removeEventListener('pagehide', restoreOnPageHide);
     isCapturing.value = false;
+    emit('finished');
   }
 };
 
@@ -471,6 +341,7 @@ const startNodeSelect = async () => {
       }
       await executeScriptFiles(tabId, [
         'scripts/message-contract.js',
+        'scripts/element-screenshot.js',
         'scripts/content-script-v3.js',
       ]);
       selection = await sendTabMessage<SelectionResponse>(
@@ -483,12 +354,18 @@ const startNodeSelect = async () => {
     if (!selection?.success) {
       throw new Error(selection?.error || t('pageScreenshot.errorSelection'));
     }
+    // Selection and capture now run in the page, independently of this popup.
+    window.close();
   } catch (error) {
     errorMessage.value = (error as Error)?.message || t('pageScreenshot.errorSelection');
   } finally {
     isSelecting.value = false;
   }
 };
+
+onMounted(() => {
+  if (props.sourceTabId !== undefined) void startCapture();
+});
 
 const resetCapture = () => {
   previewUrl.value = '';
@@ -498,11 +375,16 @@ const resetCapture = () => {
 
 const retryLastAction = () => {
   errorMessage.value = '';
+  if (lastAction.value === 'save') return saveScreenshot();
   return lastAction.value === 'select' ? startNodeSelect() : startCapture();
 };
 
-const saveScreenshot = () => {
-  if (!previewUrl.value) return;
+const saveScreenshot = async () => {
+  if (!previewUrl.value || isSaving.value) return;
+  isSaving.value = true;
+  lastAction.value = 'save';
+  errorMessage.value = '';
+  feedback.value = null;
   const now = new Date();
   const pad = (value: number) => String(value).padStart(2, '0');
   const filename = `page-screenshot-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(
@@ -510,15 +392,17 @@ const saveScreenshot = () => {
   )}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.png`;
 
   try {
-    chrome.downloads.download({
+    await chrome.downloads.download({
       url: previewUrl.value,
       saveAs: true,
       conflictAction: 'overwrite',
       filename,
     });
     feedback.value = { message: t('pageScreenshot.saveSuccess'), tone: 'success' };
-  } catch (error) {
-    errorMessage.value = (error as Error)?.message || t('pageScreenshot.errorCapture');
+  } catch {
+    errorMessage.value = t('pageScreenshot.errorSave');
+  } finally {
+    isSaving.value = false;
   }
 };
 </script>

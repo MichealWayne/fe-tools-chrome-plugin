@@ -1,20 +1,18 @@
 .json-converter {
-  --json-surface: #fff;
-  --json-surface-muted: #f6f8ff;
-  --json-border: #e2e9ff;
-  --json-border-panel: #e4e9f7;
-  --json-text: #1f2a44;
-  --json-text-secondary: #6b7a99;
-  --json-text-body: #2b3a55;
+  --json-surface: var(--color-background-light);
+  --json-surface-muted: var(--color-background-dark);
+  --json-border: var(--color-border-light);
+  --json-border-panel: var(--color-border-light);
+  --json-text: var(--color-text-primary);
+  --json-text-secondary: var(--color-text-secondary);
+  --json-text-body: var(--color-text-primary);
   --json-primary: var(--color-primary);
-  --json-primary-hover: #1f55d1;
   padding: 10px;
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: linear-gradient(180deg, var(--json-surface) 0%, #f5f8ff 100%);
-  border: 1px solid var(--json-border);
-  border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(30, 74, 173, 0.12);
+  font-family: var(--font-family-base);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   box-sizing: border-box;
 
   &__header {
@@ -28,7 +26,7 @@
     }
 
     h3 {
-      font-size: 16px;
+      font-size: var(--font-size-md);
       font-weight: 600;
       margin-bottom: 4px;
       color: var(--json-text);
@@ -37,7 +35,7 @@
     p {
       color: var(--json-text-secondary);
       margin: 0;
-      font-size: 12px;
+      font-size: var(--font-size-xs);
       line-height: 1.4;
     }
   }
@@ -46,10 +44,10 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
 
     i {
-      font-size: 14px;
+      font-size: var(--font-size-sm);
     }
   }
 
@@ -60,7 +58,7 @@
     gap: 8px;
     margin-bottom: 8px;
 
-    @media (max-width: 768px) {
+    @media (max-width: 520px) {
       flex-direction: column;
     }
   }
@@ -71,14 +69,14 @@
     display: flex;
     flex-direction: column;
     background-color: var(--json-surface);
-    border-radius: 12px;
+    border-radius: var(--border-radius-xl);
     border: 1px solid var(--json-border-panel);
-    box-shadow: 0 6px 14px rgba(28, 63, 124, 0.06);
+    box-shadow: none;
     overflow: hidden;
     transition: box-shadow 0.3s ease;
 
     &:hover {
-      box-shadow: 0 10px 20px rgba(28, 63, 124, 0.12);
+      border-color: var(--json-border);
     }
   }
 
@@ -90,33 +88,10 @@
     background-color: var(--json-surface-muted);
     border-bottom: 1px solid var(--json-border);
 
-    :deep(button),
-    button {
-      min-height: 28px;
-      padding: 4px 8px;
-      line-height: 20px;
-    }
-
-    span {
+    > span {
       font-weight: 600;
-      font-size: 13px;
+      font-size: var(--font-size-control);
       color: var(--json-text);
-    }
-
-    .clear-btn,
-    .copy-btn,
-    .format-btn {
-      color: var(--json-primary);
-      padding: 0 4px;
-      font-size: 12px;
-
-      &:hover {
-        color: var(--json-primary-hover);
-      }
-
-      &:disabled {
-        color: #c7cfdd;
-      }
     }
   }
 
@@ -126,14 +101,28 @@
     gap: 4px;
   }
 
+  .format-btn {
+    box-sizing: border-box;
+    max-width: 120px;
+    min-height: var(--control-height-small);
+    padding: 4px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--control-radius);
+    color: var(--color-text-primary);
+    background: var(--color-background-light);
+    font: inherit;
+    font-size: var(--font-size-xs);
+  }
+
   &__textarea {
+    box-sizing: border-box;
     flex: 1;
-    min-height: 110px;
-    height: 110px;
+    min-height: 88px;
+    height: clamp(88px, calc((100dvh - 250px) / 2), 180px);
     padding: 8px;
     border: none;
-    font-family: 'Fira Code', 'Courier New', monospace;
-    font-size: 14px;
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-sm);
     line-height: 1.6;
     color: var(--json-text-body);
     resize: vertical;
@@ -141,19 +130,19 @@
     transition: background-color 0.2s ease;
 
     &:focus {
-      outline: none;
       background-color: var(--json-surface-muted);
+      outline-offset: -3px;
     }
 
     &:disabled {
-      background-color: #f5f7fb;
+      background-color: var(--color-background-disabled);
       color: var(--json-text-secondary);
       cursor: default;
     }
 
     &::placeholder {
-      color: #a8b2c6;
-      font-size: 13px;
+      color: var(--color-text-tertiary);
+      font-size: var(--font-size-control);
     }
   }
 
@@ -162,9 +151,10 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 20px;
+    flex-shrink: 0;
+    width: auto;
 
-    @media (max-width: 768px) {
+    @media (max-width: 520px) {
       width: 100%;
     }
   }
@@ -174,32 +164,13 @@
     flex-direction: column;
     gap: 5px;
 
-    @media (max-width: 768px) {
+    @media (max-width: 520px) {
       flex-direction: row;
-      gap: 5px;
       margin: 2px 0;
     }
 
     .action-icon {
-      cursor: pointer;
-      font-size: 14px;
-      width: 20px;
-      height: 20px;
-      line-height: 20px;
-      text-align: center;
-      border-radius: 50%;
-      transition: all 0.2s ease;
-      color: var(--json-text-secondary);
-      user-select: none;
-
-      &:hover {
-        color: var(--json-primary);
-        background-color: rgba(41, 105, 247, 0.12);
-      }
-
-      &.to-json {
-        color: var(--json-primary);
-      }
+      min-width: 90px;
     }
   }
 
@@ -208,23 +179,23 @@
     background-color: var(--color-error-surface);
     border-top: 1px solid var(--color-error-light);
     color: var(--color-error);
-    font-size: 12px;
+    font-size: var(--font-size-xs);
   }
 
   &__tips {
     background-color: var(--json-surface-muted);
     padding: 8px 12px;
-    border-radius: 12px;
+    border-radius: var(--border-radius-xl);
     border: 1px solid var(--json-border);
     border-left: 3px solid var(--json-primary);
     margin-top: 8px;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
 
     summary {
       cursor: pointer;
       color: var(--json-text);
       font-weight: 600;
-      font-size: 13px;
+      font-size: var(--font-size-control);
     }
 
     ul {
@@ -234,7 +205,7 @@
       li {
         margin-bottom: 3px;
         color: var(--json-text-secondary);
-        font-size: 12px;
+        font-size: var(--font-size-xs);
 
         &:last-child {
           margin-bottom: 0;

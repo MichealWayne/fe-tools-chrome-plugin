@@ -17,23 +17,23 @@
       <details ref="requestManagementRef" class="postman-management">
         <summary>{{ t('postman.requestManagement') }}</summary>
         <div class="header-actions">
-          <button class="toolbar-btn" @click="openManagementDrawer('environments')">
+          <button class="tool-button toolbar-btn" @click="openManagementDrawer('environments')">
             <i class="fas fa-sliders" aria-hidden="true"></i> {{ t('postman.environments.manage') }}
           </button>
-          <button class="toolbar-btn" @click="openManagementDrawer('history')">
+          <button class="tool-button toolbar-btn" @click="openManagementDrawer('history')">
             <i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
             {{ t('postman.history.title') }}
           </button>
-          <button class="toolbar-btn" @click="openManagementDrawer('saved')">
+          <button class="tool-button toolbar-btn" @click="openManagementDrawer('saved')">
             <i class="fas fa-bookmark" aria-hidden="true"></i> {{ t('postman.saved.title') }}
           </button>
-          <button class="toolbar-btn" @click="openManagementDrawer('curl')">
+          <button class="tool-button toolbar-btn" @click="openManagementDrawer('curl')">
             <i class="fas fa-terminal" aria-hidden="true"></i> cURL
           </button>
-          <button class="save-btn" @click="saveRequest">
+          <button class="tool-button save-btn" @click="saveRequest">
             <i class="fas fa-save" aria-hidden="true"></i> {{ t('postman.saveRequest') }}
           </button>
-          <button class="load-btn" @click="loadRequest">
+          <button class="tool-button load-btn" @click="loadRequest">
             <i class="fas fa-folder-open" aria-hidden="true"></i> {{ t('postman.loadRequest') }}
           </button>
         </div>
@@ -44,7 +44,7 @@
     <section
       v-if="activeDrawer"
       ref="drawerRef"
-      class="postman-drawer"
+      class="postman-drawer focus-inset"
       role="dialog"
       tabindex="-1"
       :aria-label="t('postman.drawerLabel')"
@@ -108,7 +108,7 @@ export default {
 </script>
 
 <script setup lang="ts">
-import { computed, ref, reactive, onMounted, nextTick } from 'vue';
+import { computed, ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { langManager } from '@/utils/i18n';
 
 import RequestPanel from './RequestPanel.vue';
@@ -152,6 +152,32 @@ const validationField = ref<'url' | 'body' | 'environment' | ''>('');
 const activeDrawer = ref<PostmanDrawer>('');
 const drawerRef = ref<HTMLElement | null>(null);
 const requestManagementRef = ref<HTMLDetailsElement | null>(null);
+
+const closeManagement = (restoreFocus = false) => {
+  const menu = requestManagementRef.value;
+  if (!menu?.open) return;
+  menu.open = false;
+  if (restoreFocus) menu.querySelector('summary')?.focus();
+};
+const handleManagementPointer = (event: PointerEvent) => {
+  if (event.target instanceof Node && !requestManagementRef.value?.contains(event.target)) {
+    closeManagement();
+  }
+};
+const handleManagementKey = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && requestManagementRef.value?.open) {
+    event.preventDefault();
+    closeManagement(true);
+  }
+};
+onMounted(() => {
+  document.addEventListener('pointerdown', handleManagementPointer);
+  document.addEventListener('keydown', handleManagementKey);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', handleManagementPointer);
+  document.removeEventListener('keydown', handleManagementKey);
+});
 
 const setFeedback = (message: string, tone: 'success' | 'error') => {
   feedback.value = { message, tone };

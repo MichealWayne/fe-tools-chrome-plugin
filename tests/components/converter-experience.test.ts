@@ -6,6 +6,8 @@ import UnitCalculator from '@/components/UnitCalculator/index.vue';
 import DateConverter from '@/components/DateConverter/index.vue';
 import JsonCtn from '@/components/JsonCtn/index.vue';
 import SvgEditor from '@/components/SvgEditor/index.vue';
+import { defineComponent } from 'vue';
+import { useDateConverter } from '@/components/DateConverter/useDateConverter';
 
 const qrDownload = vi.fn();
 vi.mock('@/utils/chrome', () => ({ getLocalTabUrl: vi.fn() }));
@@ -42,7 +44,7 @@ describe('converter and editor experience', () => {
     const hex = wrapper.get('#color-hex');
     await hex.setValue('ff0000');
     expect((wrapper.get('#color-rgb').element as HTMLInputElement).value).toBe('255,0,0');
-    await hex.setValue('bad');
+    await hex.setValue('zz');
     expect(wrapper.get('[role="alert"]').exists()).toBe(true);
     expect((wrapper.get('#color-rgb').element as HTMLInputElement).value).toBe('255,0,0');
   });
@@ -65,6 +67,52 @@ describe('converter and editor experience', () => {
     await wrapper.get('input[placeholder*="ISO"]').setValue('not-a-date');
     expect(wrapper.get('[role="alert"]').exists()).toBe(true);
     expect(wrapper.get('.date-converter__result-value').text()).toBe(previous);
+  });
+
+  it.each([
+    ['ISO', 'seconds'],
+    ['ISO', 'milliseconds'],
+    ['local', 'seconds'],
+    ['local', 'milliseconds'],
+    ['custom', 'seconds'],
+    ['custom', 'milliseconds'],
+  ])('preserves the selected timestamp unit when converting from %s in %s', (source, unit) => {
+    let converter!: ReturnType<typeof useDateConverter>;
+    const wrapper = mount(
+      defineComponent({
+        setup() {
+          converter = useDateConverter(key => key);
+          return () => null;
+        },
+      })
+    );
+    try {
+      converter.timestampUnit.value = unit;
+      const milliseconds =
+        source === 'ISO'
+          ? Date.parse('2026-10-20T00:00:00.123Z')
+          : new Date(2026, 9, 20, 8, 0, 0).getTime();
+      if (source === 'ISO') {
+        converter.inputIso.value = '2026-10-20T00:00:00.123Z';
+        converter.convertFromIso();
+      } else if (source === 'local') {
+        converter.inputLocalString.value = '2026-10-20T08:00:00';
+        converter.convertFromLocalString();
+      } else {
+        converter.inputCustom.value = '2026-10-20 08:00:00';
+        converter.convertFromCustom();
+      }
+      expect(converter.error.value).toBe('');
+      expect(converter.inputTimestamp.value).toBe(
+        unit === 'milliseconds' ? milliseconds : Math.floor(milliseconds / 1000)
+      );
+      converter.convertFromTimestamp();
+      expect(converter.outputTimestampMilliseconds.value).toBe(
+        unit === 'milliseconds' ? milliseconds : Math.floor(milliseconds / 1000) * 1000
+      );
+    } finally {
+      wrapper.unmount();
+    }
   });
 
   it('uses semantic JSON actions and non-modal success feedback', async () => {

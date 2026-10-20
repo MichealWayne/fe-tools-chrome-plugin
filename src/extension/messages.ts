@@ -37,7 +37,8 @@ export type TabMessage =
   | { action: 'startElementSelectAndCapture'; filename: string };
 
 export type BackgroundMessage =
-  | { action: 'captureVisibleTab'; windowId: number }
+  | { action: 'captureVisibleTab'; windowId?: number; tabId?: number }
+  | { action: 'openElementScreenshotPreview'; dataUrl: string; filename: string }
   | { action: 'downloadImage'; dataUrl: string; filename?: string };
 
 export type RuntimeMessage =
@@ -110,7 +111,20 @@ export const isTabMessage = (value: unknown): value is TabMessage => {
 
 export const isBackgroundMessage = (value: unknown): value is BackgroundMessage => {
   if (!isRecord(value) || typeof value.action !== 'string') return false;
-  if (value.action === 'captureVisibleTab') return isFiniteNumber(value.windowId);
+  if (value.action === 'captureVisibleTab') {
+    return (
+      (value.windowId === undefined || isFiniteNumber(value.windowId)) &&
+      (value.tabId === undefined || isFiniteNumber(value.tabId))
+    );
+  }
+  if (value.action === 'openElementScreenshotPreview') {
+    return (
+      typeof value.dataUrl === 'string' &&
+      value.dataUrl.startsWith('data:image/png;base64,') &&
+      typeof value.filename === 'string' &&
+      value.filename.length > 0
+    );
+  }
   return (
     value.action === 'downloadImage' &&
     typeof value.dataUrl === 'string' &&

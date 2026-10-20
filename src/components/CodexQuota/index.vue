@@ -1,9 +1,7 @@
 <template>
   <section class="codex-quota" @click.stop>
-    <header class="codex-quota__header">
-      <span v-if="freshness === 'stale'" class="codex-quota__stale">{{
-        t('codexQuota.stale')
-      }}</span>
+    <header v-if="freshness === 'stale'" class="codex-quota__header">
+      <span class="tool-tag tool-tag--warning codex-quota__stale">{{ t('codexQuota.stale') }}</span>
     </header>
 
     <tool-state v-if="loading && !snapshot" state="loading" :message="t('codexQuota.loading')" />
@@ -35,12 +33,23 @@
           <p>{{ t('codexQuota.resetsAt', { time: formatDate(window.resetAt) }) }}</p>
         </li>
       </ul>
-      <p class="codex-quota__updated">
-        {{ t('codexQuota.updatedAt', { time: formatDate(snapshot.fetchedAt) }) }}
-        <span v-if="nextRefreshAt" class="codex-quota__next-refresh">
-          {{ t('codexQuota.autoRefreshIn', { time: autoRefreshCountdown }) }}
-        </span>
-      </p>
+      <div class="codex-quota__status-row">
+        <p class="codex-quota__updated">
+          {{ t('codexQuota.updatedAt', { time: formatDate(snapshot.fetchedAt) }) }}
+          <span v-if="nextRefreshAt" class="codex-quota__next-refresh">
+            {{ t('codexQuota.autoRefreshIn', { time: autoRefreshCountdown }) }}
+          </span>
+        </p>
+        <button
+          class="u-btn_il codex-quota__refresh"
+          s-color="blue"
+          type="button"
+          :disabled="loading"
+          @click="refresh(true)"
+        >
+          {{ loading ? t('codexQuota.refreshing') : t('codexQuota.refresh') }}
+        </button>
+      </div>
       <tool-state
         v-if="error"
         state="error"
@@ -50,29 +59,30 @@
       />
     </template>
 
-    <div class="codex-quota__actions">
-      <button
-        class="u-btn_il codex-quota__refresh"
-        s-color="blue"
-        type="button"
-        :disabled="loading"
-        @click="refresh(true)"
-      >
-        {{ loading ? t('codexQuota.refreshing') : t('codexQuota.refresh') }}
-      </button>
-      <button class="u-btn_il codex-quota__dashboard" type="button" @click="openDashboard">
-        {{ t('codexQuota.openDashboard') }}
-      </button>
-      <button class="u-btn_il codex-quota__reset-tracker" type="button" @click="openResetTracker">
-        {{ t('codexQuota.openResetTracker') }}
-      </button>
-      <button v-if="snapshot" class="codex-quota__clear" type="button" @click="clearCache">
-        {{ t('codexQuota.clearCache') }}
-      </button>
-    </div>
+    <details class="codex-quota__actions">
+      <summary>{{ t('codexQuota.moreActions') }}</summary>
+      <div class="codex-quota__action-links">
+        <button class="u-btn_il codex-quota__dashboard" type="button" @click="openDashboard">
+          {{ t('codexQuota.openDashboard') }}
+        </button>
+        <button class="u-btn_il codex-quota__reset-tracker" type="button" @click="openResetTracker">
+          {{ t('codexQuota.openResetTracker') }}
+        </button>
+        <button
+          v-if="snapshot"
+          class="tool-button tool-button--text codex-quota__clear"
+          type="button"
+          @click="clearCache"
+        >
+          {{ t('codexQuota.clearCache') }}
+        </button>
+      </div>
+    </details>
 
     <p v-if="error === 'signed_out'" class="codex-quota__hint">
-      <button type="button" @click="openSignIn">{{ t('codexQuota.openSignIn') }}</button>
+      <button class="tool-button tool-button--text" type="button" @click="openSignIn">
+        {{ t('codexQuota.openSignIn') }}
+      </button>
     </p>
     <details v-if="diagnostic" class="codex-quota__debug">
       <summary>{{ t('codexQuota.debug.title') }}</summary>
@@ -247,8 +257,8 @@ onBeforeUnmount(() => {
 
 <style scoped lang="less">
 .codex-quota {
-  min-width: 380px;
-  color: #25324a;
+  min-width: 0;
+  color: var(--color-text-primary);
 }
 
 .codex-quota__header {
@@ -260,16 +270,8 @@ onBeforeUnmount(() => {
 
   p {
     margin: 0;
-    color: #68758a;
+    color: var(--color-text-secondary);
   }
-}
-
-.codex-quota__stale {
-  flex: none;
-  padding: 2px 8px;
-  border-radius: 999px;
-  color: #8a5a00;
-  background: #fff1c7;
 }
 
 .codex-quota__windows {
@@ -281,14 +283,14 @@ onBeforeUnmount(() => {
 
   li {
     padding: 14px;
-    border: 1px solid #dfe5ee;
-    border-radius: 10px;
-    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-lg);
+    background: var(--color-background-light);
   }
   p {
     margin: 8px 0 0;
-    color: #68758a;
-    font-size: 12px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
   }
 }
 
@@ -301,56 +303,51 @@ onBeforeUnmount(() => {
   height: 8px;
   margin-top: 10px;
   overflow: hidden;
-  border-radius: 999px;
-  background: #e8edf4;
+  border-radius: var(--border-radius-pill);
+  background: var(--color-background-dark);
 }
 .codex-quota__track span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #2878ff;
+  background: var(--color-primary);
   transition: width 0.2s ease;
 }
 .codex-quota__updated,
 .codex-quota__privacy {
-  color: #7a8698;
-  font-size: 12px;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
 }
 .codex-quota__next-refresh {
   display: block;
   margin-top: 3px;
 }
-.codex-quota__actions {
+.codex-quota__status-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 8px;
 }
-.codex-quota .codex-quota__actions .u-btn_il {
-  width: auto;
-  min-width: 0;
-  height: auto;
-  min-height: 34px;
-  padding: 7px 12px;
-  line-height: 1.4;
-  white-space: nowrap;
+.codex-quota__status-row .codex-quota__updated {
+  margin: 0;
 }
-.codex-quota .codex-quota__actions .codex-quota__dashboard {
-  min-width: 132px;
+.codex-quota__actions {
+  margin-top: 8px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
 }
-.codex-quota__clear,
-.codex-quota__hint button {
-  border: 0;
-  color: #52657d;
-  background: transparent;
-  text-decoration: underline;
+.codex-quota__actions summary {
+  width: fit-content;
   cursor: pointer;
-  transition: color 0.2s ease;
 }
-.codex-quota__clear:hover,
-.codex-quota__hint button:hover {
-  color: var(--color-primary);
+.codex-quota__action-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-top: 8px;
 }
 .codex-quota__hint {
   margin: 10px 0 0;
@@ -358,11 +355,11 @@ onBeforeUnmount(() => {
 .codex-quota__debug {
   margin-top: 12px;
   padding: 10px 12px;
-  border: 1px solid #d6deea;
-  border-radius: 8px;
-  color: #52657d;
-  background: #f7f9fc;
-  font-size: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  color: var(--color-text-secondary);
+  background: var(--color-background-dark);
+  font-size: var(--font-size-xs);
 
   p,
   ul {
@@ -371,9 +368,5 @@ onBeforeUnmount(() => {
   ul {
     padding-left: 18px;
   }
-}
-button:focus-visible {
-  outline: 2px solid #2878ff;
-  outline-offset: 2px;
 }
 </style>

@@ -1,18 +1,24 @@
-name: Build and Release Extension
+name: Build and Prepare Extension Release
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
+  pull_request:
+    branches: [master]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build-release:
+  build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      artifact-id: ${{ steps.artifact.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -29,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check extension version
+        run: pnpm run check:version
+
       - name: Type check
         run: pnpm run typecheck
 
@@ -41,24 +50,60 @@ jobs:
       - name: Build extension
         run: pnpm run build
 
-      - name: Package dist
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="$(node -p "require('./package.json').version")"
-          zip_name="fe-tools-chrome-ext.${version}.zip"
-          cd dist
-          zip -r "../${zip_name}" .
-          cd -
-          echo "ZIP_NAME=${zip_name}" >> "$GITHUB_ENV"
-          echo "RELEASE_TAG=v${version}" >> "$GITHUB_ENV"
+      - name: Validate and package extension
+        id: package
+        run: pnpm run package:extension
 
-      - name: Publish Release
-        uses: ncipollo/release-action@v1
+      - name: Store installation package
+        id: artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag: ${{ env.RELEASE_TAG }}
-          name: ${{ env.RELEASE_TAG }}
-          artifacts: ${{ env.ZIP_NAME }}
-          allowUpdates: true
-          replacesArtifacts: true
-          makeLatest: true
+          name: extension-${{ steps.package.outputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            release-artifacts/fe-tools-chrome-extension.zip
+            release-artifacts/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+  draft-release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: extension-draft-releases
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          path: release-artifacts
+          merge-multiple: true
+
+      - name: Create or resume draft without replacing releases
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { pathToFileURL } = require('node:url');
+            const { resolve } = require('node:path');
+            const moduleUrl = pathToFileURL(resolve('scripts/release/draft-release.mjs')).href;
+            const { createDraftRelease } = await import(moduleUrl);
+            const result = await createDraftRelease({
+              github,
+              ...context.repo,
+              commit: context.sha,
+            });
+            core.info(`${result.tag}: ${result.status}`);
+            await core.summary
+              .addHeading('Extension release package')
+              .addRaw(`${result.tag}: ${result.status}. Drafts require Chrome smoke testing and manual publication.`)
+              .write();

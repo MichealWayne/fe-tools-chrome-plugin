@@ -134,7 +134,6 @@ const toggleSecret = (id: string) => {
   background: var(--color-background-light);
 }
 .key-value-editor input:focus {
-  outline: none;
   border-color: var(--color-primary);
 }
 .key-value-editor__value {

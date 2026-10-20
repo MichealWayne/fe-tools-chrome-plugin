@@ -12,22 +12,24 @@
   <div v-else-if="response" class="response-viewer" :class="{ fullscreen: isFullscreen }">
     <div class="response-header">
       <div class="status-info">
-        <span class="status" :class="getStatusClass(response.status)">
+        <span class="tool-tag status" :class="getStatusClass(response.status)">
           {{ response.status }} {{ response.statusText }}
         </span>
         <span class="time">{{ response.responseTime }}ms</span>
         <span class="size">{{ formatSize(response.size) }}</span>
       </div>
       <div class="response-actions">
-        <button class="copy-btn" @click="copyResponse">
-          {{ t('postman.actions.copyResponse') }}
-        </button>
-        <button class="utility-btn" @click="downloadResponse">
+        <CopyButton
+          :value="responseText"
+          :label="t('postman.actions.copyResponse')"
+          class="tool-button--small copy-btn"
+        />
+        <button class="tool-button tool-button--small utility-btn" @click="downloadResponse">
           {{ t('postman.actions.download') }}
         </button>
         <button
           ref="fullscreenButton"
-          class="fullscreen-btn"
+          class="tool-button tool-button--small fullscreen-btn"
           :aria-label="
             isFullscreen ? t('postman.actions.exitFullscreen') : t('postman.actions.fullscreen')
           "
@@ -141,13 +143,12 @@
         <div v-for="(value, key) in response.headers" :key="key" class="header-item">
           <span class="header-key">{{ key }}:</span>
           <span class="header-value">{{ value }}</span>
-          <button
-            type="button"
-            :aria-label="`${t('common.copy')} ${key}`"
-            @click="copyText(String(value))"
-          >
-            <i class="fas fa-copy" aria-hidden="true"></i>
-          </button>
+          <CopyButton
+            :value="String(value)"
+            :label="t('common.copy')"
+            :accessible-label="`${t('common.copy')} ${key}`"
+            class="tool-button--small"
+          />
         </div>
       </div>
 
@@ -175,6 +176,7 @@ export default {
 </script>
 
 <script setup lang="ts">
+import CopyButton from '@/components/Experience/CopyButton.vue';
 import { ref, computed, watch, nextTick } from 'vue';
 import { langManager } from '@/utils/i18n';
 
@@ -190,7 +192,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), { response: null, executionState: undefined });
-const emit = defineEmits<{
+defineEmits<{
   feedback: [message: string, tone: 'success' | 'error'];
 }>();
 
@@ -420,10 +422,10 @@ watch(
  * @param status - HTTP status code.
  */
 const getStatusClass = (status: number) => {
-  if (status >= 200 && status < 300) return 'success';
-  if (status >= 300 && status < 400) return 'redirect';
-  if (status >= 400 && status < 500) return 'client-error';
-  if (status >= 500) return 'server-error';
+  if (status >= 200 && status < 300) return 'success tool-tag--success';
+  if (status >= 300 && status < 400) return 'redirect tool-tag--warning';
+  if (status >= 400 && status < 500) return 'client-error tool-tag--danger';
+  if (status >= 500) return 'server-error tool-tag--danger';
   return '';
 };
 
@@ -436,22 +438,6 @@ const formatSize = (bytes?: number) => {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
-};
-
-/**
- * Copy the response body to the clipboard.
- */
-const copyResponse = async () => {
-  await copyText(responseText.value);
-};
-
-const copyText = async (value: string) => {
-  try {
-    await navigator.clipboard.writeText(value);
-    emit('feedback', t('postman.feedback.responseCopied'), 'success');
-  } catch (error) {
-    emit('feedback', t('postman.feedback.copyFailed'), 'error');
-  }
 };
 
 const moveSearch = (offset: number) => {

@@ -27,7 +27,9 @@
         @input="settingsChanged"
       />
     </div>
-    <button type="button" @click="reset">{{ t('common.clear') }}</button>
+    <button class="u-btn unit-calculator__reset" type="button" @click="reset">
+      {{ t('common.clear') }}
+    </button>
     <inline-feedback
       :feedback="error ? { id: 'unit-feedback', message: error, tone: 'validation' } : null"
     />
@@ -134,24 +136,16 @@ const reset = () => {
 
 .unit-calculator > button {
   justify-self: start;
-  min-width: 88px;
-  min-height: 36px;
-  padding: 8px 16px;
-  color: var(--color-text-inverse);
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--border-radius-md);
-  cursor: pointer;
-}
-
-.unit-calculator > button:hover {
-  background: var(--color-primary-dark);
 }
 
 @media (max-width: 520px) {
   .unit-calculator .converter-field {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-xs);
+    grid-template-columns: minmax(74px, 0.28fr) minmax(0, 1fr);
+    gap: var(--spacing-sm);
+  }
+
+  .unit-calculator__hint {
+    font-size: var(--font-size-xs);
   }
 }
 </style>

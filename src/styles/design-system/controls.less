@@ -1,0 +1,198 @@
+// Shared controls. Feature styles should only add layout rules to these classes.
+.u-btn,
+.u-btn_il,
+.tool-button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: var(--control-height);
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  color: var(--color-text-primary);
+  background: var(--color-background-light);
+  font: inherit;
+  font-size: var(--font-size-control);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.u-btn:hover:not(:disabled),
+.u-btn_il:hover:not(:disabled),
+.tool-button:hover:not(:disabled) {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-surface);
+}
+
+.u-btn[s-color='blue'],
+.u-btn_il[s-color='blue'],
+.tool-button.tool-button--primary {
+  color: var(--color-text-inverse);
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.u-btn[s-color='blue']:hover:not(:disabled),
+.u-btn_il[s-color='blue']:hover:not(:disabled),
+.tool-button.tool-button--primary:hover:not(:disabled) {
+  color: var(--color-text-inverse);
+  border-color: var(--color-primary-dark);
+  background: var(--color-primary-dark);
+}
+
+.tool-button.tool-button--small {
+  min-height: var(--control-height-small);
+  padding: 4px 8px;
+  font-size: var(--font-size-xs);
+}
+
+.tool-button.tool-button--text {
+  min-height: var(--control-height-small);
+  padding: 4px 8px;
+  color: var(--color-primary);
+  border-color: transparent;
+  background: transparent;
+  font-size: var(--font-size-xs);
+}
+
+.tool-button.tool-button--text:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--color-primary-surface);
+}
+
+.u-btn:disabled,
+.u-btn_il:disabled,
+.tool-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tool-tag,
+.tool-chip {
+  --tag-color: var(--color-text-secondary);
+  --tag-background: var(--color-background-dark);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 22px;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--control-radius);
+  color: var(--tag-color);
+  background: var(--tag-background);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.tool-tag--primary {
+  --tag-color: var(--color-primary-dark);
+  --tag-background: var(--color-primary-surface);
+}
+
+.tool-tag--warning {
+  --tag-color: var(--color-warning-foreground);
+  --tag-background: var(--color-warning-surface);
+}
+
+.tool-tag--success {
+  --tag-color: var(--color-success-foreground);
+  --tag-background: var(--color-success-surface);
+}
+
+.tool-tag--danger {
+  --tag-color: var(--color-error-foreground);
+  --tag-background: var(--color-error-surface);
+}
+
+.tool-chip {
+  min-height: var(--control-height-small);
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.tool-chip:hover:not(:disabled) {
+  border-color: currentColor;
+}
+
+.tool-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.u-input,
+.m-s_input,
+.tool-input {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: var(--input-height, var(--control-height));
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  color: var(--color-text-primary);
+  background: var(--color-background-light);
+  font: inherit;
+  font-size: var(--font-size-sm);
+}
+
+.m-s_input {
+  --input-height: var(--control-height-search);
+}
+
+.u-input:focus,
+.m-s_input:focus,
+.tool-input:focus {
+  border-color: var(--color-primary);
+}
+
+.tool-button.tool-button--icon {
+  min-width: var(--control-height-small);
+  min-height: var(--control-height-small);
+  padding: 4px;
+}
+
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--color-primary-focus-ring);
+}
+
+.focus-inset:focus-visible,
+.focus-inset :focus-visible {
+  outline-offset: -3px;
+  box-shadow: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

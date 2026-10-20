@@ -4,6 +4,7 @@ export default {
     en: 'English',
   },
   search: {
+    dismissHint: 'Press Esc to dismiss results',
     qrCodeResult: 'Generate QR Code',
     searchIn: 'Search in {site}: <strong>{keywords}</strong>',
     resultsLabel: 'Search results',
@@ -14,6 +15,7 @@ export default {
     noResults: 'No matching results',
     retry: 'Retry',
     copied: 'Copied',
+    copyFailed: 'Copy failed',
     saved: 'Saved',
     downloaded: 'Downloaded',
     required: 'This field is required',
@@ -106,7 +108,43 @@ export default {
   },
 
   // QRCode component
+  mediaView: {
+    controls: 'Image viewing controls',
+    fit: 'Fit width',
+    zoomOut: 'Zoom out',
+    zoomIn: 'Zoom in',
+    background: 'Preview background',
+    checker: 'Checkerboard',
+    light: 'White',
+    dark: 'Dark',
+    panHint:
+      'Drag or scroll to inspect a zoomed image. Focus the image area to scroll with arrow keys.',
+  },
+  jsonWorkbench: {
+    import: 'Import JSON',
+    download: 'Download JSON',
+    locateError: 'Go to error',
+    search: 'Find text (case sensitive)',
+    target: 'Search in',
+    input: 'Input',
+    output: 'Output',
+    previous: 'Previous',
+    next: 'Next',
+    matchCount: '{current} / {count} matches',
+    limit: 'Showing the first 10000 matches. Narrow your search.',
+    importHint: 'Import standard JSON up to 2 MB. Failed imports preserve current content.',
+    importFailed: 'Choose a valid JSON file up to 2 MB.',
+    downloadFailed: 'The output is not valid JSON. Correct it before downloading.',
+  },
+
   qrcode: {
+    enlarge: 'Enlarge to scan',
+    scanTitle: 'Scan mode',
+    scanSize: 'Display size',
+    encodedContent: 'Encoded content',
+    stale: 'Input changed. This QR still contains the previous value. Generate it again.',
+    openScanPage: 'Open scan page',
+    openFailed: 'Unable to open scan page. Please try again.',
     title: 'QR Code Generator',
     inputPlaceholder: 'e.g. https://example.com',
     generate: 'Generate QR Code',
@@ -128,8 +166,63 @@ export default {
 
   // Image Compressor
   imageCompressor: {
+    quality: 'Quality',
+    preset: 'Quality preset',
+    clearPreset: 'Clarity first',
+    balancedPreset: 'Balanced',
+    smallPreset: 'Smaller file',
+    customPreset: 'Custom',
+    background: 'JPEG background',
+    resize: 'Limit dimensions (keep aspect ratio, never upscale)',
+    maxWidth: 'Maximum width (px)',
+    maxHeight: 'Maximum height (px)',
+    target: 'Optimize for a size budget',
+    targetKB: 'Target size (KiB, 1 KiB = 1024 B)',
+    allowResize: 'Allow further resizing to approach the target',
+    replace: 'Replace image',
+    settings: 'Output settings',
+    localHint:
+      'Images are processed locally. Paste an image to import it; closing the popup clears this session.',
+    pngHint:
+      'PNG preserves transparency. Palette reduction and specialized lossless optimization are unavailable; quality and size budgets do not apply.',
+    qualityHint:
+      'Quality is not a file size percentage. Size search is bounded, with a quality floor of 35% (or your selected quality if lower).',
+    jpegHint: 'JPEG removes transparency and fills transparent areas with the selected background.',
+    preserveHint:
+      'Original dimensions are preserved unless you enable dimension limits or further resizing for the size budget.',
+    downloadOriginal: 'Download original',
+    originalRetained:
+      'Re-encoding did not reduce the size. The original file was retained to avoid growth and unnecessary quality loss.',
+    unchanged: 'Size unchanged',
+    cancel: 'Cancel processing',
+    stale: 'Settings changed. Recompress before exporting. The preview shows the previous result.',
+    targetMet: 'Size budget met.',
+    targetMissed:
+      'Size budget not met. Showing the smallest candidate that satisfies the format and dimension limits. Lower quality, limit dimensions or allow further resizing.',
+    generateBase64: 'Generate Base64',
+    errors: {
+      unsupported: 'Use JPEG, PNG or static WebP. GIF and other formats are unsupported.',
+      animated: 'Animated PNG/WebP is unsupported. Use a static image.',
+      fileLimit: 'Choose a nonempty image no larger than 30 MiB.',
+      pixelLimit: 'Image exceeds 32 megapixels or 16384 pixels per side.',
+      invalidQuality: 'Quality must be greater than 0 and no more than 100%.',
+      invalidDimensions: 'Dimensions must be integers between 1 and 16384.',
+      invalidTarget: 'Target size must be a valid positive number.',
+      pngTarget: 'PNG does not support size budgets. Choose JPEG or WebP.',
+      invalidBackground: 'Choose a valid JPEG background color.',
+      decodeFailed: 'Cannot decode the image. Check for a damaged file or mismatched format.',
+      encodeFailed: 'Image processing failed. Try again or use a smaller image.',
+      formatUnavailable:
+        'This browser cannot encode the selected format. Choose another output format.',
+    },
+    original: 'Original image',
+    result: 'Compressed result',
+    byteComparison: 'Original {original} → Result {result}',
+    saved: '{percent}% smaller',
+    grown: '{percent}% larger',
     dragTip: 'Choose an image or drag one here',
-    formatTip: '(*.jpg/*.png/*.gif formats)',
+    formatTip:
+      'JPEG / PNG / static WebP · Up to 30 MiB, 32 megapixels and 16384 px per side; GIF and animation unsupported',
     resetTip: 'Click to reset image',
     compressRatio: 'Image compression ratio (0~1, default 1)',
     ratioLabel: 'Compression ratio',
@@ -172,15 +265,50 @@ export default {
     errorUnavailable: 'Capture is unavailable on this page',
     errorSelection: 'Failed to select element',
     saveSuccess: 'Screenshot submitted for saving',
+    errorSave: 'Unable to save the screenshot. Please try again.',
   },
 
   // Tech stack detection
   techStack: {
+    targetPage: 'Detected page',
     title: 'Tech Stack Detection',
     description: 'Results are inferred from page signals; review the supporting evidence.',
     startDetect: 'Start Detection',
     analyzing: 'Analyzing...',
     hitCount: '{count} hits',
+    versionUnknown: 'Version unknown',
+    multipleVersions:
+      'Multiple versions found: instances may coexist or sources may disagree. Review their sources.',
+    scannedAt: 'Scanned at: {time}',
+    mainFrameOnly:
+      'Scope: current main page, excluding iframes. Run again after deferred content loads.',
+    partialCollection: 'Some signals could not be collected. Results may be incomplete.',
+    collectionStatus: 'DOM: {dom}; runtime: {runtime}',
+    probeStatus: { ok: 'collected', failed: 'failed', unknown: 'unknown' },
+    copySummary: 'Copy summary',
+    copyJson: 'Copy JSON',
+    reportTitle: 'Technology report',
+    localAnalysis: 'Local analysis · Main page',
+    detectAgain: 'Analyze again',
+    readyTitle: 'Discover what powers this page',
+    readyDescription:
+      'Identify frameworks, build tools and libraries, with available versions and supporting evidence.',
+    scanOverview: 'Scan overview',
+    scanFinished: 'Scan complete',
+    partialLabel: 'Incomplete scan',
+    technologiesFound: 'Technologies',
+    withVersion: 'With versions',
+    highConfidence: 'High confidence',
+    scopeAndStatus: 'Scope and collection status',
+    versionLabel: 'Version',
+    versionConfidence: 'Version confidence',
+    versionSource: {
+      runtime: 'Runtime version',
+      dom: 'Page version marker',
+      devtools: 'Registered app/renderer',
+      asset: 'Version declared in resource URL',
+    },
+    evidenceCount: 'Evidence ({count})',
     empty: 'No supported tech-stack signals were detected',
     errorUnavailable: 'Unable to analyze this page',
     confidence: {
@@ -204,6 +332,7 @@ export default {
     openDashboard: 'Open official usage',
     openResetTracker: 'View reset tracker',
     openSignIn: 'Open ChatGPT sign-in',
+    moreActions: 'More actions',
     clearCache: 'Clear local cache',
     stale: 'Data is stale',
     windowsLabel: 'Codex quota windows',
@@ -246,8 +375,8 @@ export default {
     inputPlaceholder: 'Enter JS object here, e.g., var obj = { a: 1 }',
     outputPlaceholder: 'Converted JSON will appear here',
     actions: {
-      convert: 'Convert',
-      reverse: 'Reverse',
+      convert: 'Convert to JSON',
+      reverse: 'Convert to JS',
       copyToClipboard: 'Copy to clipboard',
       copy: 'Copy',
       format: 'Format ▼',
@@ -347,6 +476,8 @@ export default {
 
   // Date Converter
   dateConverter: {
+    unitSuggestion: 'This value may use {unit}.',
+    applyUnit: 'Switch unit',
     title: 'Date and Time Converter',
     description:
       'Convert Unix timestamps, ISO dates, local time, and custom formats, including time zones and date calculations',
@@ -469,6 +600,7 @@ export default {
 
   // Color Pass
   colorPass: {
+    copyCss: 'Copy complete CSS format (HEX / RGB / HSL)',
     title: 'Color Conversion Tool',
     labels: {
       hex: 'HEX',
@@ -476,12 +608,12 @@ export default {
       hsb: 'HSB',
       hsl: 'HSL',
     },
-    hexPlaceholder: 'For example, FF8800',
-    rgbPlaceholder: 'For example, 255,136,0',
+    hexPlaceholder: 'For example, #fff or #FF8800',
+    rgbPlaceholder: 'For example, rgb(255,136,0)',
     hsbPlaceholder: 'For example, 30,100%,100%',
     hslPlaceholder: 'For example, 30,100%,50%',
     messages: {
-      invalidHex: 'HEX must contain 6 hexadecimal characters',
+      invalidHex: 'HEX must contain 3 or 6 hexadecimal characters, optionally prefixed with #',
       invalidRgb: 'RGB must contain three integers from 0 to 255',
       invalidHsb: 'HSB must contain valid hue, saturation, and brightness values',
       invalidHsl: 'HSL must contain valid hue, saturation, and lightness values',

@@ -5,21 +5,26 @@ import { resolve } from 'node:path';
 import ImageCompressor from '@/components/ImageCompressor/index.vue';
 import PageScreenshot from '@/components/PageScreenshot/index.vue';
 import TechStackDetection from '@/components/TechStackDetection/index.vue';
-import { handleInputUploadImageFile } from '@/utils/image';
+import { optimizeImage } from '@/components/ImageCompressor/optimizer';
 
 vi.mock('@/utils', () => ({
   getFileBase64: vi.fn((_file: File, callback: (value: string) => void) =>
     callback('data:original')
   ),
 }));
-vi.mock('@/utils/image', () => ({
-  handleInputUploadImageFile: vi.fn(),
-  getCompressedImageBase64: vi.fn().mockResolvedValue('data:compressed'),
+vi.mock('@/components/ImageCompressor/optimizer', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/components/ImageCompressor/optimizer')>()),
+  optimizeImage: vi.fn(),
 }));
 
 describe('media and inspection experience', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: vi.fn(() => 'blob:image'),
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText: vi.fn().mockResolvedValue(undefined) },
@@ -40,9 +45,15 @@ describe('media and inspection experience', () => {
   });
 
   it('uses a keyboard-native upload button and reports successful image processing', async () => {
-    vi.mocked(handleInputUploadImageFile).mockResolvedValue({
-      imgUrl: 'data:image/png;base64,preview',
-      base64result: 'data:image/png;base64,result',
+    vi.mocked(optimizeImage).mockResolvedValue({
+      blob: new Blob(['abcdef'], { type: 'image/png' }),
+      width: 10,
+      height: 10,
+      originalWidth: 10,
+      originalHeight: 10,
+      quality: 1,
+      targetMet: true,
+      keptOriginal: false,
     });
     const wrapper = mount(ImageCompressor);
     const chooser = wrapper.get('input[type="file"]').element as HTMLInputElement;
@@ -55,7 +66,7 @@ describe('media and inspection experience', () => {
     Object.defineProperty(chooser, 'files', { configurable: true, value: [file] });
     await wrapper.get('input[type="file"]').trigger('change');
     await flushPromises();
-    expect(wrapper.get('[role="status"]').text()).toContain('完成');
+    expect(wrapper.get('[role="status"]').text()).toContain('原始');
     expect(wrapper.get('.image-compressor__preview img').exists()).toBe(true);
   });
 

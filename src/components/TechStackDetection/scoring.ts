@@ -4,7 +4,9 @@ import type {
   SignatureCandidate,
   SignatureRule,
   TechStackHit,
+  VersionObservation,
 } from './types';
+import { collectVersionObservations, normalizeVersion, redactUrl } from './versions';
 
 export type SignalPool = Record<SignalSource, string[]>;
 
@@ -15,22 +17,23 @@ export const normalizeSignalList = (input: string[] | undefined): string[] =>
     .map(item => item.toLowerCase());
 
 export const buildSignalPool = (signals: ProbeSignals): SignalPool => ({
-  scripts: normalizeSignalList(signals.scripts),
-  links: normalizeSignalList(signals.links),
+  scripts: normalizeSignalList(signals.scripts?.map(value => redactUrl(value))),
+  links: normalizeSignalList(signals.links?.map(value => redactUrl(value))),
   scriptTypes: normalizeSignalList(signals.scriptTypes),
   globals: normalizeSignalList(signals.globals),
   selectors: normalizeSignalList(signals.selectors),
   metas: normalizeSignalList(signals.metas),
   htmlAttrs: normalizeSignalList(signals.htmlAttrs),
   content: normalizeSignalList(signals.content),
-  resources: normalizeSignalList(signals.resources),
+  resources: normalizeSignalList(signals.resources?.map(value => redactUrl(value))),
   runtime: normalizeSignalList(signals.runtime),
 });
 
 export const normalizeVersions = (versions: Record<string, string> | undefined) =>
   Object.entries(versions || {}).reduce(
     (acc, [key, value]) => {
-      acc[key.toLowerCase()] = String(value || '').trim();
+      const version = normalizeVersion(value);
+      if (version) acc[key.toLowerCase()] = version;
       return acc;
     },
     {} as Record<string, string>
@@ -61,14 +64,18 @@ const sourceLabel: Record<SignalSource, string> = {
 
 const findByPattern = (items: string[], rule: SignatureRule) => {
   const pattern = rule.pattern.toLowerCase();
+  const matchValue = (item: string) =>
+    ['scripts', 'links', 'resources'].includes(rule.source)
+      ? new URL(item, 'https://relative.invalid').pathname
+      : item;
   if (rule.operator === 'equals') {
-    return items.find(item => item === pattern);
+    return items.find(item => matchValue(item) === pattern);
   }
   if (rule.operator === 'regex') {
     const expression = new RegExp(pattern, 'i');
-    return items.find(item => expression.test(item));
+    return items.find(item => expression.test(matchValue(item)));
   }
-  return items.find(item => item.includes(pattern));
+  return items.find(item => matchValue(item).includes(pattern));
 };
 
 const sumGroupScores = (groupScores: Map<SignatureRule['group'], number>) =>
@@ -77,7 +84,8 @@ const sumGroupScores = (groupScores: Map<SignatureRule['group'], number>) =>
 export const scoreCandidate = (
   candidate: SignatureCandidate,
   signalPool: SignalPool,
-  versions: Record<string, string>
+  versions: Record<string, string>,
+  observations: VersionObservation[] = []
 ): TechStackHit | null => {
   let hasDecisive = false;
   const evidence = new Set<string>();
@@ -92,6 +100,7 @@ export const scoreCandidate = (
   });
 
   let score = sumGroupScores(groupScores);
+  const matchedVersions = observations.filter(item => item.technology === candidate.key);
   (candidate.versionKeys || []).forEach(versionKey => {
     const version = versions[versionKey.toLowerCase()];
     if (!version) return;
@@ -101,6 +110,15 @@ export const scoreCandidate = (
     evidence.add(`version: ${versionKey}@${version}`);
   });
 
+  matchedVersions
+    .filter(item => item.source !== 'asset')
+    .forEach(item => {
+      const group = item.source === 'dom' ? 'markup' : 'runtime';
+      groupScores.set(group, Math.max(groupScores.get(group) || 0, 3));
+      hasDecisive = true;
+    });
+  score = sumGroupScores(groupScores);
+
   if (score <= 0 || (!hasDecisive && groupScores.size < 2)) return null;
   return {
     key: candidate.key,
@@ -109,6 +127,8 @@ export const scoreCandidate = (
     score,
     confidence: toConfidence(score, groupScores.size, hasDecisive),
     evidence: Array.from(evidence),
+    versions: matchedVersions,
+    versionConflict: new Set(matchedVersions.map(item => item.version)).size > 1,
   };
 };
 
@@ -123,10 +143,10 @@ export const detectFromCandidates = (
   candidates: SignatureCandidate[]
 ): TechStackHit[] => {
   const signalPool = buildSignalPool(signals);
-  const versions = normalizeVersions(signals.versions);
+  const observations = collectVersionObservations(signals);
   return sortTechStackHits(
     candidates
-      .map(candidate => scoreCandidate(candidate, signalPool, versions))
+      .map(candidate => scoreCandidate(candidate, signalPool, {}, observations))
       .filter((hit): hit is TechStackHit => Boolean(hit))
   );
 };

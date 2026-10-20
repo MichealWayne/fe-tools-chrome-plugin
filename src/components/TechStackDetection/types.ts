@@ -1,5 +1,18 @@
 export type ConfidenceLevel = 'high' | 'medium' | 'low';
 
+export type VersionObservation = {
+  technology: string;
+  version: string;
+  source: 'runtime' | 'dom' | 'devtools' | 'asset';
+  detail: string;
+  confidence: ConfidenceLevel;
+};
+
+export type ProbeCoverage = {
+  isolated: 'ok' | 'failed';
+  main: 'ok' | 'failed';
+};
+
 export type ProbeSignals = {
   scripts: string[];
   links: string[];
@@ -12,6 +25,8 @@ export type ProbeSignals = {
   resources?: string[];
   runtime?: string[];
   versions?: Record<string, string>;
+  versionObservations?: VersionObservation[];
+  coverage?: ProbeCoverage;
 };
 
 export type TechStackHit = {
@@ -21,6 +36,8 @@ export type TechStackHit = {
   confidence: ConfidenceLevel;
   score: number;
   evidence: string[];
+  versions?: VersionObservation[];
+  versionConflict?: boolean;
 };
 
 export type SignalSource =

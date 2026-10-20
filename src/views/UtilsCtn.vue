@@ -108,13 +108,27 @@ onMounted(loadUtils);
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 6px;
-  max-height: 320px;
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
 }
 .m-module-list button {
   width: 100%;
-  padding: 8px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-text-primary);
+  background: var(--color-background);
   text-align: left;
-  word-break: break-all;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.m-module-list button:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary-light);
+  background: var(--color-primary-surface);
 }
 </style>

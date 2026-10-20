@@ -1,9 +1,26 @@
 <template>
-  <section class="tool-workspace" :class="{ 'tool-workspace--wide': wide }">
+  <section
+    class="tool-workspace"
+    :class="{ 'tool-workspace--wide': wide, 'tool-workspace--compact': compact }"
+  >
     <header class="tool-workspace__header">
-      <div>
-        <h2 ref="heading" class="tool-workspace__title" tabindex="-1">{{ title }}</h2>
-        <p v-if="description" class="tool-workspace__description">{{ description }}</p>
+      <div v-if="$slots.leading" class="tool-workspace__leading"><slot name="leading" /></div>
+      <div class="tool-workspace__heading">
+        <h2
+          ref="heading"
+          class="tool-workspace__title"
+          tabindex="-1"
+          :title="compact && description ? `${title} — ${description}` : title"
+        >
+          {{ title }}
+        </h2>
+        <p
+          v-if="description"
+          class="tool-workspace__description"
+          :class="{ 'visually-hidden': compact }"
+        >
+          {{ description }}
+        </p>
       </div>
       <div v-if="$slots.actions" class="tool-workspace__actions">
         <slot name="actions" />
@@ -23,10 +40,12 @@ withDefaults(
     title: string;
     description?: string;
     wide?: boolean;
+    compact?: boolean;
   }>(),
   {
     description: '',
     wide: false,
+    compact: false,
   }
 );
 

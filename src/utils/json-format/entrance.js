@@ -260,10 +260,14 @@ let JsonFormatEntrance = (function () {
     optionBar = $('<div id="optionBar" />').appendTo(jfContent.parent());
 
     let buttonFormatted = $(
-      '<button id="buttonFormatted">' + t('jsonFormat.metadata') + '</button>'
+      '<button type="button" class="tool-button tool-button--small" id="buttonFormatted">' +
+        t('jsonFormat.metadata') +
+        '</button>'
     ).appendTo(optionBar);
     let buttonCollapseAll = $(
-      '<button id="buttonCollapseAll">' + t('jsonFormat.collapseAll') + '</button>'
+      '<button type="button" class="tool-button tool-button--small" id="buttonCollapseAll">' +
+        t('jsonFormat.collapseAll') +
+        '</button>'
     ).appendTo(optionBar);
     let plainOn = false;
 

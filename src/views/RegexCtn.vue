@@ -24,16 +24,15 @@
     <ul class="reference-tool__list">
       <li v-for="item in filteredRegex" :key="item.regexStr" class="m-regex_item">
         <div class="reference-tool__item-header">
-          <span>
-            <strong>{{ item.name }}</strong>
-            <span v-if="item.description">（{{ item.description }}）</span>
-          </span>
+          <strong class="reference-tool__item-title">{{ item.name }}</strong>
           <span class="reference-tool__actions">
-            <button class="u-btn" type="button" @click="copyRegex(item)">
-              {{ t('common.copy') }}
-            </button>
+            <CopyButton
+              :value="item.regexStr"
+              :label="t('common.copy')"
+              class="tool-button--small"
+            />
             <button
-              class="u-btn"
+              class="tool-button tool-button--small"
               type="button"
               :aria-expanded="Boolean(item.isOpened)"
               @click="item.isOpened = !item.isOpened"
@@ -41,6 +40,9 @@
               {{ item.isOpened ? t('common.collapse') : t('regex.openTest') }}
             </button>
           </span>
+          <p v-if="item.description" class="reference-tool__description">
+            {{ item.description }}
+          </p>
         </div>
         <figure>
           <pre :class="$style.pre">{{ item.regexStr }}</pre>
@@ -68,17 +70,16 @@
         </div>
       </li>
     </ul>
-    <inline-feedback :feedback="feedback" />
   </section>
 </template>
 
 <script setup lang="ts">
+import CopyButton from '@/components/Experience/CopyButton.vue';
 import { computed, onMounted, ref } from 'vue';
 import ajax from '@/api';
 import { langManager } from '@/utils/i18n';
 import InlineFeedback from '@/components/Experience/InlineFeedback.vue';
 import ToolState from '@/components/Experience/ToolState.vue';
-import type { InlineFeedbackMessage } from '@/types/experience';
 
 type RegexItem = {
   name: string;
@@ -95,7 +96,6 @@ const filterTxt = ref('');
 const regexList = ref<RegexItem[]>([]);
 const loading = ref(false);
 const loadError = ref('');
-const feedback = ref<InlineFeedbackMessage | null>(null);
 
 const filteredRegex = computed(() => {
   const keyword = filterTxt.value.trim().toLowerCase();
@@ -132,15 +132,6 @@ const runTest = (item: RegexItem) => {
   }
 };
 
-const copyRegex = async (item: RegexItem) => {
-  try {
-    await navigator.clipboard.writeText(item.regexStr);
-    feedback.value = { message: t('experience.copied'), tone: 'success' };
-  } catch (error) {
-    feedback.value = { message: (error as Error).message, tone: 'error' };
-  }
-};
-
 onMounted(loadRegex);
 </script>
 
@@ -156,13 +147,21 @@ onMounted(loadRegex);
 
 <style lang="less" scoped>
 .m-regex {
-  max-height: 480px;
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
 }
 .m-regex_item {
+  min-width: 0;
   padding: 12px;
   border: 1px solid var(--color-border-light);
   border-radius: 8px;
+}
+.m-regex_item figure {
+  min-width: 0;
+  margin: 8px 0 0;
+}
+.m-regex_item .reference-tool__actions {
+  flex-wrap: wrap;
 }
 .m-regex_input {
   display: grid;

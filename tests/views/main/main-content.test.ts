@@ -68,9 +68,24 @@ describe('MainContent settings window', () => {
     expect(wrapper.get('.tool-workspace__title').text()).toBe('Moo CSS');
     expect(wrapper.find('.tool-workspace__description').exists()).toBe(false);
 
-    await wrapper.get('.m-back-entry').trigger('click');
+    await wrapper.get('.tool-workspace__header button[title="返回主页"]').trigger('click');
     await wrapper.get('[data-tool-key="tech-stack-detection"]').trigger('click');
     expect(wrapper.get('.tool-workspace__description').text()).toContain('推测');
+  });
+
+  it('opens PostMan separately and keeps embedded editors in the popup shell', async () => {
+    const wrapper = mount(MainContent);
+    await flushPromises();
+
+    await wrapper.get('[data-tool-key="postman"]').trigger('click');
+    expect(jumpAction).toHaveBeenCalledWith('index.html?type=postman');
+    expect(wrapper.find('.module-host').exists()).toBe(false);
+
+    await wrapper.get('[data-tool-key="svg-editor"]').trigger('click');
+    expect(wrapper.get('.tool-workspace__title').text()).toBe('SVG编辑器');
+    expect(wrapper.get('.m-ctn').classes()).not.toContain('m-ctn--wide');
+    expect(wrapper.get('.tool-workspace').classes()).not.toContain('tool-workspace--wide');
+    wrapper.unmount();
   });
 
   it('supports keyboard result selection and activation', async () => {
@@ -129,7 +144,7 @@ describe('MainContent settings window', () => {
     await wrapper.vm.$nextTick();
     expect(document.activeElement).toBe(wrapper.get('.tool-workspace__title').element);
 
-    await wrapper.get('.m-back-entry').trigger('click');
+    await wrapper.get('.tool-workspace__header button[title="返回主页"]').trigger('click');
     await wrapper.vm.$nextTick();
     expect(document.activeElement).toBe(qrCard.element);
     wrapper.unmount();
